@@ -65,8 +65,9 @@ func addWebRoutes(r chi.Router) {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(authenticator)
 
+		r.HandleFunc("/bot/verify/ws", VerifyHandler)
+
 		r.Get("/account", AccountFormHandler)
-		r.Get("/bot/verify/ws", VerifyHandler)
 		r.Get("/bot/verify", VerifyFormHandler)
 		r.Post("/bot/delete", DeleteHandler)
 		r.Post("/bot/cycle", CycleHandler)

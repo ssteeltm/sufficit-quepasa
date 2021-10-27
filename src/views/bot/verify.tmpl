@@ -7,35 +7,77 @@
 
 <script>
   window.onload = getQRCode;
+  var myWebSocket;
 
   function getQRCode() {
-    let ws = new WebSocket("{{ .Protocol }}://{{ .Host }}/bot/verify/ws");
-    ws.onopen = onWebSocketOpen;
-    ws.onmessage = onWebSocketMessage;
+    loadQrCode();
+    if (myWebSocket === undefined || (myWebSocket && myWebSocket.readyState === 3)) {
+      myWebSocket = new WebSocket("{{ .Protocol }}://{{ .Host }}/bot/verify/ws");
+      myWebSocket.onopen = onWebSocketOpen;
+      myWebSocket.onmessage = onWebSocketMessage;
+      myWebSocket.onclose = onWebSocketClose;
+      myWebSocket.onerror = onWebSocketError; 
+      
+      window.addEventListener("unload", function(){
+        myWebSocket.close();
+      });   
+    }
+  }
+
+  function loadQrCode(data)
+  {
+    var img = document.getElementById("qr-code");        
+    if(data){
+      img.style = "";
+      img.src = "data:image/png;base64, " + data;
+    } else {
+      img.style = "border: red 3px solid; filter: blur(4px);";
+    }
+  }
+
+  function formatDebug(message)
+  {
+    console.debug("(" + Date.now() + ") " + message);
   }
 
   function onWebSocketOpen(event){
     if (event) {
-      event.target.send("start");
-    } else { console.debug("no event passed"); }
+      myWebSocket.send("start");
+    } else { formatDebug("no event passed"); }
+  }
+
+  function onWebSocketError(event){
+    formatDebug("error socket", event);
+  }
+
+  function onWebSocketClose(event)
+  {
+    //console.debug(event);
+    formatDebug("closed socket (" + event.reason + "): regenerating qr code and trying again");    
+    setTimeout(function() {
+      getQRCode()();
+    }, 1000);
   }
 
   function onWebSocketMessage(event){
     if (event) {
-      if (event.data === "Complete") {
+      if (event.data === "complete") {
         window.location.replace("/account");
+      } else if (event.data === "echo") {
+        //console.debug("websocket echo keep alive");
+      } else if (event.data === "timeout") {
+        console.debug("timeout: regenerating qr code and trying again");
+        myWebSocket.send("start");
       } else {
-        var img = document.getElementById("qr-code");
-        img.src = "data:image/png;base64, " + event.data;
+        loadQrCode(event.data);
       }
-    } else { console.debug("no event passed"); }
+    } else { formatDebug("no event passed"); }
   }
 </script>
 <div class="is-block is-large is-fullwidth container" style="text-align: center;">
   <hr />
   <label class="label">Scan this QR code in the next 20 seconds:</label>
   <img id="qr-code" src="">
-  <button class="button is-block is-large is-fullwidth" onclick="getQRCode();">New code</button>
   <hr />
   <a href="/account">Back</a>
 </div>

@@ -5,6 +5,10 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"strings"
+	"os/signal"
+    "time"
 
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
@@ -139,6 +143,8 @@ func VerifyFormHandler(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "main", data)
 }
 
+var done chan interface{}
+var interrupt chan os.Signal
 var upgrader = websocket.Upgrader{}
 
 // VerifyHandler renders route GET "/bot/verify/ws"
@@ -150,52 +156,103 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	con, err := upgrader.Upgrade(w, r, nil)
+	done = make(chan interface{}) // Channel to indicate that the receiverHandler is done
+    interrupt = make(chan os.Signal) // Channel to listen for interrupt signal to terminate gracefully 
+    signal.Notify(interrupt, os.Interrupt) // Notify the interrupt channel for SIGINT
+
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("Connection upgrade error: ", err)
 		return
 	}
 
-	defer con.Close()
+	defer conn.Close()
+	go receiveWebScoketHandler(user, conn)
 
-	out := make(chan []byte)
-	go func() {
-		err = con.WriteMessage(websocket.TextMessage, <-out)
-		if err != nil {
-			log.Println("Write message error: ", err)
-		}
-	}()
+	// Our main loop for the client
+    // We send our relevant packets here
+    for {
+        select {
+			case <-time.After(time.Duration(1) * time.Millisecond * 1000):
+				// Send an echo packet every second
+				err := conn.WriteMessage(websocket.TextMessage, []byte("echo"))
+				if err != nil {
+					//log.Println("Error during writing to websocket:", err)
+					return
+				}
+	
+			case <-interrupt:
+				// We received a SIGINT (Ctrl + C). Terminate gracefully...
+				log.Println("Received SIGINT interrupt signal. Closing all pending connections")
+	
+				// Close our websocket connection
+				err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					log.Println("Error during closing websocket:", err)
+					return
+				}
+	
+				select {
+					case <-done:
+						log.Println("Receiver Channel Closed! Exiting....")
+					case <-time.After(time.Duration(1) * time.Second):
+						log.Println("Timeout in closing receiving channel. Exiting....")
+				}
+				return
+        }
+	}
+}
 
-	// Exibindo código QR
-	bot, err := models.SignInWithQRCode(user, out)
-	if err != nil {
-		err = con.WriteMessage(websocket.TextMessage, []byte("Complete"))
+func receiveWebScoketHandler(user models.QPUser,  connection *websocket.Conn) {
+    defer close(done)
+    for {
+        mt, msg, err := connection.ReadMessage()
+        if err != nil {
+            log.Println("Error in receive:", err)
+            return
+        }
+
+		if strings.EqualFold(string(msg), "start") {			
+			out := make(chan []byte)
+			go func() {
+				defer close(out)
+				err = connection.WriteMessage(mt, <-out)
+				if err != nil {
+					log.Println("Write message error: ", err)
+				}
+			}()
 		
-		// Se for timeout não me interessa e volta para tela de contas
-		if err != nil {
-			log.Printf("error on read qr code: %s", err)
-			w.WriteHeader(500)
-			return
-		}
+			// Exibindo código QR
+			bot, err := models.SignInWithQRCode(user, out)
+			if err != nil {					
+				if strings.Contains(err.Error(), "timed out") {
+					err = connection.WriteMessage(mt, []byte("timeout"))
+					if err != nil {						
+						// log.Println("Write message error after timeout: ", err)
+						return
+					}
+				} else {
+					log.Println("SignInWithQRCode Unknown Error:", err)
+				}					
+			} else {
+				log.Printf("(%s) SignInWithQRCode success ...", bot.GetNumber())
+				err = bot.MarkVerified(true)
+				if err != nil {
+					log.Printf("(%s)(ERR) Error on update verified state :: %s", bot.GetNumber(), err)
+				}
 		
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	log.Printf("(%s) Verificação QRCode confirmada ...", bot.GetNumber())
-	err = bot.MarkVerified(true)
-	if err != nil {
-		log.Println(err)
-	}
-
-	go models.WhatsAppService.AppendNewServer(bot)
-
-	err = con.WriteMessage(websocket.TextMessage, []byte("Complete"))
-	if err != nil {
-		log.Println("Write message error: ", err)
-	}
-
-	w.WriteHeader(http.StatusOK)
+				err = connection.WriteMessage(websocket.TextMessage, []byte("complete"))
+				if err != nil {
+					log.Printf("(%s)(ERR) Error on write complete message after qrcode verified :: %s", bot.GetNumber(), err)
+				}
+		
+				go models.WhatsAppService.AppendNewServer(bot)
+				return
+			}
+		}else{
+			log.Printf("Received Unknown msg from WebSocket: %s\n", msg)
+		}
+    }
 }
 
 //
