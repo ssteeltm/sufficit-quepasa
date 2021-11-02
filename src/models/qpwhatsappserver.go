@@ -36,7 +36,7 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (bot QPBot, err error) {
 		var png []byte
 		png, err := qrcode.Encode(<-qr, qrcode.Medium, 256)
 		if err != nil {
-			log.Printf("(%s)(ERR) SUFF ERROR C :: %#v\n", bot.GetNumber(), err.Error())
+			log.Printf("(ERR) Error on QrCode encode %#v\n", err.Error())
 		}
 		encodedPNG := base64.StdEncoding.EncodeToString(png)
 		out <- []byte(encodedPNG)
@@ -44,16 +44,22 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (bot QPBot, err error) {
 
 	session, err := con.Login(qr)
 	if err != nil {
+		log.Printf("(ERR) Error on login and get session %#v\n", err.Error())
 		return
 	}
 
 	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
 	bot, err = WhatsAppService.DB.Bot.GetOrCreate(con.Info.Wid, user.ID)
 	if err != nil {
+		log.Printf("(ERR) Error on get or create bot after login %#v\n", err.Error())
 		return
 	}
 
 	err = WriteSession(con.Info.Wid, session)
+	if err != nil {
+		log.Printf("(%s)(ERR) Error on write session :: %s", bot.GetNumber(), err)
+		return
+	}
 	return
 }
 
