@@ -68,9 +68,9 @@ func (h *QPMessageHandler) HandleError(publicError error) {
 	}
 }
 
-func (h *QPMessageHandler) HandleJsonMessage(msgString string) {
+func (h *QPMessageHandler) HandleJsonMessage(message string) {
 	var waJsonMessage WhatsAppJsonMessage
-	err := json.Unmarshal([]byte(msgString), &waJsonMessage)
+	err := json.Unmarshal([]byte(message), &waJsonMessage)
 	if err == nil {
 		if waJsonMessage.Cmd.Type == "disconnect" {
 			// Restarting because an order of whatsapp
@@ -78,13 +78,13 @@ func (h *QPMessageHandler) HandleJsonMessage(msgString string) {
 			go h.Server.Restart()
 		} else {
 			if h.Server.IsDevelopment() {
-				log.Printf("(%s)(DEV) JSON Unmarshal string :: %s", h.Server.Bot.GetNumber(), msgString)
+				log.Printf("(%s)(DEV) JSON Unmarshal string :: %s", h.Server.Bot.GetNumber(), message)
 				log.Printf("(%s)(DEV) JSON Unmarshal :: %s", h.Server.Bot.GetNumber(), waJsonMessage)
 			}
 		}
 	} else {
 		if h.Server.IsDevelopment() && ENV.DEBUGJsonMessages() {
-			log.Printf("(%s)(DEV) JSON :: %s", h.Server.Bot.GetNumber(), msgString)
+			log.Printf("(%s)(DEV) JSON :: %s", h.Server.Bot.GetNumber(), message)
 		}
 	}
 }
