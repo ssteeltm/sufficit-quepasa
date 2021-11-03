@@ -25,6 +25,7 @@ require (
 
 replace github.com/sufficit/sufficit-quepasa-fork/models => ./
 
-replace github.com/Rhymen/go-whatsapp => github.com/sufficit/sufficit-go-whatsapp v0.1.11
+replace github.com/Rhymen/go-whatsapp => github.com/sufficit/sufficit-go-whatsapp v0.1.12
+// replace github.com/Rhymen/go-whatsapp => Z:\Desenvolvimento\sufficit-go-whatsapp
 
 go 1.14

@@ -62,7 +62,9 @@ func CreateConnection() (*whatsapp.Conn, error) {
 	}
 
 	con.SetClientName("QuePasa for Link", "QuePasa", "0.6")
-	con.SetClientVersion(2, 2121, 6)
+
+	// Commented to use default from github
+	//con.SetClientVersion(2, 2121, 6)
 
 	return con, err
 }
