@@ -90,11 +90,11 @@ func (h *QPMessageHandler) HandleJsonMessage(msgString string) {
 }
 
 /// Atualizando informações sobre a bateria
-func (h *QPMessageHandler) HandleBatteryMessage(msg whatsapp.BatteryMessage) {
+func (h *QPMessageHandler) HandleBatteryMessage(message whatsapp.BatteryMessage) {
 	h.Server.Battery.Timestamp = time.Now()
-	h.Server.Battery.Plugged = msg.Plugged
-	h.Server.Battery.Percentage = msg.Percentage
-	h.Server.Battery.Powersave = msg.Powersave
+	h.Server.Battery.Plugged = message.Plugged
+	h.Server.Battery.Percentage = message.Percentage
+	h.Server.Battery.Powersave = message.Powersave
 }
 
 func (h *QPMessageHandler) HandleNewContact(contact whatsapp.Contact) {

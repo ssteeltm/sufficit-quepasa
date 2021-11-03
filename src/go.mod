@@ -21,6 +21,6 @@ replace github.com/sufficit/sufficit-quepasa-fork/controllers => ./controllers
 
 replace github.com/sufficit/sufficit-quepasa-fork => ./
 
-replace github.com/Rhymen/go-whatsapp => github.com/sufficit/sufficit-go-whatsapp v0.1.11
+replace github.com/Rhymen/go-whatsapp => github.com/sufficit/sufficit-go-whatsapp v0.1.12
 
 go 1.14
