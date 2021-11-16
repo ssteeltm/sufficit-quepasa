@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type QPBot struct {
@@ -58,6 +59,26 @@ func (bot *QPBot) GetStatus() string {
 
 	return "running"
 }
+
+func (bot *QPBot) GetTimestamp() uint64 {
+	server, ok := WhatsAppService.Servers[bot.ID]
+	if ok {
+		if server.Timestamp > 0 {
+			return server.Timestamp
+		}
+	}
+
+	return 0
+}
+
+func (bot *QPBot) GetStartedTime() string {
+	server, ok := WhatsAppService.Servers[bot.ID]
+	if ok {
+		return time.Unix(int64(server.Timestamp), 0).String()
+	}
+	return ""
+}
+
 
 func (bot *QPBot) GetBatteryInfo() WhatsAppBateryStatus {
 	server, ok := WhatsAppService.Servers[bot.ID]

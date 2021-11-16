@@ -7,3 +7,8 @@ sql         Extension
 
 202110211710_testing_migrations.up.sql      => what to do on up migrations
 202110211710_testing_migrations.down.sql    => what to do on down migrations
+
+
+/*
+ ALTER TABLE bots ADD COLUMN devel BOOLEAN NOT NULL DEFAULT false;        
+*/

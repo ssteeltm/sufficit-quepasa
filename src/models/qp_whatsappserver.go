@@ -13,15 +13,16 @@ import (
 )
 
 type QPWhatsAppServer struct {
-	Bot            QPBot
-	Connection     *wa.Conn
-	Handlers       QPMessageHandler
-	Recipients     map[string]bool
-	Messages       map[string]QPMessage
-	syncConnection *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
-	syncMessages   *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
-	Status         *string
-	Battery        *WhatsAppBateryStatus
+	Bot				QPBot
+	Connection		*wa.Conn
+	Handlers		QPMessageHandler
+	Recipients		map[string]bool
+	Messages		map[string]QPMessage
+	syncConnection	*sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
+	syncMessages	*sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
+	Status			*string
+	Battery			*WhatsAppBateryStatus
+	Timestamp 		uint64
 }
 
 // Envia o QRCode para o usuário e aguarda pela resposta
@@ -80,7 +81,8 @@ func CreateWhatsAppServer(bot QPBot) QPWhatsAppServer {
 	messages := make(map[string]QPMessage)
 	status := "created"
 	batery := WhatsAppBateryStatus{}
-	return QPWhatsAppServer{bot, connection, *handlers, recipients, messages, syncConnetion, syncMessages, &status, &batery}
+	currentTime := time.Now().Unix()
+	return QPWhatsAppServer{bot, connection, *handlers, recipients, messages, syncConnetion, syncMessages, &status, &batery, uint64(currentTime)}
 }
 
 // Inicializa um repetidor eterno que confere o estado da conexão e tenta novamente a cada 10 segundos
@@ -202,7 +204,9 @@ func (server *QPWhatsAppServer) AppenMsgToCache(msg QPMessage) error {
 	server.syncConnection.Unlock() // Sinal verde !
 
 	// Executando WebHook de forma assincrona
-	go server.Bot.PostToWebHook(msg)
+	if msg.Timestamp > server.Timestamp {
+		go server.Bot.PostToWebHook(msg)
+	}
 
 	return nil
 }

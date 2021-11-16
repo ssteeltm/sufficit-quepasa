@@ -25,7 +25,9 @@
         <tbody>
         {{ range .Bots }}   
           <tr>
-            <th>{{ .GetNumber }}</th>
+            <td>
+              <span title="{{ .GetStartedTime }}">{{ .GetNumber }}</span>
+            </td>
             <td>
               {{ if .Verified }}
               <span class="icon has-text-success"><i class="fas fa-check-square"></i> </span> verified

@@ -1,0 +1,4 @@
+ /*
+ ALTER TABLE bots ADD COLUMN webhook_sync_at TIMESTAMP;       
+
+ */
