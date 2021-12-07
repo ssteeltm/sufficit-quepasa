@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"crypto/tls"
 )
 
 type QPBot struct {
@@ -93,6 +94,10 @@ func (bot *QPBot) PostToWebHook(message QPMessage) error {
 	if len(bot.WebHook) > 0 {
 		payloadJson, _ := json.Marshal(message.ToV2())
 		requestBody := bytes.NewBuffer(payloadJson)
+
+		// Ignorando certificado ao realizar o post 
+		// Não cabe a nós a segurança do cliente
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		resp, _ := http.Post(bot.WebHook, "application/json", requestBody)
 
 		if resp != nil {
