@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"crypto/tls"
+	"log"
 )
 
 type QPBot struct {
@@ -98,20 +99,27 @@ func (bot *QPBot) PostToWebHook(message QPMessage) error {
 		// Ignorando certificado ao realizar o post 
 		// Não cabe a nós a segurança do cliente
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		resp, _ := http.Post(bot.WebHook, "application/json", requestBody)
+		resp, err := http.Post(bot.WebHook, "application/json", requestBody)
+		if err != nil {
+			log.Printf("(%s) erro ao postar no webhook: %s", bot.GetNumber(), err.Error())
+		} else {
+			if resp != nil {
+				defer resp.Body.Close()
+				if resp.StatusCode == 422 {
+					body, err := ioutil.ReadAll(resp.Body)
+					if err != nil {
+						log.Printf("(%s) erro ao ler resposta do webhook: %s", bot.GetNumber(), err.Error())
+					} else {
+						if body != nil && strings.Contains(string(body), "invalid callback token") {
 
-		if resp != nil {
-			defer resp.Body.Close()
-			if resp.StatusCode == 422 {
-				body, _ := ioutil.ReadAll(resp.Body)
-				if body != nil && strings.Contains(string(body), "invalid callback token") {
+							// Sincroniza o token mais novo
+							bot.WebHookSincronize()
 
-					// Sincroniza o token mais novo
-					bot.WebHookSincronize()
-
-					// Preenche o body novamente pois foi esvaziado na requisição anterior
-					requestBody = bytes.NewBuffer(payloadJson)
-					http.Post(bot.WebHook, "application/json", requestBody)
+							// Preenche o body novamente pois foi esvaziado na requisição anterior
+							requestBody = bytes.NewBuffer(payloadJson)
+							http.Post(bot.WebHook, "application/json", requestBody)
+						}
+					}
 				}
 			}
 		}
