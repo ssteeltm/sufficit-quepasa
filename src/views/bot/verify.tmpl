@@ -12,7 +12,7 @@
   function getQRCode() {
     loadQrCode();
     if (myWebSocket === undefined || (myWebSocket && myWebSocket.readyState === 3)) {
-      myWebSocket = new WebSocket("{{ .Protocol }}://{{ .Host }}/bot/verify/ws");
+      myWebSocket = new WebSocket("{{ .Protocol }}://{{ .Host }}/form/verify/ws");
       myWebSocket.onopen = onWebSocketOpen;
       myWebSocket.onmessage = onWebSocketMessage;
       myWebSocket.onclose = onWebSocketClose;
@@ -62,7 +62,7 @@
   function onWebSocketMessage(event){
     if (event) {
       if (event.data === "complete") {
-        window.location.replace("/account");
+        window.location.replace(FormAccountEndpoint);
       } else if (event.data === "echo") {
         //console.debug("websocket echo keep alive");
       } else if (event.data === "timeout") {
@@ -79,6 +79,6 @@
   <label class="label">Scan this QR code in the next 20 seconds:</label>
   <img id="qr-code" src="">
   <hr />
-  <a href="/account">Back</a>
+  <a href="/form/account">Back</a>
 </div>
 {{ end }}

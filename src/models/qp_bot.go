@@ -1,14 +1,9 @@
 package models
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
-	"strings"
 	"time"
-	"crypto/tls"
-	"log"
+
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type QPBot struct {
@@ -16,28 +11,11 @@ type QPBot struct {
 	Verified  bool   `db:"is_verified" json:"is_verified"`
 	Token     string `db:"token" json:"token"`
 	UserID    string `db:"user_id" json:"user_id"`
-	WebHook   string `db:"webhook" json:"webhook"`
+	WebHook   string `db:"webhook" json:"webhook,omitempty"`
 	CreatedAt string `db:"created_at" json:"created_at"`
 	UpdatedAt string `db:"updated_at" json:"updated_at"`
 	Devel     bool   `db:"devel" json:"devel"`
-}
-
-type IQPBot interface {
-	FindAll() ([]QPBot, error)
-	FindAllForUser(userID string) ([]QPBot, error)
-	FindByToken(token string) (QPBot, error)
-	FindForUser(userID string, ID string) (QPBot, error)
-	FindByID(botID string) (QPBot, error)
-	GetOrCreate(botID string, userID string) (bot QPBot, err error)
-	Create(botID string, userID string) (QPBot, error)
-
-	/// FORWARDING ---
-	MarkVerified(id string, ok bool) error
-	CycleToken(id string) error
-	Delete(id string) error
-	WebHookUpdate(webhook string, id string) error
-	WebHookSincronize(id string) (result string, err error)
-	Devel(id string, status bool) error
+	Version   string `db:"version" json:"version,omitempty"`
 }
 
 // Traduz o Wid para um número de telefone em formato E164
@@ -50,89 +28,55 @@ func (bot *QPBot) GetNumber() string {
 }
 
 func (bot *QPBot) GetStatus() string {
-	server, ok := WhatsAppService.Servers[bot.ID]
-	if !ok {
+	server, err := GetServerFromBot(*bot)
+	if err != nil {
 		return "stopped"
 	}
 
-	if len(*server.Status) > 0 {
-		return *server.Status
+	status, description := server.GetState()
+	if status > 0 {
+		return description
 	}
 
 	return "running"
 }
 
-func (bot *QPBot) GetTimestamp() uint64 {
-	server, ok := WhatsAppService.Servers[bot.ID]
-	if ok {
-		if server.Timestamp > 0 {
-			return server.Timestamp
-		}
+func (bot *QPBot) GetTimestamp() (timestamp uint64) {
+	server, err := GetServerFromBot(*bot)
+	if err != nil {
+		return
 	}
 
-	return 0
+	timestamp = uint64(server.Timestamp.Unix())
+	return
 }
 
-func (bot *QPBot) GetStartedTime() string {
-	server, ok := WhatsAppService.Servers[bot.ID]
-	if ok {
-		return time.Unix(int64(server.Timestamp), 0).String()
+func (bot *QPBot) GetStartedTime() (timestamp time.Time) {
+	server, err := GetServerFromBot(*bot)
+	if err != nil {
+		return
 	}
-	return ""
+
+	timestamp = server.Timestamp
+	return
 }
 
-
-func (bot *QPBot) GetBatteryInfo() WhatsAppBateryStatus {
-	server, ok := WhatsAppService.Servers[bot.ID]
-	if !ok {
-		return WhatsAppBateryStatus{}
+func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
+	server, err := GetServerFromBot(*bot)
+	if err != nil {
+		return
 	}
-	return *server.Battery
-}
 
-// Encaminha msg ao WebHook específicado
-func (bot *QPBot) PostToWebHook(message QPMessage) error {
-	if len(bot.WebHook) > 0 {
-		payloadJson, _ := json.Marshal(message.ToV2())
-		requestBody := bytes.NewBuffer(payloadJson)
-
-		// Ignorando certificado ao realizar o post 
-		// Não cabe a nós a segurança do cliente
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		resp, err := http.Post(bot.WebHook, "application/json", requestBody)
-		if err != nil {
-			log.Printf("(%s) erro ao postar no webhook: %s", bot.GetNumber(), err.Error())
-		} else {
-			if resp != nil {
-				defer resp.Body.Close()
-				if resp.StatusCode == 422 {
-					body, err := ioutil.ReadAll(resp.Body)
-					if err != nil {
-						log.Printf("(%s) erro ao ler resposta do webhook: %s", bot.GetNumber(), err.Error())
-					} else {
-						if body != nil && strings.Contains(string(body), "invalid callback token") {
-
-							// Sincroniza o token mais novo
-							bot.WebHookSincronize()
-
-							// Preenche o body novamente pois foi esvaziado na requisição anterior
-							requestBody = bytes.NewBuffer(payloadJson)
-							http.Post(bot.WebHook, "application/json", requestBody)
-						}
-					}
-				}
-			}
-		}
-	}
-	return nil
+	status = server.Battery
+	return
 }
 
 func (bot *QPBot) Toggle() (err error) {
-	server, ok := WhatsAppService.Servers[bot.ID]
-	if !ok {
-		go WhatsAppService.AppendNewServer(*bot)
+	server, err := GetServerFromBot(*bot)
+	if err != nil {
+		go WhatsAppService.AppendNewServer(bot)
 	} else {
-		if *server.Status == "stopped" || *server.Status == "created" {
+		if server.Status == "stopped" || server.Status == "created" {
 			err = server.Start()
 		} else {
 			err = server.Shutdown()
@@ -176,4 +120,8 @@ func (bot *QPBot) ToggleDevel() (err error) {
 		bot.Devel = true
 	}
 	return err
+}
+
+func (bot *QPBot) Send(msg *WhatsappMessage) (err error) {
+	return SendMessageFromBot(bot, msg)
 }

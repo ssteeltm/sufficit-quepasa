@@ -1,0 +1,1 @@
+ALTER TABLE bots ADD COLUMN `version` VARCHAR (10) NOT NULL DEFAULT '';    

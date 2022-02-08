@@ -1,23 +1,24 @@
 package models
 
+/*
 import (
 	"encoding/base64"
 	"fmt"
 	"log"
 
-	"github.com/Rhymen/go-whatsapp"
+	whatsapp "go.mau.fi/whatsmeow"
 )
 
 // Cria uma mensagem no formato do QuePasa apartir de uma msg do WhatsApp
 // Preenche somente as propriedades padrões e comuns a todas as msgs
-func CreateQPMessage(Info whatsapp.MessageInfo) (message QPMessage) {
-	message = QPMessage{}
+func CreateQPMessage(Info whatsapp.MessageInfo) (message QPMessageV1) {
+	message = QPMessageV1{}
 	message.ID = Info.Id
 	message.Timestamp = Info.Timestamp
 	return
 }
 
-func (message *QPMessage) FillHeader(Info whatsapp.MessageInfo, server *QPWhatsAppServer) (err error) {
+func (message *QPMessageV1) FillHeader(Info whatsapp.MessageInfo, server *QPWhatsappServer) (err error) {
 
 	con := server.Connection
 	if con == nil {
@@ -59,7 +60,7 @@ func (message *QPMessage) FillHeader(Info whatsapp.MessageInfo, server *QPWhatsA
 	return
 }
 
-func (message *QPMessage) FillAudioAttachment(msg whatsapp.AudioMessage, con *whatsapp.Conn) {
+func (message *QPMessageV1) FillAudioAttachment(msg whatsapp.AudioMessage, con *whatsapp.Conn) {
 	getKey := msg.Info.Source.Message.AudioMessage.MediaKey
 	getUrl := *msg.Info.Source.Message.AudioMessage.Url
 	getLength := *msg.Info.Source.Message.AudioMessage.FileLength
@@ -73,7 +74,7 @@ func (message *QPMessage) FillAudioAttachment(msg whatsapp.AudioMessage, con *wh
 	}
 }
 
-func (message *QPMessage) FillDocumentAttachment(msg whatsapp.DocumentMessage, con *whatsapp.Conn) {
+func (message *QPMessageV1) FillDocumentAttachment(msg whatsapp.DocumentMessage, con *whatsapp.Conn) {
 	innerMSG := msg.Info.Source.Message.DocumentMessage
 	//filename := &innerMSG.FileName
 	message.Attachment = QPAttachment{
@@ -89,7 +90,7 @@ func (message *QPMessage) FillDocumentAttachment(msg whatsapp.DocumentMessage, c
 	}
 }
 
-func (message *QPMessage) FillImageAttachment(msg whatsapp.ImageMessage, con *whatsapp.Conn) {
+func (message *QPMessageV1) FillImageAttachment(msg whatsapp.ImageMessage, con *whatsapp.Conn) {
 	if msg.Info.Source.Message.ImageMessage.Url == nil {
 		// Aconteceu na primeira vez, quando cadastrei o número de whatsapp errado
 		log.Println("erro on filling image attachement, url not avail")
@@ -149,3 +150,4 @@ func getContactTitle(contact whatsapp.Contact) string {
 	}
 	return result
 }
+*/

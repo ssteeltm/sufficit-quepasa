@@ -14,8 +14,8 @@ type QPBotMysql struct {
 	db *sqlx.DB
 }
 
-func (source QPBotMysql) FindAll() ([]QPBot, error) {
-	bots := []QPBot{}
+func (source QPBotMysql) FindAll() ([]*QPBot, error) {
+	bots := []*QPBot{}
 	err := source.db.Select(&bots, "SELECT * FROM bots")
 	return bots, err
 }
@@ -106,5 +106,12 @@ func (source QPBotMysql) Devel(id string, status bool) (err error) {
 	now := time.Now()
 	query := "UPDATE bots SET devel = ?, updated_at = ? WHERE id = ?"
 	_, err = source.db.Exec(query, status, now, id)
+	return err
+}
+
+func (source QPBotMysql) SetVersion(id string, version string) (err error) {
+	now := time.Now()
+	query := "UPDATE bots SET version = ?, updated_at = ? WHERE id = ?"
+	_, err = source.db.Exec(query, version, now, id)
 	return err
 }

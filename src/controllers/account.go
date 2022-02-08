@@ -1,104 +1,13 @@
 package controllers
 
 import (
-	"errors"
 	"html/template"
 	"net/http"
-	"os"
-	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-chi/jwtauth"
 	"github.com/nbutton23/zxcvbn-go"
 	"github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/library"
 )
-
-//
-// Account
-//
-
-type accountFormData struct {
-	PageTitle    string
-	ErrorMessage string
-	Bots         []models.QPBot
-	User         models.QPUser
-}
-
-// AccountFormHandler renders route GET "/account"
-func AccountFormHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := models.GetUser(r)
-	if err != nil {
-		redirectToLogin(w, r)
-	}
-
-	data := accountFormData{
-		PageTitle: "Account",
-		User:      user,
-	}
-
-	bots, err := models.WhatsAppService.DB.Bot.FindAllForUser(user.ID)
-	if err != nil {
-		data.ErrorMessage = err.Error()
-	} else {
-		data.Bots = bots
-	}
-
-	templates := template.Must(template.ParseFiles("views/layouts/main.tmpl", "views/account.tmpl"))
-	templates.ExecuteTemplate(w, "main", data)
-}
-
-//
-// Login
-//
-
-type loginFormData struct {
-	PageTitle string
-}
-
-// LoginFormHandler renders route GET "/login"
-func LoginFormHandler(w http.ResponseWriter, r *http.Request) {
-	data := loginFormData{
-		PageTitle: "Login",
-	}
-
-	templates := template.Must(template.ParseFiles("views/layouts/main.tmpl", "views/login.tmpl"))
-	templates.ExecuteTemplate(w, "main", data)
-}
-
-// LoginHandler renders route POST "/login"
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	email := r.Form.Get("email")
-	password := r.Form.Get("password")
-
-	if email == "" || password == "" {
-		respondUnauthorized(w, errors.New("Missing username or password"))
-		return
-	}
-
-	user, err := models.WhatsAppService.DB.User.Check(email, password)
-	if err != nil {
-		respondUnauthorized(w, errors.New("Incorrect username or password"))
-		return
-	}
-
-	tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("SIGNING_SECRET")), nil)
-	claims := jwt.MapClaims{"user_id": user.ID}
-	jwtauth.SetIssuedNow(claims)
-	jwtauth.SetExpiryIn(claims, 24*time.Hour)
-	_, tokenString, _ := tokenAuth.Encode(claims)
-	cookie := &http.Cookie{
-		Name:     "jwt",
-		Value:    tokenString,
-		MaxAge:   60 * 60 * 24,
-		Path:     "/",
-		HttpOnly: true,
-	}
-
-	http.SetCookie(w, cookie)
-
-	http.Redirect(w, r, "/account", http.StatusFound)
-}
 
 // LogoutHandler renders route GET "/logoout"
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +21,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, cookie)
 
-	redirectToLogin(w, r)
+	RedirectToLogin(w, r)
 }
 
 //
@@ -140,7 +49,7 @@ func renderSetupForm(w http.ResponseWriter, data setupFormData) {
 func SetupFormHandler(w http.ResponseWriter, r *http.Request) {
 	count, err := models.WhatsAppService.DB.User.Count()
 	if count > 0 || err != nil {
-		redirectToLogin(w, r)
+		RedirectToLogin(w, r)
 		return
 	}
 
@@ -155,7 +64,7 @@ func SetupFormHandler(w http.ResponseWriter, r *http.Request) {
 func SetupHandler(w http.ResponseWriter, r *http.Request) {
 	count, err := models.WhatsAppService.DB.User.Count()
 	if count > 0 || err != nil {
-		redirectToLogin(w, r)
+		RedirectToLogin(w, r)
 		return
 	}
 
@@ -177,7 +86,7 @@ func SetupHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Email = email
 
-	if !validateEmail(email) {
+	if !IsValidEMail(email) {
 		data.ErrorMessage = "Email is invalid"
 		data.EmailInvalidError = true
 		renderSetupForm(w, data)
@@ -220,5 +129,5 @@ func SetupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectToLogin(w, r)
+	RedirectToLogin(w, r)
 }
