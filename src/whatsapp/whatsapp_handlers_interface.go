@@ -1,21 +1,23 @@
-package models
+package whatsapp
 
-import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"strings"
-	"time"
+// Eventos vindos do serviço de whatsapp
+type IWhatsappHandlers interface {
 
-	whatsapp "github.com/Rhymen/go-whatsapp"
-)
-
-type QPMessageHandler struct {
-	Bot         *QPBot
-	Synchronous bool
-	Server      *QPWhatsAppServer
+	// Recebimento/Envio de mensagem
+	Message(*WhatsappMessage)
 }
 
+/*
+import (
+	"encoding/json"
+	//"fmt"
+	"log"
+	//"strings"
+	//"time"
+)
+*/
+
+/*
 // Essencial
 // Unico item realmente necessario para o sistema do whatsapp funcionar
 // Trata qualquer erro que influêncie no recebimento de msgs
@@ -201,3 +203,4 @@ func (h *QPMessageHandler) HandleTextMessage(msg whatsapp.TextMessage) {
 func (h *QPMessageHandler) ShouldCallSynchronously() bool {
 	return h.Synchronous
 }
+*/

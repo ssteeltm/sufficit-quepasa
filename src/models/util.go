@@ -39,9 +39,25 @@ func CleanPhoneNumber(number string) (string, error) {
 // Usado também para identificar o número do bot
 // Meramente visual
 func GetPhoneByID(id string) (out string, err error) {
-	spacesRemoved := strings.Replace(id, " ", "", -1)
+
+	// removing whitespaces
+	out = strings.Replace(id, " ", "", -1)
+	if strings.Contains(out, "@") {
+		// capturando tudo antes do @
+		splited :=  strings.Split(out, "@")
+		out = splited[0]
+
+		if strings.Contains(out, ".") {
+			// capturando tudo antes do "."
+			splited =  strings.Split(out, ".")
+			out = splited[0]
+
+			return 
+		}
+	} 
+
 	re, err := regexp.Compile(`\d*`)
-	matches := re.FindAllString(spacesRemoved, -1)
+	matches := re.FindAllString(out, -1)
 	if len(matches) > 0 {
 		out = matches[0]
 	}

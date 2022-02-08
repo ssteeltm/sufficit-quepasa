@@ -15,7 +15,7 @@ type indexData struct {
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := models.GetUser(r)
 	if err != nil {
-		redirectToLogin(w, r)
+		RedirectToLogin(w, r)
 		return
 	}
 

@@ -11,21 +11,25 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
 	"github.com/sufficit/sufficit-quepasa-fork/models"
+	"github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 )
 
-func main() {
+func main() { 	
+
 	// Carregando variaveis de ambiente apartir de arquivo .env
 	godotenv.Load()
-
+	
 	// Verifica se é necessario realizar alguma migração de base de dados
 	err := models.MigrateToLatest()
 	if err != nil {
 		log.Fatalf("Database migration error: %s", err.Error())
 	}
 
+	whatsmeow.WhatsmeowStart()
+	
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona
-	go models.QPWhatsAppStart()
+	go models.QPWhatsAppStart()	
 
 	go func() {
 		m := chi.NewRouter()
@@ -39,5 +43,5 @@ func main() {
 		}
 	}()
 
-	controllers.QPWebServerStart()
+	controllers.QPWebServerStart()	
 }

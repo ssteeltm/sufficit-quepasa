@@ -13,8 +13,8 @@ type QPBotPostgres struct {
 	db *sqlx.DB
 }
 
-func (source QPBotPostgres) FindAll() ([]QPBot, error) {
-	bots := []QPBot{}
+func (source QPBotPostgres) FindAll() ([]*QPBot, error) {
+	bots := []*QPBot{}
 	err := source.db.Select(&bots, "SELECT * FROM bots")
 	return bots, err
 }
@@ -105,5 +105,12 @@ func (source QPBotPostgres) Devel(id string, status bool) (err error) {
 	now := time.Now()
 	query := "UPDATE bots SET devel = $1, updated_at = $2 WHERE id = $3"
 	_, err = source.db.Exec(query, status, now, id)
+	return err
+}
+
+func (source QPBotPostgres) SetVersion(id string, version string) (err error) {
+	now := time.Now()
+	query := "UPDATE bots SET version = $1, updated_at = $2 WHERE id = $3"
+	_, err = source.db.Exec(query, version, now, id)
 	return err
 }

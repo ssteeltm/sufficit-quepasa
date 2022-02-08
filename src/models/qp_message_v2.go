@@ -3,8 +3,7 @@ package models
 // Mensagem no formato QuePasa
 // Utilizada na API do QuePasa para troca com outros sistemas
 type QPMessageV2 struct {
-	ID        string `json:"message_id"`
-	Timestamp int    `json:"timestamp"`
+	QPMessageInfo
 
 	// Whatsapp que gerencia a bagaça toda
 	Controller QPEndPoint `json:"controller"`
