@@ -32,7 +32,7 @@ func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
 	}
 
 	if source.HasAttachment() {
-		message.Attachment = ToQPAttachment(source.Attachment, message.ID, wid)
+		message.Attachment = ToQPAttachmentV1(source.Attachment, message.ID, wid)
 	}
 
 	return
@@ -58,7 +58,7 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	}
 
 	if source.HasAttachment() {
-		message.Attachment = ToQPAttachment(source.Attachment, message.ID, wid)
+		message.Attachment = ToQPAttachmentV1(source.Attachment, message.ID, wid)
 	}
 
 	return

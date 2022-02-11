@@ -9,7 +9,7 @@ import (
 type QPAttachmentV1 struct {
 	Url         string `json:"url,omitempty"`
 	B64MediaKey string `json:"b64mediakey,omitempty"`
-	Length      int    `json:"length,omitempty"`
+	Length      uint64 `json:"length,omitempty"`
 	MIME        string `json:"mime,omitempty"`
 	Base64      string `json:"base64,omitempty"`
 	FileName    string `json:"filename,omitempty"`
