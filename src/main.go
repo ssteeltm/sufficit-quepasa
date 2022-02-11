@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -12,13 +11,17 @@ import (
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
 	"github.com/sufficit/sufficit-quepasa-fork/models"
 	"github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func main() { 	
+func main() {
 
 	// Carregando variaveis de ambiente apartir de arquivo .env
 	godotenv.Load()
-	
+
+	log.SetLevel(log.DebugLevel)
+
 	// Verifica se é necessario realizar alguma migração de base de dados
 	err := models.MigrateToLatest()
 	if err != nil {
@@ -26,10 +29,10 @@ func main() {
 	}
 
 	whatsmeow.WhatsmeowStart()
-	
+
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona
-	go models.QPWhatsAppStart()	
+	go models.QPWhatsAppStart()
 
 	go func() {
 		m := chi.NewRouter()
@@ -43,5 +46,5 @@ func main() {
 		}
 	}()
 
-	controllers.QPWebServerStart()	
+	controllers.QPWebServerStart()
 }

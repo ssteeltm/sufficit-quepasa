@@ -155,7 +155,9 @@ func ChatToQPEndPointV1(source WhatsappChat) (endpoint QPEndpointV1) {
 
 func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
 	if !strings.Contains(source.ID, "@") {
-		if strings.Contains(source.ID, "-") {
+		if source.ID == "status" {
+			destination.ID = source.ID + "@broadcast"
+		} else if strings.Contains(source.ID, "-") {
 			destination.ID = source.ID + "@g.us"
 		} else {
 			destination.ID = source.ID + "@s.whatsapp.net"
@@ -166,17 +168,19 @@ func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
 	return
 }
 
-func ChatToQPEndPointV2(source WhatsappChat) (endpoint QPEndpointV2) {
+func ChatToQPEndPointV2(source WhatsappChat) (destination QPEndpointV2) {
 	if !strings.Contains(source.ID, "@") {
-		if strings.Contains(source.ID, "-") {
-			endpoint.ID = source.ID + "@g.us"
+		if source.ID == "status" {
+			destination.ID = source.ID + "@broadcast"
+		} else if strings.Contains(source.ID, "-") {
+			destination.ID = source.ID + "@g.us"
 		} else {
-			endpoint.ID = source.ID + "@s.whatsapp.net"
-			endpoint.UserName = "+" + source.ID
+			destination.ID = source.ID + "@s.whatsapp.net"
+			destination.UserName = "+" + source.ID
 		}
 	}
 
-	endpoint.Title = source.Title
+	destination.Title = source.Title
 	return
 }
 

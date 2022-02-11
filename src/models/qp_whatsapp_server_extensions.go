@@ -24,6 +24,8 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) erro
 		log.Info("dispatching webhook from: ", server.GetWid())
 
 		payloadJson, _ := json.Marshal(&message)
+		log.Debug(string(payloadJson))
+
 		requestBody := bytes.NewBuffer(payloadJson)
 
 		// Ignorando certificado ao realizar o post
