@@ -104,16 +104,15 @@ func ToQPAttachment(source *WhatsappAttachment, id string, wid string) (attach *
 }
 
 func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
-	WhatsappID := source.ID
-	if !strings.Contains(WhatsappID, "@") {
-		if strings.Contains(WhatsappID, "-") {
-			WhatsappID = WhatsappID + "@g.us"
+	if !strings.Contains(source.ID, "@") {
+		if strings.Contains(source.ID, "-") {
+			endpoint.ID = source.ID + "@g.us"
 		} else {
-			WhatsappID = WhatsappID + "@s.whatsapp.net"
+			endpoint.ID = source.ID + "@s.whatsapp.net"
+			endpoint.Phone = "+" + source.ID
 		}
 	}
 
-	endpoint.ID = WhatsappID
 	endpoint.Title = source.Title
 	if len(endpoint.Title) == 0 {
 		endpoint.Title = source.UserName
@@ -123,16 +122,15 @@ func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
 }
 
 func ChatToQPEndPoint(source WhatsappChat) (endpoint QPEndPoint) {
-	WhatsappID := source.ID
-	if !strings.Contains(WhatsappID, "@") {
-		if strings.Contains(WhatsappID, "-") {
-			WhatsappID = WhatsappID + "@g.us"
+	if !strings.Contains(source.ID, "@") {
+		if strings.Contains(source.ID, "-") {
+			endpoint.ID = source.ID + "@g.us"
 		} else {
-			WhatsappID = WhatsappID + "@s.whatsapp.net"
+			endpoint.ID = source.ID + "@s.whatsapp.net"
+			endpoint.Phone = "+" + source.ID
 		}
 	}
 
-	endpoint.ID = WhatsappID
 	endpoint.Title = source.Title
 	return
 }
