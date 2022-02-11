@@ -123,7 +123,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RespondSuccess(w, server.Bot)
+	RespondSuccess(w, server)
 }
 
 //endregion

@@ -1,12 +1,12 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
-	//"encoding/json"
 	"net/http"
 
-	//log "github.com/sirupsen/logrus"
 	"github.com/go-chi/chi"
+	log "github.com/sirupsen/logrus"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
@@ -20,7 +20,7 @@ func RegisterAPIV1Controllers(r chi.Router) {
 	r.Post(ControllerPrefixV1+"/send", SendAPIHandlerV1)
 	r.Get(ControllerPrefixV1+"/receive", ReceiveAPIHandlerV1)
 	r.Post(ControllerPrefixV1+"/attachment", AttachmentAPIHandlerV2)
-	r.Post(ControllerPrefixV1+"/webhook", WebhookController)
+	r.Post(ControllerPrefixV1+"/webhook", WebhookControllerV1)
 }
 
 //region CONTROLLER - INFORMATION
@@ -48,6 +48,45 @@ func InformationControllerV1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondSuccess(w, ep)
+}
+
+//endregion
+//region CONTROLLER - WEBHOOK
+
+func WebhookControllerV1(w http.ResponseWriter, r *http.Request) {
+
+	// setting default reponse type as json
+	w.Header().Set("Content-Type", "application/json")
+
+	token := chi.URLParam(r, "token")
+	server, err := GetServerFromToken(token)
+	if err != nil {
+		RespondNotFound(w, fmt.Errorf("Token '%s' not found on WebHookHandler", token))
+		return
+	}
+
+	// Declare a new Person struct.
+	var p QPWebhookRequest
+
+	// Try to decode the request body into the struct. If there is an error,
+	// respond to the client with the error message and a 400 status code.
+	err = json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		RespondServerError(server, w, err)
+	}
+
+	// Já tratei os parametros
+	if ENV.IsDevelopment() {
+		log.Printf("(%s) Updating Webhook: %s", server.Bot.GetNumber(), p.Url)
+	}
+
+	server.Bot.WebHook = p.Url
+	// Atualizando banco de dados
+	if err := server.Bot.WebHookUpdate(); err != nil {
+		return
+	}
+
+	RespondSuccess(w, ToQPBotV1(server.Bot))
 }
 
 //endregion
