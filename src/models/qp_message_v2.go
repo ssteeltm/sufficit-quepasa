@@ -20,7 +20,7 @@ type QPMessageV2 struct {
 	// Texto da msg
 	Text string `json:"text"`
 
-	Attachment QPAttachment `json:"attachment,omitempty"`
+	Attachment *QPAttachment `json:"attachment,omitempty"`
 
 	Chat QPChatV2 `json:"chat"`
 }

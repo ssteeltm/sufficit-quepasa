@@ -11,7 +11,7 @@ type WhatsappMessage struct {
 	// original message from source service
 	Content interface{} `json:"-"`
 
-	ID        string    `json:"message_id"`
+	ID        string    `json:"id"`
 	Timestamp time.Time `json:"timestamp"`
 
 	// Se a msg foi postado em algum grupo ? quem postou !
@@ -23,10 +23,20 @@ type WhatsappMessage struct {
 	// Texto da msg
 	Text string `json:"text"`
 
-	Attachment WhatsappAttachment `json:"attachment,omitempty"`
+	Attachment *WhatsappAttachment `json:"attachment,omitempty"`
 
 	Chat WhatsappChat `json:"chat"`
 }
+
+//region ORDER BY TIMESTAMP
+
+type ByTimestamp []WhatsappMessage
+
+func (m ByTimestamp) Len() int           { return len(m) }
+func (m ByTimestamp) Less(i, j int) bool { return m[i].Timestamp.After(m[j].Timestamp) }
+func (m ByTimestamp) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+
+//endregion
 
 //region IMPLEMENT WHATSAPP SEND RESPONSE INTERFACE
 
@@ -49,8 +59,9 @@ func (source *WhatsappMessage) GetText() string {
 }
 
 func (source *WhatsappMessage) HasAttachment() bool {
+	// this attachment is a pointer to correct show info on deserialized
 	attach := source.Attachment
-	return len(attach.Mimetype) > 0 && attach.FileLength > 0
+	return attach != nil && len(attach.Mimetype) > 0
 }
 
 func (source *WhatsappMessage) GetSource() interface{} {

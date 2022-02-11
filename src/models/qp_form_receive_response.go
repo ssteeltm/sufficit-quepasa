@@ -1,6 +1,10 @@
 package models
 
+import (
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+)
+
 type QPFormReceiveResponse struct {
-	Messages []QPMessageV1 `json:"messages"`
-	Bot      QPBot         `json:"bot"`
+	Messages []WhatsappMessage `json:"messages"`
+	Bot      QPBot             `json:"bot"`
 }

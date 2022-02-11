@@ -21,15 +21,16 @@ func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	if server.Status != "ready" {
-		RespondNotReady(w, fmt.Errorf("bot not ready yet ! try later."))
+	status := server.GetStatus()
+	if status != Ready {
+		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
 
 	queryValues := r.URL.Query()
 	timestamp := queryValues.Get("timestamp")
 
-	messages, err := RetrieveMessages(server.GetWid(), timestamp)
+	messages, err := GetMessages(server, timestamp)
 	if err != nil {
 		MessageReceiveErrors.Inc()
 		RespondServerError(server, w, err)

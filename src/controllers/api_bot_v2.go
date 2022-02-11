@@ -132,45 +132,6 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	RespondSuccess(w, response)
 }
 
-// ReceiveAPIHandler renders route GET "/v1/bot/{token}/receive"
-func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
-	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
-	if err != nil {
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
-		return
-	}
-
-	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	if server.Status != "ready" {
-		RespondNotReady(w, fmt.Errorf("bot not ready yet ! try later."))
-		return
-	}
-
-	queryValues := r.URL.Query()
-	timestamp := queryValues.Get("timestamp")
-
-	messages, err := RetrieveMessages(server.GetWid(), timestamp)
-	if err != nil {
-		MessageReceiveErrors.Inc()
-		RespondServerError(server, w, err)
-		return
-	}
-
-	MessagesReceived.Add(float64(len(messages)))
-
-	out := QPFormReceiveResponse{
-		Bot:      *server.Bot,
-		Messages: messages,
-	}
-
-	RespondSuccess(w, out)
-}
-
 // AttachmentHandler renders route POST "/v1/bot/{token}/attachment"
 func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
@@ -181,8 +142,9 @@ func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	if server.Status != "ready" {
-		RespondNotReady(w, fmt.Errorf("bot not ready yet ! try later."))
+	status := server.GetStatus()
+	if status != Ready {
+		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
 
