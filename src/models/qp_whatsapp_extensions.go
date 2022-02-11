@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"
@@ -86,7 +87,7 @@ func GetDownloadPrefixFromWid(wid string) (path string, err error) {
 	return prefix, err
 }
 
-func ToQPAttachment(source WhatsappAttachment, id string, wid string) (attach *QPAttachment) {
+func ToQPAttachment(source *WhatsappAttachment, id string, wid string) (attach *QPAttachment) {
 
 	// Anexo que devolverá ao utilizador da api, cliente final
 	// com Url pública válida sem criptografia
@@ -103,7 +104,16 @@ func ToQPAttachment(source WhatsappAttachment, id string, wid string) (attach *Q
 }
 
 func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
-	endpoint.ID = source.ID
+	WhatsappID := source.ID
+	if !strings.Contains(WhatsappID, "@") {
+		if strings.Contains(WhatsappID, "-") {
+			WhatsappID = WhatsappID + "@g.us"
+		} else {
+			WhatsappID = WhatsappID + "@s.whatsapp.net"
+		}
+	}
+
+	endpoint.ID = WhatsappID
 	endpoint.Title = source.Title
 	if len(endpoint.Title) == 0 {
 		endpoint.Title = source.UserName
@@ -113,7 +123,16 @@ func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
 }
 
 func ChatToQPEndPoint(source WhatsappChat) (endpoint QPEndPoint) {
-	endpoint.ID = source.ID
+	WhatsappID := source.ID
+	if !strings.Contains(WhatsappID, "@") {
+		if strings.Contains(WhatsappID, "-") {
+			WhatsappID = WhatsappID + "@g.us"
+		} else {
+			WhatsappID = WhatsappID + "@s.whatsapp.net"
+		}
+	}
+
+	endpoint.ID = WhatsappID
 	endpoint.Title = source.Title
 	return
 }
@@ -129,7 +148,7 @@ func ToWhatsappMessage(destination string, text string, attach *WhatsappAttachme
 	msg.Text = text
 	msg.Chat = chat
 	if attach != nil {
-		msg.Attachment = *attach
+		msg.Attachment = attach
 	}
 	return
 

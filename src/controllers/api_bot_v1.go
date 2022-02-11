@@ -73,8 +73,9 @@ func ReceiveAPIHandlerV1(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	if server.Status != "ready" {
-		RespondNotReady(w, fmt.Errorf("bot not ready yet ! try later."))
+	status := server.GetStatus()
+	if status != Ready {
+		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
 
@@ -90,7 +91,7 @@ func ReceiveAPIHandlerV1(w http.ResponseWriter, r *http.Request) {
 
 	MessagesReceived.Add(float64(len(messages)))
 
-	out := QPFormReceiveResponse{
+	out := QPFormReceiveResponseV1{
 		Bot:      *server.Bot,
 		Messages: messages,
 	}

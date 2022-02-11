@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -13,25 +12,26 @@ import (
 func FormReceiveController(w http.ResponseWriter, r *http.Request) {
 	data := QPFormReceiveData{PageTitle: "Receive", FormAccountEndpoint: FormAccountEndpoint}
 
-	bot, err := GetBotFromRequest(r)
+	server, err := GetServerFromRequest(r)
 	if err != nil {
 		data.ErrorMessage = err.Error()
 	} else {
-		data.Number = bot.GetNumber()
-		data.Token = bot.Token
-		data.DownloadPrefix = GetDownloadPrefix(bot.Token)
+		data.Number = server.GetWid()
+		data.Token = server.Bot.Token
+		data.DownloadPrefix = GetDownloadPrefix(server.Bot.Token)
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	if bot.GetStatus() != "ready" {
-		RespondNotReady(w, fmt.Errorf("bot not ready yet ! try later."))
+	status := server.GetStatus()
+	if status != Ready {
+		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
 
 	queryValues := r.URL.Query()
 	timestamp := queryValues.Get("timestamp")
 
-	messages, err := RetrieveMessages(bot.ID, timestamp)
+	messages, err := GetMessagesV1(server.Bot, timestamp)
 	if err != nil {
 		MessageReceiveErrors.Inc()
 		data.ErrorMessage = err.Error()

@@ -1,8 +1,9 @@
 package models
 
 import (
-	"log"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Serviço que controla os servidores / bots individuais do whatsapp
@@ -37,16 +38,21 @@ func (service *QPWhatsappService) AppendNewServer(bot *QPBot) {
 	service.Sync.Lock()
 
 	// Cria um novo servidor
-	server := NewQPWhatsappServer(bot)
-
-	// Adiciona na lista de servidores
-	service.Servers[bot.ID] = server
-
+	server, err := NewQPWhatsappServer(bot)
+	if err != nil {
+		log.Error(err, "error on append new server")
+		bot.MarkVerified(false)
+	} else {
+		// Adiciona na lista de servidores
+		service.Servers[bot.ID] = server
+	}
 	// Destrava simultaneos
 	service.Sync.Unlock()
 
 	// Inicializa o servidor
-	go server.Initialize()
+	if server != nil {
+		go server.Initialize()
+	}
 }
 
 // Função privada que irá iniciar todos os servidores apartir do banco de dados

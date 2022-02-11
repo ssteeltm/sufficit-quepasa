@@ -38,7 +38,7 @@ func (source *QPMessageV1) ToV2() *QPMessageV2 {
 	message.Participant = source.Participant
 	message.FromMe = source.FromMe
 	message.Text = source.Text
-	message.Attachment = *source.Attachment
+	message.Attachment = source.Attachment
 	message.Chat = source.ReplyTo.ToQPChatV2()
 
 	return message

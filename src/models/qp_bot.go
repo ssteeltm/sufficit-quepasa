@@ -30,15 +30,10 @@ func (bot *QPBot) GetNumber() string {
 func (bot *QPBot) GetStatus() string {
 	server, err := GetServerFromBot(*bot)
 	if err != nil {
-		return "stopped"
+		return Unknown.String()
 	}
 
-	status, description := server.GetState()
-	if status > 0 {
-		return description
-	}
-
-	return "running"
+	return server.GetStatus().String()
 }
 
 func (bot *QPBot) GetTimestamp() (timestamp uint64) {
@@ -76,7 +71,7 @@ func (bot *QPBot) Toggle() (err error) {
 	if err != nil {
 		go WhatsAppService.AppendNewServer(bot)
 	} else {
-		if server.Status == "stopped" || server.Status == "created" {
+		if server.GetStatus() == Stopped || server.GetStatus() == Created {
 			err = server.Start()
 		} else {
 			err = server.Shutdown()

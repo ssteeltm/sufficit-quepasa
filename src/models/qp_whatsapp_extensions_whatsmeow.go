@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 )
@@ -15,7 +17,12 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	message.Text = source.Text
 	message.FromMe = source.FromMe
 
-	message.Controller = QPEndPoint{ID: wid}
+	WhatsappID := wid
+	if !strings.Contains(WhatsappID, "@") {
+		WhatsappID = WhatsappID + "@s.whatsapp.net"
+	}
+
+	message.Controller = QPEndPoint{ID: WhatsappID}
 	message.ReplyTo = ChatToQPEndPoint(source.Chat)
 
 	if (WhatsappEndpoint{}) != source.Participant {
@@ -23,7 +30,7 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	}
 
 	if source.HasAttachment() {
-		message.Attachment = ToQPAttachment(source.Attachment, message.ID, wid)
+		message.Attachment = ToQPAttachment(source.Attachment, message.ID, WhatsappID)
 	}
 
 	return

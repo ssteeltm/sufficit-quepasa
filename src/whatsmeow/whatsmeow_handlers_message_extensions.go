@@ -36,7 +36,7 @@ func HandleImageMessage(out *WhatsappMessage, in *ImageMessage) {
 	}
 
 	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
-	out.Attachment = WhatsappAttachment{
+	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
 
@@ -54,7 +54,7 @@ func HandleVideoMessage(out *WhatsappMessage, in *VideoMessage) {
 	}
 
 	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
-	out.Attachment = WhatsappAttachment{
+	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
 
@@ -68,7 +68,7 @@ func HandleDocumentMessage(out *WhatsappMessage, in *DocumentMessage) {
 	out.Text = *in.Title
 
 	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
-	out.Attachment = WhatsappAttachment{
+	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
 
@@ -80,7 +80,7 @@ func HandleDocumentMessage(out *WhatsappMessage, in *DocumentMessage) {
 func HandleAudioMessage(out *WhatsappMessage, in *AudioMessage) {
 	log.Debug("Received an audio message !")
 	out.Content = in
-	out.Attachment = WhatsappAttachment{
+	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
 

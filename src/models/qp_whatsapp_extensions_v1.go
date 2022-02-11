@@ -37,7 +37,7 @@ func ToWhatsappMessageV1(source *QPSendRequestV1) (msg *WhatsappMessage, err err
 	msg.Text = source.Message
 	msg.Chat = chat
 	if attach != nil {
-		msg.Attachment = *attach
+		msg.Attachment = attach
 	}
 	return
 }
