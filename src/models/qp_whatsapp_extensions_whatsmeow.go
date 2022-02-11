@@ -17,12 +17,12 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	message.Text = source.Text
 	message.FromMe = source.FromMe
 
-	WhatsappID := wid
-	if !strings.Contains(WhatsappID, "@") {
-		WhatsappID = WhatsappID + "@s.whatsapp.net"
+	if !strings.Contains(wid, "@") {
+		message.Controller = QPEndPoint{ID: wid + "@c.us"}
+	} else {
+		message.Controller = QPEndPoint{ID: wid}
 	}
 
-	message.Controller = QPEndPoint{ID: WhatsappID}
 	message.ReplyTo = ChatToQPEndPoint(source.Chat)
 
 	if (WhatsappEndpoint{}) != source.Participant {
@@ -30,7 +30,7 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	}
 
 	if source.HasAttachment() {
-		message.Attachment = ToQPAttachment(source.Attachment, message.ID, WhatsappID)
+		message.Attachment = ToQPAttachment(source.Attachment, message.ID, wid)
 	}
 
 	return
