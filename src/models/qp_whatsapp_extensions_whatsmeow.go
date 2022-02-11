@@ -17,10 +17,11 @@ func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
 	message.Text = source.Text
 	message.FromMe = source.FromMe
 
+	message.Controller = QPEndpointV2{}
 	if !strings.Contains(wid, "@") {
-		message.Controller = QPEndpointV2{ID: wid + "@c.us"}
+		message.Controller.ID = wid + "@c.us"
 	} else {
-		message.Controller = QPEndpointV2{ID: wid}
+		message.Controller.ID = wid
 	}
 
 	message.ReplyTo = ChatToQPEndPointV2(source.Chat)
@@ -43,10 +44,11 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 	message.Text = source.Text
 	message.FromMe = source.FromMe
 
+	message.Controller = QPEndpointV1{}
 	if !strings.Contains(wid, "@") {
-		message.Controller = QPEndpointV1{ID: wid + "@c.us"}
+		message.Controller.ID = wid + "@c.us"
 	} else {
-		message.Controller = QPEndpointV1{ID: wid}
+		message.Controller.ID = wid
 	}
 
 	message.ReplyTo = ChatToQPEndPointV1(source.Chat)
