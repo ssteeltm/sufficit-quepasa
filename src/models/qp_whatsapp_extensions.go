@@ -103,7 +103,7 @@ func ToQPAttachment(source *WhatsappAttachment, id string, wid string) (attach *
 	return
 }
 
-func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
+func ToQPEndPointV1(source WhatsappEndpoint) (endpoint QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
 		if strings.Contains(source.ID, "-") {
 			endpoint.ID = source.ID + "@g.us"
@@ -121,13 +121,58 @@ func ToQPEndPoint(source WhatsappEndpoint) (endpoint QPEndPoint) {
 	return
 }
 
-func ChatToQPEndPoint(source WhatsappChat) (endpoint QPEndPoint) {
+func ToQPEndPointV2(source WhatsappEndpoint) (endpoint QPEndpointV2) {
+	if !strings.Contains(source.ID, "@") {
+		if strings.Contains(source.ID, "-") {
+			endpoint.ID = source.ID + "@g.us"
+		} else {
+			endpoint.ID = source.ID + "@s.whatsapp.net"
+			endpoint.UserName = "+" + source.ID
+		}
+	}
+
+	endpoint.Title = source.Title
+	if len(endpoint.Title) == 0 {
+		endpoint.Title = source.UserName
+	}
+
+	return
+}
+
+func ChatToQPEndPointV1(source WhatsappChat) (endpoint QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
 		if strings.Contains(source.ID, "-") {
 			endpoint.ID = source.ID + "@g.us"
 		} else {
 			endpoint.ID = source.ID + "@s.whatsapp.net"
 			endpoint.Phone = "+" + source.ID
+		}
+	}
+
+	endpoint.Title = source.Title
+	return
+}
+
+func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
+	if !strings.Contains(source.ID, "@") {
+		if strings.Contains(source.ID, "-") {
+			destination.ID = source.ID + "@g.us"
+		} else {
+			destination.ID = source.ID + "@s.whatsapp.net"
+		}
+	}
+
+	destination.Title = source.Title
+	return
+}
+
+func ChatToQPEndPointV2(source WhatsappChat) (endpoint QPEndpointV2) {
+	if !strings.Contains(source.ID, "@") {
+		if strings.Contains(source.ID, "-") {
+			endpoint.ID = source.ID + "@g.us"
+		} else {
+			endpoint.ID = source.ID + "@s.whatsapp.net"
+			endpoint.UserName = "+" + source.ID
 		}
 	}
 

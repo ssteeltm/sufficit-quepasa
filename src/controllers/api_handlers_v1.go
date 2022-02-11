@@ -10,7 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 const APIVersion1 string = "v1"
@@ -42,14 +41,14 @@ func InformationControllerV1(w http.ResponseWriter, r *http.Request) {
 
 	wid := server.GetWid()
 
-	var ep WhatsappEndpoint
+	var ep QPEndpointV1
 	if !strings.Contains(wid, "@") {
 		ep.ID = wid + "@c.us"
 	} else {
 		ep.ID = wid
 	}
 
-	ep.UserName = server.Bot.GetNumber()
+	ep.Phone = server.Bot.GetNumber()
 	RespondSuccess(w, ep)
 }
 

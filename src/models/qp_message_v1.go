@@ -6,13 +6,13 @@ type QPMessageV1 struct {
 	QPMessageInfo
 
 	// Whatsapp que gerencia a bagaça toda
-	Controller QPEndPoint `json:"controller"`
+	Controller QPEndpointV1 `json:"controller"`
 
 	// Endereço garantido que deve receber uma resposta
-	ReplyTo QPEndPoint `json:"replyto"`
+	ReplyTo QPEndpointV1 `json:"replyto"`
 
 	// Se a msg foi postado em algum grupo ? quem postou !
-	Participant QPEndPoint `json:"participant,omitempty"`
+	Participant QPEndpointV1 `json:"participant,omitempty"`
 
 	// Fui eu quem enviou a msg ?
 	FromMe bool `json:"fromme"`
@@ -33,9 +33,9 @@ func (source *QPMessageV1) ToV2() *QPMessageV2 {
 	message := &QPMessageV2{}
 	message.ID = source.ID
 	message.Timestamp = source.Timestamp
-	message.Controller = source.Controller
-	message.ReplyTo = source.ReplyTo
-	message.Participant = source.Participant
+	message.Controller = source.Controller.GetQPEndPointV2()
+	message.ReplyTo = source.ReplyTo.GetQPEndPointV2()
+	message.Participant = source.Participant.GetQPEndPointV2()
 	message.FromMe = source.FromMe
 	message.Text = source.Text
 	message.Attachment = source.Attachment
