@@ -18,7 +18,7 @@ func RegisterAPIV2Controllers(r chi.Router) {
 	r.Post(ControllerPrefixV2+"/senddocument", SendDocumentAPIHandlerV2)
 	r.Get(ControllerPrefixV2+"/receive", ReceiveAPIHandlerV1)
 	r.Post(ControllerPrefixV2+"/attachment", AttachmentAPIHandlerV2)
-	r.Post(ControllerPrefixV2+"/webhook", WebhookController)
+	r.Post(ControllerPrefixV2+"/webhook", WebhookControllerV1)
 }
 
 //region CONTROLLER - INFORMATION
