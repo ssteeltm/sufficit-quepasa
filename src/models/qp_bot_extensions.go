@@ -25,7 +25,7 @@ func ToQPBotV1(source *QPBot) (destination *QPBotV1) {
 	}
 
 	if !strings.Contains(destination.ID, "@") {
-		destination.ID = destination.ID + "@s.whatsapp.net"
+		destination.ID = destination.ID + "@c.us"
 	}
 	return
 }

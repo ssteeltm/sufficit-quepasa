@@ -12,6 +12,46 @@ import (
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
+// Renders route GET "/{version}/bot/{token}/receive"
+func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
+
+	// setting default reponse type as json
+	w.Header().Set("Content-Type", "application/json")
+
+	token := chi.URLParam(r, "token")
+	server, err := GetServerFromToken(token)
+	if err != nil {
+		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
+		return
+	}
+
+	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
+	status := server.GetStatus()
+	if status != Ready {
+		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
+		return
+	}
+
+	queryValues := r.URL.Query()
+	timestamp := queryValues.Get("timestamp")
+
+	messages, err := GetMessagesV2(server.Bot, timestamp)
+	if err != nil {
+		MessageReceiveErrors.Inc()
+		RespondServerError(server, w, err)
+		return
+	}
+
+	MessagesReceived.Add(float64(len(messages)))
+
+	out := QPFormReceiveResponseV2{
+		Bot:      *ToQPBotV1(server.Bot),
+		Messages: messages,
+	}
+
+	RespondSuccess(w, out)
+}
+
 // SendAPIHandler renders route "/v2/bot/{token}/send"
 func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
