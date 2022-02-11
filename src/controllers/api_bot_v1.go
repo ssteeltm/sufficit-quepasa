@@ -92,7 +92,7 @@ func ReceiveAPIHandlerV1(w http.ResponseWriter, r *http.Request) {
 	MessagesReceived.Add(float64(len(messages)))
 
 	out := QPFormReceiveResponseV1{
-		Bot:      *server.Bot,
+		Bot:      *ToQPBotV1(server.Bot),
 		Messages: messages,
 	}
 
