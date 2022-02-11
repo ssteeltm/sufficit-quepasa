@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi"
 	log "github.com/sirupsen/logrus"
@@ -32,16 +33,23 @@ func InformationControllerV1(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	token := chi.URLParam(r, "token")
-	bot, err := WhatsAppService.DB.Bot.FindByToken(token)
+	server, err := GetServerFromToken(token)
 	if err != nil {
 		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
 		return
 	}
 
+	wid := server.GetWid()
+
 	var ep QPEndPoint
-	ep.ID = bot.ID
-	ep.Phone = bot.GetNumber()
-	if bot.Verified {
+	if !strings.Contains(wid, "@") {
+		ep.ID = wid + "@s.whatsapp.net"
+	} else {
+		ep.ID = wid
+	}
+
+	ep.Phone = server.Bot.GetNumber()
+	if server.Bot.Verified {
 		ep.Status = "verified"
 	} else {
 		ep.Status = "unverified"
