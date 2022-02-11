@@ -21,7 +21,7 @@ type QPMessageV1 struct {
 	// Texto da msg
 	Text string `json:"text"`
 
-	Attachment *QPAttachment `json:"attachment,omitempty"`
+	Attachment *QPAttachmentV1 `json:"attachment,omitempty"`
 }
 
 type ByTimestampV1 []QPMessageV1
@@ -59,7 +59,7 @@ func (source *QPMessageV1) GetChatID() string {
 func (source *QPMessageV1) HasAttachment() bool {
 	// this attachment is a pointer to correct show info on deserialized
 	attach := source.Attachment
-	return attach != nil && len(attach.DirectPath) > 0
+	return attach != nil && attach.Length > 0
 }
 
 //endregion

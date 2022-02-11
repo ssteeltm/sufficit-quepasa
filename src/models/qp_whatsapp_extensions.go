@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 
@@ -87,19 +86,21 @@ func GetDownloadPrefixFromWid(wid string) (path string, err error) {
 	return prefix, err
 }
 
-func ToQPAttachment(source *WhatsappAttachment, id string, wid string) (attach *QPAttachment) {
+func ToQPAttachmentV1(source *WhatsappAttachment, id string, wid string) (attach *QPAttachmentV1) {
 
 	// Anexo que devolverá ao utilizador da api, cliente final
 	// com Url pública válida sem criptografia
-	attach = &QPAttachment{}
+	attach = &QPAttachmentV1{}
+	attach.MIME = source.Mimetype
+	attach.FileName = source.FileName
+	attach.Length = source.FileLength
 
-	copier.Copy(attach, source)
 	url, err := GetDownloadPrefixFromWid(wid)
 	if err != nil {
 		return
 	}
 
-	attach.DirectPath = url + "/" + id
+	attach.Url = url + "/" + id
 	return
 }
 
