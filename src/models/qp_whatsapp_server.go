@@ -165,7 +165,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 	} else {
 
 		// Registrando webhook
-		webhookDispatcher := QPWebhookHandlerV1{Server: server}
+		webhookDispatcher := QPWebhookHandlerV2{Server: server}
 		server.Handler.Register(webhookDispatcher)
 
 		// Atualizando manipuladores de eventos
