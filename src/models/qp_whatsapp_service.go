@@ -8,46 +8,60 @@ import (
 
 // Serviço que controla os servidores / bots individuais do whatsapp
 type QPWhatsappService struct {
-	Servers map[string]*QPWhatsappServer
-	DB      *QPDatabase
-	Sync    *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
+	Servers     map[string]*QPWhatsappServer
+	DB          *QPDatabase
+	Initialized bool
+
+	initlock   *sync.Mutex
+	appendlock *sync.Mutex
 }
 
-var WhatsAppService *QPWhatsappService
+var WhatsappService *QPWhatsappService
 
-func QPWhatsAppStart() {
-	log.Println("Starting WhatsApp Service ....")
+func QPWhatsappStart() (err error) {
+	if WhatsappService == nil {
+		log.Trace("starting whatsapp service ....")
 
-	servers := make(map[string]*QPWhatsappServer)
-	sync := &sync.Mutex{}
-	db := *GetDatabase()
-	WhatsAppService = &QPWhatsappService{servers, &db, sync}
+		servers := make(map[string]*QPWhatsappServer)
+		db := GetDatabase()
+		WhatsappService = &QPWhatsappService{
+			Servers:    servers,
+			DB:         db,
+			initlock:   &sync.Mutex{},
+			appendlock: &sync.Mutex{},
+		}
 
-	// iniciando servidores e cada bot individualmente
-	err := WhatsAppService.initService()
-	if err != nil {
-		log.Printf("Problema ao instanciar bots .... %s", err)
+		// iniciando servidores e cada bot individualmente
+		err = WhatsappService.Initialize()
+	} else {
+		log.Debug("attempt to start whatsapp service, already started ...")
 	}
+	return
 }
 
 // Inclui um novo servidor em um serviço já em andamento
 // *Usado quando se passa pela verificação do QRCode
 // *Usado quando se inicializa o sistema
 func (service *QPWhatsappService) AppendNewServer(bot *QPBot) {
+
 	// Trava simultaneos
-	service.Sync.Lock()
+	service.appendlock.Lock()
+
+	// Vinculando base de dados
+	bot.db = service.DB.Bot
 
 	// Cria um novo servidor
 	server, err := NewQPWhatsappServer(bot)
 	if err != nil {
 		log.Error(err, "error on append new server")
-		bot.MarkVerified(false)
+		bot.UpdateVerified(false)
 	} else {
 		// Adiciona na lista de servidores
 		service.Servers[bot.ID] = server
 	}
-	// Destrava simultaneos
-	service.Sync.Unlock()
+
+	// Trava simultaneos
+	service.appendlock.Unlock()
 
 	// Inicializa o servidor
 	if server != nil {
@@ -55,20 +69,38 @@ func (service *QPWhatsappService) AppendNewServer(bot *QPBot) {
 	}
 }
 
-// Função privada que irá iniciar todos os servidores apartir do banco de dados
-func (service *QPWhatsappService) initService() error {
-	bots, err := service.DB.Bot.FindAll()
-	if err != nil {
-		return err
-	}
+// Função que irá iniciar todos os servidores apartir do banco de dados
+func (service *QPWhatsappService) Initialize() (err error) {
+	// Trava simultaneos
+	service.initlock.Lock()
 
-	for _, bot := range bots {
+	if !service.Initialized {
 
-		if !bot.Verified {
-
+		bots, err := service.DB.Bot.FindAll()
+		if err != nil {
+			return err
 		}
-		service.AppendNewServer(bot)
+
+		for _, bot := range bots {
+			service.AppendNewServer(bot)
+		}
+
+		service.Initialized = true
 	}
 
-	return nil
+	// Destrava simultaneos
+	service.initlock.Unlock()
+
+	return
+}
+
+// Função privada que irá iniciar todos os servidores apartir do banco de dados
+func (service *QPWhatsappService) GetServersForUser(userid string) (servers map[string]*QPWhatsappServer) {
+	servers = make(map[string]*QPWhatsappServer)
+	for _, server := range service.Servers {
+		if server.GetOwnerID() == userid {
+			servers[server.GetWid()] = server
+		}
+	}
+	return
 }

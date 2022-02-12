@@ -117,9 +117,8 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		log.Printf("(%s) Updating Webhook: %s", server.Bot.GetNumber(), p.Url)
 	}
 
-	server.Bot.WebHook = p.Url
 	// Atualizando banco de dados
-	if err := server.Bot.WebHookUpdate(); err != nil {
+	if err := server.SetWebhook(p.Url); err != nil {
 		return
 	}
 

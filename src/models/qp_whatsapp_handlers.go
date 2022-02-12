@@ -16,15 +16,24 @@ type QPWhatsappHandlers struct {
 
 	// Appended events handler
 	aeh []interface{ Handle(WhatsappMessage) }
+
+	//filters
+	HandleGroups    bool
+	HandleBroadcast bool
 }
 
 //region CONTRUCTORS
 
 // Create a new QuePasa WhatsApp Event Handler
-func NewQPWhatsappHandlers() (handler *QPWhatsappHandlers) {
+func NewQPWhatsappHandlers(groups bool, broadcast bool) (handler *QPWhatsappHandlers) {
 	handlerMessages := make(map[string]WhatsappMessage)
 	handlerSync := &sync.Mutex{}
-	handler = &QPWhatsappHandlers{messages: handlerMessages, sync: handlerSync}
+	handler = &QPWhatsappHandlers{
+		messages:        handlerMessages,
+		sync:            handlerSync,
+		HandleGroups:    groups,
+		HandleBroadcast: broadcast,
+	}
 	return
 }
 
@@ -32,6 +41,16 @@ func NewQPWhatsappHandlers() (handler *QPWhatsappHandlers) {
 //region EVENTS FROM WHATSAPP SERVICE
 
 func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
+
+	// skipping groups if choosed
+	if !handler.HandleGroups && msg.FromGroup() {
+		return
+	}
+
+	// skipping broadcast if choosed
+	if !handler.HandleBroadcast && msg.FromBroadcast() {
+		return
+	}
 
 	log.Trace("msg recebida/(enviada por outro meio) em models: %s", msg.ID)
 

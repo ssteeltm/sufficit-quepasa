@@ -68,20 +68,68 @@ func (source QPBotPostgres) Create(botID string, userID string) (QPBot, error) {
 	return source.FindForUser(userID, botID)
 }
 
-func (source QPBotPostgres) MarkVerified(id string, ok bool) error {
+//region SINGLE UPDATES
+
+/*
+UpdateToken(id string, value string) error
+UpdateGroups(id string, value bool) error
+UpdateBroadcast(id string, value bool) error
+UpdateVerified(id string, value bool) error
+UpdateWebhook(id string, value string) error
+UpdateDevel(id string, value bool) error
+UpdateVersion(id string, value string) error
+*/
+
+func (source QPBotPostgres) UpdateToken(id string, value string) error {
 	now := time.Now()
-	query := "UPDATE bots SET is_verified = $1, updated_at = $2 WHERE id = $3"
-	_, err := source.db.Exec(query, ok, now, id)
+	query := "UPDATE bots SET token = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
 	return err
 }
 
-func (source QPBotPostgres) CycleToken(id string) error {
-	token := uuid.New().String()
+func (source QPBotPostgres) UpdateGroups(id string, value bool) error {
 	now := time.Now()
-	query := "UPDATE bots SET token = $1, updated_at = $2 WHERE id = $3"
-	_, err := source.db.Exec(query, token, now, id)
+	query := "UPDATE bots SET handlegroups = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
 	return err
 }
+
+func (source QPBotPostgres) UpdateBroadcast(id string, value bool) error {
+	now := time.Now()
+	query := "UPDATE bots SET handlebroadcast = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
+	return err
+}
+
+func (source QPBotPostgres) UpdateVerified(id string, value bool) error {
+	now := time.Now()
+	query := "UPDATE bots SET is_verified = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
+	return err
+}
+
+func (source QPBotPostgres) UpdateWebhook(id string, value string) error {
+	now := time.Now()
+	query := "UPDATE bots SET webhook = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
+	return err
+}
+
+func (source QPBotPostgres) UpdateDevel(id string, value bool) error {
+	now := time.Now()
+	query := "UPDATE bots SET devel = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
+	return err
+}
+
+func (source QPBotPostgres) UpdateVersion(id string, value string) error {
+	now := time.Now()
+	query := "UPDATE bots SET version = $1, updated_at = $2 WHERE id = $3"
+	_, err := source.db.Exec(query, value, now, id)
+	return err
+}
+
+//endregion
 
 func (source QPBotPostgres) Delete(id string) error {
 	query := "DELETE FROM bots WHERE id = $1"
@@ -89,28 +137,7 @@ func (source QPBotPostgres) Delete(id string) error {
 	return err
 }
 
-func (source QPBotPostgres) WebHookUpdate(webhook string, id string) error {
-	now := time.Now()
-	query := "UPDATE bots SET webhook = $1, updated_at = $2 WHERE id = $3"
-	_, err := source.db.Exec(query, webhook, now, id)
-	return err
-}
-
 func (source QPBotPostgres) WebHookSincronize(id string) (result string, err error) {
 	err = source.db.Get(&result, "SELECT webhook FROM bots WHERE id = $1", id)
 	return result, err
-}
-
-func (source QPBotPostgres) Devel(id string, status bool) (err error) {
-	now := time.Now()
-	query := "UPDATE bots SET devel = $1, updated_at = $2 WHERE id = $3"
-	_, err = source.db.Exec(query, status, now, id)
-	return err
-}
-
-func (source QPBotPostgres) SetVersion(id string, version string) (err error) {
-	now := time.Now()
-	query := "UPDATE bots SET version = $1, updated_at = $2 WHERE id = $3"
-	_, err = source.db.Exec(query, version, now, id)
-	return err
 }

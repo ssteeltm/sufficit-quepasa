@@ -10,12 +10,14 @@ type IQPBot interface {
 	Create(botID string, userID string) (QPBot, error)
 
 	/// FORWARDING ---
-	MarkVerified(id string, ok bool) error
-	CycleToken(id string) error
-	Delete(id string) error
-	WebHookUpdate(webhook string, id string) error
-	WebHookSincronize(id string) (result string, err error)
-	Devel(id string, status bool) error
+	UpdateToken(id string, value string) error
+	UpdateGroups(id string, value bool) error
+	UpdateBroadcast(id string, value bool) error
+	UpdateVerified(id string, value bool) error
+	UpdateWebhook(id string, value string) error
+	UpdateDevel(id string, value bool) error
+	UpdateVersion(id string, value string) error
 
-	SetVersion(id string, version string) (err error)
+	Delete(id string) error
+	WebHookSincronize(id string) (result string, err error)
 }

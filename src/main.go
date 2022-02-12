@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
-	"github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/models"
 	"github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 
 	log "github.com/sirupsen/logrus"
@@ -23,7 +23,7 @@ func main() {
 	log.SetLevel(log.InfoLevel)
 
 	// Verifica se é necessario realizar alguma migração de base de dados
-	err := models.MigrateToLatest()
+	err := MigrateToLatest()
 	if err != nil {
 		log.Fatalf("Database migration error: %s", err.Error())
 	}
@@ -32,7 +32,10 @@ func main() {
 
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona
-	go models.QPWhatsAppStart()
+	err = QPWhatsappStart()
+	if err != nil {
+		panic(err.Error())
+	}
 
 	go func() {
 		m := chi.NewRouter()

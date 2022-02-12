@@ -23,25 +23,27 @@
         </tr>
         </thead>
         <tbody>
-        {{ range .Bots }}   
+        {{ range .Servers }}   
           <tr>
             <td>
               <span title="{{ .GetStartedTime }}">{{ .GetNumber }}</span>
             </td>
             <td>
-              {{ if .Verified }}
-              <span class="icon has-text-success"><i class="fas fa-check-square"></i> </span> verified
-              {{ else }}
-              <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i></span>
-              {{ end }}
+              <span class="button" disabled>
+                {{ if .Verified }}
+                  <span class="icon has-text-success"><i class="fas fa-check-square"></i></span>
+                {{ else }}
+                  <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i></span>
+                {{ end }}
+              </span>
             </td>
             <td>
-              <code>{{ .Token }}</code>
+              <small><code>{{ .Token }}</code></small>
             </td>
             <td style="text-align: center;">              
               <div class="field has-addons">
                 <p class="control">
-                  <form class="" method="post" action="/form/bot/cycle">
+                  <form class="" method="post" action="/form/cycle">
                     <input name="botID" type="hidden" value="{{ .ID }}">
                     <button class="button is-primary is-outlined" title="Reset the token">
                       <span class="icon is-small is-inline"><i class="fa fa-sync"></i></span>
@@ -51,7 +53,7 @@
                 {{ if .Verified }}
                   {{ if .IsDevelopmentGlobal }}
                     <p class="control"> 
-                      <form class="" method="post" action="/form/bot/debug">
+                      <form class="" method="post" action="/form/debug">
                         <input name="botID" type="hidden" value="{{ .ID }}">
                         <button class="button is-warning {{ if .Devel }}is-hovered{{ else }}is-outlined{{ end }}" title="Toggle Debug for this bot">
                           <span class="icon is-small is-inline"><i class="fa fa-bug"></i></span>
@@ -60,19 +62,38 @@
                     </p>
                   {{ end }}
                   <p class="control"> 
-                    <form class="" method="post" action="/form/bot/toggle">
+                    <form class="" method="post" action="/form/toggle">
                       <input name="botID" type="hidden" value="{{ .ID }}">
-                      <button class="button is-danger {{ if eq .GetStatus "Stopped" }}is-hovered{{ else }}is-outlined{{ end }}" title="Toggle Running state for this bot">
-                        <span class="icon is-small is-inline"><i class="fa fa-{{ if eq .GetStatus "Stopped" }}play{{ else }}stop{{ end }}-circle"></i></span>
+                      <button class="button is-danger {{ if eq .GetStatusString "Stopped" }}is-hovered{{ else }}is-outlined{{ end }}" title="Toggle Running state for this bot">
+                        <span class="icon is-small is-inline"><i class="fa fa-{{ if eq .GetStatusString "Stopped" }}play{{ else }}stop{{ end }}-circle"></i></span>
+                      </button>
+                    </form>
+                  </p>
+                  <p>&nbsp;&nbsp;</p>
+                  <p class="control"> 
+                    <form class="" method="post" action="/form/togglebroadcast">
+                      <input name="botID" type="hidden" value="{{ .ID }}">
+                      <button class="button is-info {{ if .HandleBroadcast }}is-hovered{{ else }}is-outlined{{ end }}" title="Handle status messages">
+                        <span class="icon is-small is-inline"><i class="fa fa-comment-dots"></i></span>
+                      </button>
+                    </form>
+                  </p>
+                  <p>&nbsp;</p>
+                  <p class="control"> 
+                    <form class="" method="post" action="/form/togglegroups">
+                      <input name="botID" type="hidden" value="{{ .ID }}">
+                      <button class="button is-info {{ if .HandleGroups }}is-hovered{{ else }}is-outlined{{ end }}" title="Handle group messages">
+                        <span class="icon is-small is-inline"><i class="fa fa-comments"></i></span>
                       </button>
                     </form>
                   </p>
                 {{ end }}
                 <p>&nbsp;&nbsp;</p>
                 <p class="control">
-                  <form class="" method="post" action="/form/bot/delete">
+                  <form class="" method="post" action="/form/delete">
                     <input name="botID" type="hidden" value="{{ .ID }}">
                     <button class="button  is-danger is-outlined" title="Delete this bot">
+                      <i class="fa fa-trash"></i>&nbsp;&nbsp;
                       Delete
                     </button>
                   </form>
@@ -81,24 +102,30 @@
             </td>
             <td style="text-align: center;"> 
               <div class="field has-addons">
-                {{ if eq .GetStatus "Ready" }}               
+                {{ if eq .GetStatusString "Ready" }}               
                   <p class="control">
-                    <a href="/form/bot/{{ .ID }}/send" class="button" title="Send a message as this bot">
+                    <a href="/form/server/{{ .ID }}/send" class="button" title="Send a message as this bot">
+                      <i class="fa fa-paper-plane"></i>&nbsp;&nbsp;
                       Send
                     </a>
                   </p>
                   <p class="control">
-                    <a href="/form/bot/{{ .ID }}/receive" class="button" title="Receive messages for this bot">Receive</a>
+                    <a href="/form/server/{{ .ID }}/receive" class="button" title="Receive messages for this bot">
+                      <i class="fa fa-download"></i>&nbsp;&nbsp;
+                      Receive
+                    </a>
                   </p>
                 {{ end }}                
               </div>
             </td>
             <td style="text-align: center;">
-            {{ if .WebHook }}
-              <span class="icon has-text-success" title="{{ .WebHook }}"><i class="fas fa-check-square"></i> </span>
-              {{ else }}
-              <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i> </span>
-              {{ end }}
+              <span class="button" disabled>
+                {{ if .Webhook }}
+                  <span class="icon has-text-success" title="{{ .Webhook }}"><i class="fas fa-check-square"></i> </span>
+                  {{ else }}
+                  <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i> </span>
+                {{ end }}
+              </span>
             </td>
             <td>
               <span>{{ .GetBatteryInfo.Percentage }} % </span>
@@ -112,7 +139,7 @@
                 <span class="icon has-text-danger" title="power save mode !"><i class="fas fa-battery-empty"></i> </span>              
               {{ end }}              
             </td>
-            <td>{{ .GetStatus }}</td>
+            <td>{{ .GetStatusString }}</td>
             </tr>            
         {{ end }}
         </tbody>

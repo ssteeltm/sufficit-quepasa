@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -34,7 +35,7 @@ func WebSocketProtocol() string {
 //
 
 // CycleHandler renders route POST "/bot/cycle"
-func CycleHandler(w http.ResponseWriter, r *http.Request) {
+func FormCycleController(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUser(r)
 	if err != nil {
 		RedirectToLogin(w, r)
@@ -42,14 +43,15 @@ func CycleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	botID := r.Form.Get("botID")
-	bot, err := WhatsAppService.DB.Bot.FindForUser(user.ID, botID)
+	server, err := GetServerFromAuthenticatedRequest(user, r)
 	if err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
-	err = bot.CycleToken()
+	err = server.CycleToken()
 	if err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -57,7 +59,7 @@ func CycleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DebugHandler renders route POST "/bot/debug"
-func DebugHandler(w http.ResponseWriter, r *http.Request) {
+func FormDebugController(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUser(r)
 	if err != nil {
 		RedirectToLogin(w, r)
@@ -65,15 +67,15 @@ func DebugHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	botID := r.Form.Get("botID")
-	bot, err := WhatsAppService.DB.Bot.FindForUser(user.ID, botID)
+	server, err := GetServerFromAuthenticatedRequest(user, r)
 	if err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
-	err = bot.ToggleDevel()
+	err = server.ToggleDevel()
 	if err != nil {
-		log.Printf("(%s)(ERR) Debug Handler :: '%s',", bot.GetNumber(), err)
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -81,7 +83,7 @@ func DebugHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ToggleHandler renders route POST "/bot/toggle"
-func ToggleHandler(w http.ResponseWriter, r *http.Request) {
+func FormToggleController(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUser(r)
 	if err != nil {
 		RedirectToLogin(w, r)
@@ -89,15 +91,62 @@ func ToggleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	botID := r.Form.Get("botID")
-	bot, err := WhatsAppService.DB.Bot.FindForUser(user.ID, botID)
+	server, err := GetServerFromAuthenticatedRequest(user, r)
 	if err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
-	err = bot.Toggle()
+	err = server.Toggle()
 	if err != nil {
-		log.Print("(%s)(ERR) Toggle Handler :: '%s',", bot.GetNumber(), err)
+		RespondServerError(server, w, err)
+		return
+	}
+
+	http.Redirect(w, r, FormAccountEndpoint, http.StatusFound)
+}
+
+// ToggleHandler renders route POST "/bot/toggle"
+func FormToggleBroadcastController(w http.ResponseWriter, r *http.Request) {
+	user, err := GetUser(r)
+	if err != nil {
+		RedirectToLogin(w, r)
+		return
+	}
+
+	r.ParseForm()
+	server, err := GetServerFromAuthenticatedRequest(user, r)
+	if err != nil {
+		RespondServerError(server, w, err)
+		return
+	}
+
+	err = server.ToggleBroadcast()
+	if err != nil {
+		RespondServerError(server, w, err)
+		return
+	}
+
+	http.Redirect(w, r, FormAccountEndpoint, http.StatusFound)
+}
+
+func FormToggleGroupsController(w http.ResponseWriter, r *http.Request) {
+	user, err := GetUser(r)
+	if err != nil {
+		RedirectToLogin(w, r)
+		return
+	}
+
+	r.ParseForm()
+	server, err := GetServerFromAuthenticatedRequest(user, r)
+	if err != nil {
+		RespondServerError(server, w, err)
+		return
+	}
+
+	err = server.ToggleGroups()
+	if err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -227,7 +276,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 				log.Printf("(%s) SignInWithQRCode success ...", bot.GetNumber())
 
 				// Marking as verified
-				err = bot.MarkVerified(true)
+				err = bot.UpdateVerified(true)
 				if err != nil {
 					log.Printf("(%s)(ERR) Error on update verified state :: %s", bot.GetNumber(), err)
 				}
@@ -237,7 +286,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 					log.Printf("(%s)(ERR) Error on write complete message after qrcode verified :: %s", bot.GetNumber(), err)
 				}
 
-				go WhatsAppService.AppendNewServer(bot)
+				go WhatsappService.AppendNewServer(bot)
 				return
 			}
 		} else {
@@ -260,12 +309,12 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	botID := r.Form.Get("botID")
 
-	bot, err := WhatsAppService.DB.Bot.FindForUser(user.ID, botID)
+	bot, err := WhatsappService.DB.Bot.FindForUser(user.ID, botID)
 	if err != nil {
 		return
 	}
 
-	if err := WhatsAppService.DB.Store.Delete(bot.ID); err != nil {
+	if err := WhatsappService.DB.Store.Delete(bot.ID); err != nil {
 		return
 	}
 
@@ -289,12 +338,21 @@ func GetBotFromRequest(r *http.Request) (QPBot, error) {
 	}
 
 	botID := chi.URLParam(r, "id")
-
-	return WhatsAppService.DB.Bot.FindForUser(user.ID, botID)
+	return WhatsappService.DB.Bot.FindForUser(user.ID, botID)
 }
 
 // Returns bot from http form request using E164 id
 func GetServerFromRequest(r *http.Request) (*QPWhatsappServer, error) {
 	wid := chi.URLParam(r, "id")
 	return GetServerFromID(wid)
+}
+
+// Search for a server ID from an authenticated request
+func GetServerFromAuthenticatedRequest(user QPUser, r *http.Request) (server *QPWhatsappServer, err error) {
+	serverid := r.Form.Get("botID")
+	server, ok := GetServersForUser(user)[serverid]
+	if !ok {
+		err = fmt.Errorf("server not found")
+	}
+	return
 }

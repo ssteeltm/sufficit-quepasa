@@ -1,5 +1,9 @@
 package models
 
+import (
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+)
+
 // Parameters to be acessed/passed on Views (receive.tmpl)
 type QPFormReceiveData struct {
 	PageTitle           string
@@ -8,5 +12,5 @@ type QPFormReceiveData struct {
 	Token               string
 	DownloadPrefix      string
 	FormAccountEndpoint string
-	Messages            []QPMessageV1
+	Messages            []WhatsappMessage
 }

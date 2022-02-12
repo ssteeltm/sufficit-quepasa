@@ -45,7 +45,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := WhatsAppService.DB.User.Check(email, password)
+	user, err := WhatsappService.DB.User.Check(email, password)
 	if err != nil {
 		RespondUnauthorized(w, errors.New("Incorrect username or password"))
 		return

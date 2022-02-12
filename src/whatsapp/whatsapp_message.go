@@ -1,6 +1,7 @@
 package whatsapp
 
 import (
+	"strings"
 	"time"
 )
 
@@ -66,4 +67,12 @@ func (source *WhatsappMessage) HasAttachment() bool {
 
 func (source *WhatsappMessage) GetSource() interface{} {
 	return source.Content
+}
+
+func (source *WhatsappMessage) FromGroup() bool {
+	return strings.Contains(source.Chat.ID, "-")
+}
+
+func (source *WhatsappMessage) FromBroadcast() bool {
+	return source.Chat.ID == "status"
 }

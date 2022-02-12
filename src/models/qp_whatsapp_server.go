@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
@@ -33,6 +34,7 @@ func NewQPWhatsappServer(bot *QPBot) (server *QPWhatsappServer, err error) {
 	}
 
 	state := Created
+	handler := NewQPWhatsappHandlers(bot.HandleGroups, bot.HandleBroadcast)
 	server = &QPWhatsappServer{
 		Bot:            bot,
 		Connection:     connection,
@@ -41,7 +43,7 @@ func NewQPWhatsappServer(bot *QPBot) (server *QPWhatsappServer, err error) {
 		Status:         state,
 		Battery:        WhatsAppBateryStatus{},
 		Timestamp:      time.Now(),
-		Handler:        NewQPWhatsappHandlers(),
+		Handler:        handler,
 	}
 	return
 }
@@ -171,7 +173,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 		// Atualizando manipuladores de eventos
 		server.Connection.UpdateHandler(server.Handler)
 		if err != nil {
-			err = server.Bot.MarkVerified(false)
+			err = server.MarkVerified(false)
 			return
 		}
 
@@ -189,7 +191,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 			default:
 				if strings.Contains(err.Error(), "401") {
 					log.Printf("(%s) WhatsApp return a unauthorized state, please verify again", server.Bot.GetNumber())
-					err = server.Bot.MarkVerified(false)
+					err = server.MarkVerified(false)
 				} else if strings.Contains(err.Error(), "restore session connection timed out") {
 					log.Printf("(%s) WhatsApp returns after a timeout, trying again in 10 seconds, please wait ...", server.Bot.GetNumber())
 				} else {
@@ -266,3 +268,136 @@ func (server *QPWhatsappServer) startHandlers() (err error) {
 func (server *QPWhatsappServer) GetTitle(Wid string) string {
 	return server.Connection.GetTitle()
 }
+
+// Usado para exibir os servidores/bots de cada usuario em suas respectivas telas
+func (server *QPWhatsappServer) GetOwnerID() string {
+	return server.Bot.UserID
+}
+
+//region QP BOT EXTENSIONS
+
+func (server *QPWhatsappServer) GetStatusString() string {
+	return server.Bot.GetStatus()
+}
+
+func (server *QPWhatsappServer) ID() string {
+	return server.Bot.ID
+}
+
+// Traduz o Wid para um número de telefone em formato E164
+func (server *QPWhatsappServer) GetNumber() string {
+	return server.Bot.GetNumber()
+}
+
+func (server *QPWhatsappServer) GetTimestamp() (timestamp uint64) {
+	return server.Bot.GetTimestamp()
+}
+
+func (server *QPWhatsappServer) GetStartedTime() (timestamp time.Time) {
+	return server.Bot.GetStartedTime()
+}
+
+func (server *QPWhatsappServer) GetBatteryInfo() (status WhatsAppBateryStatus) {
+	return server.Bot.GetBatteryInfo()
+}
+
+func (server *QPWhatsappServer) Toggle() (err error) {
+	return server.Bot.Toggle()
+}
+
+func (server *QPWhatsappServer) IsDevelopmentGlobal() bool {
+	return ENV.IsDevelopment()
+}
+
+//region SINGLE UPDATES
+
+/*
+UpdateToken(id string, value string) error
+UpdateGroups(id string, value bool) error
+UpdateBroadcast(id string, value bool) error
+UpdateVerified(id string, value bool) error
+UpdateWebhook(id string, value string) error
+UpdateDevel(id string, value bool) error
+UpdateVersion(id string, value string) error
+*/
+
+func (server *QPWhatsappServer) CycleToken() (err error) {
+	value := uuid.New().String()
+	return server.Bot.UpdateToken(value)
+}
+
+func (server *QPWhatsappServer) Token() string {
+	return server.Bot.Token
+}
+
+func (server *QPWhatsappServer) MarkVerified(value bool) error {
+	return server.Bot.UpdateVerified(value)
+}
+
+func (server *QPWhatsappServer) Verified() bool {
+	return server.Bot.Verified
+}
+
+func (server *QPWhatsappServer) ToggleGroups() (err error) {
+	err = server.Bot.UpdateGroups(!server.Bot.HandleGroups)
+	if err != nil {
+		return
+	}
+
+	server.Handler.HandleGroups = server.Bot.HandleGroups
+	return
+}
+
+func (server *QPWhatsappServer) HandleGroups() bool {
+	return server.Bot.HandleGroups
+}
+
+func (server *QPWhatsappServer) ToggleBroadcast() (err error) {
+	err = server.Bot.UpdateBroadcast(!server.Bot.HandleBroadcast)
+	if err != nil {
+		return
+	}
+
+	server.Handler.HandleBroadcast = server.Bot.HandleBroadcast
+	return
+}
+
+func (server *QPWhatsappServer) HandleBroadcast() bool {
+	return server.Bot.HandleBroadcast
+}
+
+func (server *QPWhatsappServer) ToggleDevel() error {
+	return server.Bot.UpdateDevel(!server.Bot.Devel)
+}
+
+func (server *QPWhatsappServer) Devel() bool {
+	return server.Bot.Devel
+}
+
+func (server *QPWhatsappServer) SetWebhook(value string) error {
+	return server.Bot.UpdateWebhook(value)
+}
+
+func (server *QPWhatsappServer) Webhook() string {
+	return server.Bot.Webhook
+}
+
+func (server *QPWhatsappServer) SetVersion(value string) error {
+	return server.Bot.UpdateVersion(value)
+}
+
+func (server *QPWhatsappServer) Version() string {
+	return server.Bot.Version
+}
+
+//endregion
+
+func (server *QPWhatsappServer) Delete() error {
+	return server.Bot.Delete()
+}
+
+func (server *QPWhatsappServer) WebHookSincronize() error {
+	return server.Bot.WebHookSincronize()
+}
+
+//endregion

@@ -79,12 +79,11 @@ func WebhookControllerV1(w http.ResponseWriter, r *http.Request) {
 
 	// Já tratei os parametros
 	if ENV.IsDevelopment() {
-		log.Printf("(%s) Updating Webhook: %s", server.Bot.GetNumber(), p.Url)
+		log.Printf("(%s) Updating Webhook: %s", server.GetNumber(), p.Url)
 	}
 
-	server.Bot.WebHook = p.Url
 	// Atualizando banco de dados
-	if err := server.Bot.WebHookUpdate(); err != nil {
+	if err := server.SetWebhook(p.Url); err != nil {
 		return
 	}
 
