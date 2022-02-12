@@ -37,7 +37,7 @@ func PostToWebHook(wid string, url string, message interface{}) (err error) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	resp, err := http.Post(url, "application/json", requestBody)
 	if err != nil {
-		log.Printf("(%s) erro ao postar no webhook: %s", wid, err.Error())
+		log.Error("(%s) erro ao postar no webhook: %s", wid, err.Error())
 	} else {
 		if resp != nil {
 			defer resp.Body.Close()

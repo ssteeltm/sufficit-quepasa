@@ -20,7 +20,11 @@ func main() {
 	// Carregando variaveis de ambiente apartir de arquivo .env
 	godotenv.Load()
 
-	log.SetLevel(log.InfoLevel)
+	if ENV.DEBUGJsonMessages() {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
 
 	// Verifica se é necessario realizar alguma migração de base de dados
 	err := MigrateToLatest()
