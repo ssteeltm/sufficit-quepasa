@@ -2,21 +2,25 @@ package models
 
 import (
 	"time"
-
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type QPBot struct {
-	ID        string `db:"id" json:"id"`
-	Verified  bool   `db:"is_verified" json:"is_verified"`
-	Token     string `db:"token" json:"token"`
-	UserID    string `db:"user_id" json:"user_id"`
-	WebHook   string `db:"webhook" json:"webhook,omitempty"`
-	CreatedAt string `db:"created_at" json:"created_at"`
-	UpdatedAt string `db:"updated_at" json:"updated_at"`
-	Devel     bool   `db:"devel" json:"devel"`
-	Version   string `db:"version" json:"version,omitempty"`
+	ID              string `db:"id" json:"id"`
+	Verified        bool   `db:"is_verified" json:"is_verified"`
+	Token           string `db:"token" json:"token"`
+	UserID          string `db:"user_id" json:"user_id"`
+	Webhook         string `db:"webhook" json:"webhook,omitempty"`
+	CreatedAt       string `db:"created_at" json:"created_at"`
+	UpdatedAt       string `db:"updated_at" json:"updated_at"`
+	Devel           bool   `db:"devel" json:"devel"`
+	Version         string `db:"version" json:"version,omitempty"`
+	HandleGroups    bool   `db:"handlegroups" json:"handlegroups,omitempty"`
+	HandleBroadcast bool   `db:"handlebroadcast" json:"handlebroadcast,omitempty"`
+
+	db IQPBot
 }
+
+//region DATABASE METHODS
 
 // Traduz o Wid para um número de telefone em formato E164
 func (bot *QPBot) GetNumber() string {
@@ -69,7 +73,7 @@ func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
 func (bot *QPBot) Toggle() (err error) {
 	server, err := GetServerFromBot(*bot)
 	if err != nil {
-		go WhatsAppService.AppendNewServer(bot)
+		go WhatsappService.AppendNewServer(bot)
 	} else {
 		if server.GetStatus() == Stopped || server.GetStatus() == Created {
 			err = server.Start()
@@ -80,43 +84,92 @@ func (bot *QPBot) Toggle() (err error) {
 	return
 }
 
+//region SINGLE UPDATES
+
+func (bot *QPBot) UpdateVersion(value string) (err error) {
+	err = bot.db.UpdateVersion(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.Version = value
+	return
+}
+
+func (bot *QPBot) UpdateGroups(value bool) (err error) {
+	err = bot.db.UpdateGroups(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.HandleGroups = value
+	return
+}
+
+func (bot *QPBot) UpdateBroadcast(value bool) (err error) {
+	err = bot.db.UpdateBroadcast(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.HandleBroadcast = value
+	return
+}
+
+func (bot *QPBot) UpdateVerified(value bool) (err error) {
+	err = bot.db.UpdateVerified(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.Verified = value
+	return
+}
+
+func (bot *QPBot) UpdateDevel(value bool) (err error) {
+	err = bot.db.UpdateDevel(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.Devel = value
+	return
+}
+
+func (bot *QPBot) UpdateToken(value string) (err error) {
+	err = bot.db.UpdateToken(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.Token = value
+	return
+}
+
+func (bot *QPBot) UpdateWebhook(value string) (err error) {
+	err = bot.db.UpdateWebhook(bot.ID, value)
+	if err != nil {
+		return
+	}
+
+	bot.Webhook = value
+	return
+}
+
+//endregion
+
 func (bot *QPBot) IsDevelopmentGlobal() bool {
 	return ENV.IsDevelopment()
 }
 
-func (bot *QPBot) MarkVerified(ok bool) error {
-	return WhatsAppService.DB.Bot.MarkVerified(bot.ID, ok)
-}
-
-func (bot *QPBot) CycleToken() error {
-	return WhatsAppService.DB.Bot.CycleToken(bot.ID)
-}
-
 func (bot *QPBot) Delete() error {
-	return WhatsAppService.DB.Bot.Delete(bot.ID)
-}
-
-func (bot *QPBot) WebHookUpdate() error {
-	return WhatsAppService.DB.Bot.WebHookUpdate(bot.WebHook, bot.ID)
+	return bot.db.Delete(bot.ID)
 }
 
 func (bot *QPBot) WebHookSincronize() error {
-	webhook, err := WhatsAppService.DB.Bot.WebHookSincronize(bot.ID)
-	bot.WebHook = webhook
+	webhook, err := bot.db.WebHookSincronize(bot.ID)
+	bot.Webhook = webhook
 	return err
 }
 
-func (bot *QPBot) ToggleDevel() (err error) {
-	if bot.Devel {
-		err = WhatsAppService.DB.Bot.Devel(bot.ID, false)
-		bot.Devel = false
-	} else {
-		err = WhatsAppService.DB.Bot.Devel(bot.ID, true)
-		bot.Devel = true
-	}
-	return err
-}
-
-func (bot *QPBot) Send(msg *WhatsappMessage) (err error) {
-	return SendMessageFromBot(bot, msg)
-}
+//endregion

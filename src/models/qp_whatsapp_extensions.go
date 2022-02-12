@@ -60,7 +60,7 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (bot *QPBot, err error) {
 	}
 
 	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
-	databaseBot, err := WhatsAppService.DB.Bot.GetOrCreate(wid, user.ID)
+	databaseBot, err := WhatsappService.DB.Bot.GetOrCreate(wid, user.ID)
 	if err != nil {
 		log.Printf("(ERR) Error on get or create bot after login :: %v\r", err.Error())
 		return
@@ -69,14 +69,13 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (bot *QPBot, err error) {
 	bot = &databaseBot
 
 	// Updating connection version information
-	bot.Version = con.GetVersion()
-	err = WhatsAppService.DB.Bot.SetVersion(bot.ID, bot.Version)
+	bot.UpdateVersion(con.GetVersion())
 
 	return
 }
 
 func GetDownloadPrefixFromWid(wid string) (path string, err error) {
-	server, ok := WhatsAppService.Servers[wid]
+	server, ok := WhatsappService.Servers[wid]
 	if !ok {
 		err = fmt.Errorf("server not found: %s", wid)
 		return
@@ -104,53 +103,56 @@ func ToQPAttachmentV1(source *WhatsappAttachment, id string, wid string) (attach
 	return
 }
 
-func ToQPEndPointV1(source WhatsappEndpoint) (endpoint QPEndpointV1) {
+func ToQPEndPointV1(source WhatsappEndpoint) (destination QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
-		if strings.Contains(source.ID, "-") {
-			endpoint.ID = source.ID + "@g.us"
+		if source.ID == "status" {
+			destination.ID = source.ID + "@broadcast"
+		} else if strings.Contains(source.ID, "-") {
+			destination.ID = source.ID + "@g.us"
 		} else {
-			endpoint.ID = source.ID + "@s.whatsapp.net"
-			endpoint.Phone = "+" + source.ID
+			destination.ID = source.ID + "@s.whatsapp.net"
 		}
 	}
 
-	endpoint.Title = source.Title
-	if len(endpoint.Title) == 0 {
-		endpoint.Title = source.UserName
+	destination.Title = source.Title
+	if len(destination.Title) == 0 {
+		destination.Title = source.UserName
 	}
 
 	return
 }
 
-func ToQPEndPointV2(source WhatsappEndpoint) (endpoint QPEndpointV2) {
+func ToQPEndPointV2(source WhatsappEndpoint) (destination QPEndpointV2) {
 	if !strings.Contains(source.ID, "@") {
-		if strings.Contains(source.ID, "-") {
-			endpoint.ID = source.ID + "@g.us"
+		if source.ID == "status" {
+			destination.ID = source.ID + "@broadcast"
+		} else if strings.Contains(source.ID, "-") {
+			destination.ID = source.ID + "@g.us"
 		} else {
-			endpoint.ID = source.ID + "@s.whatsapp.net"
-			endpoint.UserName = "+" + source.ID
+			destination.ID = source.ID + "@s.whatsapp.net"
 		}
 	}
 
-	endpoint.Title = source.Title
-	if len(endpoint.Title) == 0 {
-		endpoint.Title = source.UserName
+	destination.Title = source.Title
+	if len(destination.Title) == 0 {
+		destination.Title = source.UserName
 	}
 
 	return
 }
 
-func ChatToQPEndPointV1(source WhatsappChat) (endpoint QPEndpointV1) {
+func ChatToQPEndPointV1(source WhatsappChat) (destination QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
-		if strings.Contains(source.ID, "-") {
-			endpoint.ID = source.ID + "@g.us"
+		if source.ID == "status" {
+			destination.ID = source.ID + "@broadcast"
+		} else if strings.Contains(source.ID, "-") {
+			destination.ID = source.ID + "@g.us"
 		} else {
-			endpoint.ID = source.ID + "@s.whatsapp.net"
-			endpoint.Phone = "+" + source.ID
+			destination.ID = source.ID + "@s.whatsapp.net"
 		}
 	}
 
-	endpoint.Title = source.Title
+	destination.Title = source.Title
 	return
 }
 

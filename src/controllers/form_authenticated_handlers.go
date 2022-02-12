@@ -1,10 +1,10 @@
 package controllers
 
-import(
-	"os"
+import (
 	"html/template"
 	"net/http"
-	
+	"os"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
 
@@ -16,6 +16,7 @@ var TokenAuth = jwtauth.New("HS256", []byte(os.Getenv("SIGNING_SECRET")), nil)
 
 // Prefix on forms endpoints to avoid conflict with api
 const FormEndpointPrefix string = "/form"
+
 var FormWebsocketEndpoint string = FormEndpointPrefix + "/verify/ws"
 var FormAccountEndpoint string = FormEndpointPrefix + "/account"
 var FormVerifyEndpoint string = FormEndpointPrefix + "/verify"
@@ -26,17 +27,20 @@ func RegisterFormAuthenticatedControllers(r chi.Router) {
 	r.Use(HttpAuthenticatorHandler)
 
 	r.HandleFunc(FormWebsocketEndpoint, VerifyHandler)
-
 	r.Get(FormAccountEndpoint, FormAccountController)
 	r.Get(FormVerifyEndpoint, VerifyFormHandler)
+
 	r.Post(FormDeleteEndpoint, DeleteHandler)
-	r.Post(FormEndpointPrefix + "/cycle", CycleHandler)
-	r.Post(FormEndpointPrefix + "/debug", DebugHandler)
-	r.Post(FormEndpointPrefix + "/toggle", ToggleHandler)
-	r.Get(FormEndpointPrefix + "/bot/{id}", FormSendController)
-	r.Get(FormEndpointPrefix + "/bot/{id}/send", FormSendController)
-	r.Post(FormEndpointPrefix + "/bot/{id}/send", FormSendController)
-	r.Get(FormEndpointPrefix + "/bot/{id}/receive", FormReceiveController)
+	r.Post(FormEndpointPrefix+"/cycle", FormCycleController)
+	r.Post(FormEndpointPrefix+"/debug", FormDebugController)
+	r.Post(FormEndpointPrefix+"/toggle", FormToggleController)
+	r.Post(FormEndpointPrefix+"/togglegroups", FormToggleGroupsController)
+	r.Post(FormEndpointPrefix+"/togglebroadcast", FormToggleBroadcastController)
+
+	r.Get(FormEndpointPrefix+"/server/{id}", FormSendController)
+	r.Get(FormEndpointPrefix+"/server/{id}/send", FormSendController)
+	r.Post(FormEndpointPrefix+"/server/{id}/send", FormSendController)
+	r.Get(FormEndpointPrefix+"/server/{id}/receive", FormReceiveController)
 }
 
 // Authentication manager on forms
@@ -58,7 +62,6 @@ func HttpAuthenticatorHandler(next http.Handler) http.Handler {
 	})
 }
 
-
 // Rrenders route GET "/{prefix}/account"
 func FormAccountController(w http.ResponseWriter, r *http.Request) {
 	user, err := GetUser(r)
@@ -71,12 +74,7 @@ func FormAccountController(w http.ResponseWriter, r *http.Request) {
 		User:      user,
 	}
 
-	bots, err := WhatsAppService.DB.Bot.FindAllForUser(user.ID)
-	if err != nil {
-		data.ErrorMessage = err.Error()
-	} else {
-		data.Bots = bots
-	}
+	data.Servers = GetServersForUser(user)
 
 	templates := template.Must(template.ParseFiles("views/layouts/main.tmpl", "views/account.tmpl"))
 	templates.ExecuteTemplate(w, "main", data)

@@ -1,7 +1,6 @@
 package whatsmeow
 
 import (
-	"encoding/json"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
@@ -49,12 +48,14 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 		return
 	}
 
+	/* for testing porpouses
 	b, err := json.Marshal(evt)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(string(b))
+	*/
 
 	message := &WhatsappMessage{Content: evt.Message}
 

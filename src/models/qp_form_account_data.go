@@ -3,6 +3,6 @@ package models
 type QPFormAccountData struct {
 	PageTitle    string
 	ErrorMessage string
-	Bots         []QPBot
+	Servers      map[string]*QPWhatsappServer
 	User         QPUser
 }

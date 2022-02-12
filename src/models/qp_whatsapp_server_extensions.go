@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -14,49 +13,50 @@ import (
 )
 
 // Encaminha msg ao WebHook específicado
-func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) error {
-	bot := server.Bot
-	if bot == nil {
-		return fmt.Errorf("cannot find bot for server")
+func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err error) {
+	wid := server.GetWid()
+	url := server.Webhook()
+
+	if len(url) > 0 {
+		return PostToWebHook(wid, url, message)
 	}
 
-	if len(bot.WebHook) > 0 {
-		log.Info("dispatching webhook from: ", server.GetWid())
+	return
+}
 
-		payloadJson, _ := json.Marshal(&message)
-		log.Debug(string(payloadJson))
+func PostToWebHook(wid string, url string, message interface{}) (err error) {
+	log.Info("dispatching webhook from: ", wid)
 
-		requestBody := bytes.NewBuffer(payloadJson)
+	payloadJson, _ := json.Marshal(&message)
+	log.Debug(string(payloadJson))
 
-		// Ignorando certificado ao realizar o post
-		// Não cabe a nós a segurança do cliente
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		resp, err := http.Post(bot.WebHook, "application/json", requestBody)
-		if err != nil {
-			log.Printf("(%s) erro ao postar no webhook: %s", bot.GetNumber(), err.Error())
-		} else {
-			if resp != nil {
-				defer resp.Body.Close()
-				if resp.StatusCode == 422 {
-					body, err := ioutil.ReadAll(resp.Body)
-					if err != nil {
-						log.Printf("(%s) erro ao ler resposta do webhook: %s", bot.GetNumber(), err.Error())
-					} else {
-						if body != nil && strings.Contains(string(body), "invalid callback token") {
+	requestBody := bytes.NewBuffer(payloadJson)
 
-							// Sincroniza o token mais novo
-							bot.WebHookSincronize()
-
-							// Preenche o body novamente pois foi esvaziado na requisição anterior
-							requestBody = bytes.NewBuffer(payloadJson)
-							http.Post(bot.WebHook, "application/json", requestBody)
-						}
+	// Ignorando certificado ao realizar o post
+	// Não cabe a nós a segurança do cliente
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	resp, err := http.Post(url, "application/json", requestBody)
+	if err != nil {
+		log.Printf("(%s) erro ao postar no webhook: %s", wid, err.Error())
+	} else {
+		if resp != nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == 422 {
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Printf("(%s) erro ao ler resposta do webhook: %s", wid, err.Error())
+				} else {
+					if body != nil && strings.Contains(string(body), "invalid callback token") {
+						// Preenche o body novamente pois foi esvaziado na requisição anterior
+						requestBody = bytes.NewBuffer(payloadJson)
+						http.Post(url, "application/json", requestBody)
 					}
 				}
 			}
 		}
 	}
-	return nil
+
+	return
 }
 
 //region FIND|SEARCH WHATSAPP SERVER
@@ -64,7 +64,7 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) erro
 var ServerNotFoundError error = errors.New("the requested whatsapp server was not founded")
 
 func GetServerFromID(source string) (server *QPWhatsappServer, err error) {
-	server, ok := WhatsAppService.Servers[source]
+	server, ok := WhatsappService.Servers[source]
 	if !ok {
 		err = ServerNotFoundError
 		return
@@ -77,7 +77,7 @@ func GetServerFromBot(source QPBot) (server *QPWhatsappServer, err error) {
 }
 
 func GetServerFromToken(token string) (server *QPWhatsappServer, err error) {
-	for _, item := range WhatsAppService.Servers {
+	for _, item := range WhatsappService.Servers {
 		if item.Bot != nil && item.Bot.Token == token {
 			server = item
 			break
@@ -87,6 +87,14 @@ func GetServerFromToken(token string) (server *QPWhatsappServer, err error) {
 		err = ServerNotFoundError
 	}
 	return
+}
+
+func GetServersForUserID(userid string) (servers map[string]*QPWhatsappServer) {
+	return WhatsappService.GetServersForUser(userid)
+}
+
+func GetServersForUser(user QPUser) (servers map[string]*QPWhatsappServer) {
+	return GetServersForUserID(user.ID)
 }
 
 //endregion

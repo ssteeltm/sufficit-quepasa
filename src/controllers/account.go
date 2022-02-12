@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/nbutton23/zxcvbn-go"
-	"github.com/sufficit/sufficit-quepasa-fork/models"
 	. "github.com/sufficit/sufficit-quepasa-fork/library"
+	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
 // LogoutHandler renders route GET "/logoout"
@@ -47,7 +47,7 @@ func renderSetupForm(w http.ResponseWriter, data setupFormData) {
 
 // SetupFormHandler renders route GET "/setup"
 func SetupFormHandler(w http.ResponseWriter, r *http.Request) {
-	count, err := models.WhatsAppService.DB.User.Count()
+	count, err := WhatsappService.DB.User.Count()
 	if count > 0 || err != nil {
 		RedirectToLogin(w, r)
 		return
@@ -62,7 +62,7 @@ func SetupFormHandler(w http.ResponseWriter, r *http.Request) {
 
 // SetupHandler renders route POST "/setup"
 func SetupHandler(w http.ResponseWriter, r *http.Request) {
-	count, err := models.WhatsAppService.DB.User.Count()
+	count, err := WhatsappService.DB.User.Count()
 	if count > 0 || err != nil {
 		RedirectToLogin(w, r)
 		return
@@ -109,7 +109,7 @@ func SetupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := models.WhatsAppService.DB.User.Exists(email)
+	exists, err := WhatsappService.DB.User.Exists(email)
 	if err != nil {
 		data.ErrorMessage = err.Error()
 		renderSetupForm(w, data)
@@ -122,7 +122,7 @@ func SetupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = models.WhatsAppService.DB.User.Create(email, password)
+	_, err = WhatsappService.DB.User.Create(email, password)
 	if err != nil {
 		data.ErrorMessage = err.Error()
 		renderSetupForm(w, data)
