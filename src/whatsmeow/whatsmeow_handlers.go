@@ -1,17 +1,18 @@
 package whatsmeow
 
 import (
+	"encoding/json"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	"go.mau.fi/whatsmeow"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"
 )
 
 type WhatsmeowHandlers struct {
-	Client         *whatsmeow.Client
-	WAHandlers     whatsapp.IWhatsappHandlers
+	Client         *Client
+	WAHandlers     IWhatsappHandlers
 	eventHandlerID uint32
 }
 
@@ -48,20 +49,34 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 		return
 	}
 
-	message := &whatsapp.WhatsappMessage{Content: evt.Message}
+	b, err := json.Marshal(evt)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(b))
+
+	message := &WhatsappMessage{Content: evt.Message}
 
 	// basic information
 	message.ID = evt.Info.ID
 	message.Timestamp = evt.Info.Timestamp
 	message.FromMe = evt.Info.IsFromMe
 
-	message.Chat = whatsapp.WhatsappChat{}
+	message.Chat = WhatsappChat{}
 	message.Chat.ID = evt.Info.Chat.User
-	message.Chat.Title = evt.Info.PushName
 
 	if evt.Info.IsGroup {
-		message.Participant = whatsapp.WhatsappEndpoint{}
+		gInfo, _ := handler.Client.GetGroupInfo(evt.Info.Chat)
+		if gInfo != nil {
+			message.Chat.Title = gInfo.Name
+		}
+
+		message.Participant = WhatsappEndpoint{}
 		message.Participant.ID = evt.Info.Sender.User
+		message.Participant.Title = evt.Info.PushName
+	} else {
+		message.Chat.Title = evt.Info.PushName
 	}
 
 	message.Text = evt.Message.GetConversation()
