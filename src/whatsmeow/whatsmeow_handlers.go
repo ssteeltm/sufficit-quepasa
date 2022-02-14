@@ -26,8 +26,9 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 		return
 	}
 
-	handler.eventHandlerID = handler.Client.AddEventHandler(handler.EventsHandler)
 	handler.unregisterRequestedToken = false
+	handler.eventHandlerID = handler.Client.AddEventHandler(handler.EventsHandler)
+
 	return
 }
 
@@ -35,6 +36,7 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 // Aqui se define se vamos processar mensagens | confirmações de leitura | etc
 func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 	if handler.unregisterRequestedToken {
+		log.Debug("unregister event handler requested")
 		go handler.Client.RemoveEventHandler(handler.eventHandlerID)
 		return
 	}
@@ -86,8 +88,6 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 	} else {
 		message.Chat.Title = evt.Info.PushName
 	}
-
-	message.Text = evt.Message.GetConversation()
 
 	// Process diferent message types
 	HandleKnowingMessages(message, evt.Message)

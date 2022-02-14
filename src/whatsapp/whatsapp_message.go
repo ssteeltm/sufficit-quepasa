@@ -12,23 +12,29 @@ type WhatsappMessage struct {
 	// original message from source service
 	Content interface{} `json:"-"`
 
-	ID        string    `json:"id"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        string              `json:"id"`
+	Timestamp time.Time           `json:"timestamp"`
+	Type      WhatsappMessageType `json:"type"`
+
+	// Em qual chat (grupo ou direct) essa msg foi postada, para onde devemos responder
+	Chat WhatsappChat `json:"chat"`
 
 	// Se a msg foi postado em algum grupo ? quem postou !
 	Participant WhatsappEndpoint `json:"participant,omitempty"`
-
-	// Fui eu quem enviou a msg ?
-	FromMe bool `json:"fromme"`
 
 	// Texto da msg
 	Text string `json:"text"`
 
 	Attachment *WhatsappAttachment `json:"attachment,omitempty"`
 
-	Chat WhatsappChat `json:"chat"`
+	// Fui eu quem enviou a msg ?
+	FromMe bool `json:"fromme"`
 
-	Type WhatsappMessageType `json:"type"`
+	// Quantas vezes essa msg foi encaminhada
+	ForwardingScore uint32 `json:"forwardingscore,omitempty"`
+
+	// Msg in reply of another ? Message ID
+	InReply string `json:"inreply,omitempty"`
 }
 
 //region ORDER BY TIMESTAMP

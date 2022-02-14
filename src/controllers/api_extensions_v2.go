@@ -2,15 +2,27 @@ package controllers
 
 import (
 	"sort"
+	"strconv"
+	"time"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
 // Retrieve messages with timestamp parameter
 // Sorting then
-func GetMessagesV2(source *QPBot, timestamp string) (messages []QPMessageV2, err error) {
+func GetMessagesToAPIV2(server *QPWhatsappServer, timestamp string) (messages []QPMessageV2, err error) {
 
-	messages, err = GetMessagesFromBotV2(*source, timestamp)
+	searchTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		if len(timestamp) > 0 {
+			return
+		} else {
+			searchTimestamp = 0
+		}
+	}
+
+	searchTime := time.Unix(searchTimestamp, 0)
+	messages, err = GetMessagesFromServerV2(server, searchTime)
 	if err != nil {
 		return
 	}

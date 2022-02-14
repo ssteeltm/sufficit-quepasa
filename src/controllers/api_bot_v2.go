@@ -35,7 +35,7 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	queryValues := r.URL.Query()
 	timestamp := queryValues.Get("timestamp")
 
-	messages, err := GetMessagesV2(server.Bot, timestamp)
+	messages, err := GetMessagesToAPIV2(server, timestamp)
 	if err != nil {
 		MessageReceiveErrors.Inc()
 		RespondServerError(server, w, err)

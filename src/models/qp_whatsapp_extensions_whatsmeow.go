@@ -35,6 +35,14 @@ func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
 		message.Attachment = ToQPAttachmentV1(source.Attachment, message.ID, wid)
 	}
 
+	if len(source.InReply) > 0 {
+		message.Text = "*(IN REPLY) " + message.Text
+	}
+
+	if source.ForwardingScore > 0 {
+		message.Text = "*(FORWARDED) " + message.Text
+	}
+
 	return
 }
 
