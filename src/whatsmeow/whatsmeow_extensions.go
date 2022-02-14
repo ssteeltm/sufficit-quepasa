@@ -5,16 +5,25 @@ import (
 	"fmt"
 	"strings"
 
-	//log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow/store"
+	waLog "go.mau.fi/whatsmeow/util/log"
 
 	. "go.mau.fi/whatsmeow"
 	//. "go.mau.fi/whatsmeow/types"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
-	waLog "go.mau.fi/whatsmeow/util/log"
+)
+
+type WhatsmeowLogLevel string
+
+const (
+	DebugLevel WhatsmeowLogLevel = "DEBUG"
+	InfoLevel                    = "INFO"
+	WarnLevel                    = "WARN"
+	ErrorLevel                   = "ERROR"
 )
 
 // Flush entire Whatsmeow Database
@@ -35,8 +44,8 @@ func FlushDatabase() (err error) {
 	return
 }
 
-func NewWhatsappConnection(wid string) (conn *WhatsmeowConnection, err error) {
-	client, err := GetWhatsAppClient(wid)
+func NewWhatsappConnection(wid string, logger *log.Logger) (conn *WhatsmeowConnection, err error) {
+	client, err := GetWhatsAppClient(wid, logger)
 	if err != nil {
 		return
 	}
@@ -47,16 +56,17 @@ func NewWhatsappConnection(wid string) (conn *WhatsmeowConnection, err error) {
 		return
 	}
 
-	conn = &WhatsmeowConnection{Client: client, Handlers: handlers}
+	loggerEntry := logger.WithField("wid", wid)
+	conn = &WhatsmeowConnection{Client: client, Handlers: handlers, Logger: logger, log: loggerEntry}
 	return
 }
 
-func GetWhatsAppClient(wid string) (client *Client, err error) {
+func GetWhatsAppClient(wid string, logger *log.Logger) (client *Client, err error) {
 	deviceStore, err := GetStoreFromWid(wid)
 	if err != nil {
 		err = fmt.Errorf("error on getting whatsapp client: %s", err)
 	} else {
-		clientLog := waLog.Stdout("Client", "DEBUG", true)
+		clientLog := waLog.Stdout("Whatsmeow/Client", logger.Level.String(), true)
 		client = NewClient(deviceStore, clientLog)
 	}
 	return

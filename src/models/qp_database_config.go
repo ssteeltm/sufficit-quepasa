@@ -2,7 +2,8 @@ package models
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type QPDatabaseConfig struct {
@@ -24,6 +25,8 @@ func (config *QPDatabaseConfig) GetConnectionString() (connection string) {
 			config.Host, config.DataBase, config.Port, config.User, config.Password, config.SSL)
 	} else if config.Driver == "sqlite3" {
 		connection = "quepasa.db?cache=shared&mode=memory"
-	} else { log.Fatal("database driver not supported") }
+	} else {
+		log.Fatal("database driver not supported")
+	}
 	return
 }

@@ -3,12 +3,14 @@ package models
 import (
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 )
 
-func NewConnection(wid string) (IWhatsappConnection, error) {
-	return NewWhatsappConnection(wid)
+func NewConnection(wid string, logger *log.Logger) (IWhatsappConnection, error) {
+	return NewWhatsappConnection(wid, logger)
 }
 
 func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {

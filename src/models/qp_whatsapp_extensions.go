@@ -28,7 +28,7 @@ func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
 // Envia o QRCode para o usuário e aguarda pela resposta
 // Retorna um novo BOT
 func SignInWithQRCode(user QPUser, out chan<- []byte) (server *QPWhatsappServer, err error) {
-	con, err := NewConnection("")
+	con, err := NewConnection("", log.StandardLogger())
 	if err != nil {
 		return
 	}

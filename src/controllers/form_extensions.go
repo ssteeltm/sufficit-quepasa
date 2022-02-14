@@ -3,12 +3,13 @@ package controllers
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"

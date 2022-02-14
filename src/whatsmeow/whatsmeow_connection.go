@@ -17,6 +17,8 @@ import (
 type WhatsmeowConnection struct {
 	Client   *Client
 	Handlers *WhatsmeowHandlers
+	Logger   *log.Logger
+	log      *log.Entry
 }
 
 //region IMPLEMENT INTERFACE WHATSAPP CONNECTION
@@ -54,12 +56,7 @@ func (conn *WhatsmeowConnection) GetTitle() string {
 }
 
 func (conn *WhatsmeowConnection) Connect() (err error) {
-	wid, err := conn.GetWid()
-	if err != nil {
-		return
-	}
-
-	log.Println("(%s) starting whatsmeow connecting ...", wid)
+	conn.log.Info("starting whatsmeow connecting ...")
 
 	err = conn.Client.Connect()
 	if err != nil {
