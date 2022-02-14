@@ -7,11 +7,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "go.mau.fi/whatsmeow"
+	. "go.mau.fi/whatsmeow/appstate"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	. "go.mau.fi/whatsmeow/types"
-
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Must Implement IWhatsappConnection
@@ -40,6 +40,11 @@ func (conn *WhatsmeowConnection) GetWid() (wid string, err error) {
 	}
 
 	return
+}
+
+func (conn *WhatsmeowConnection) Syncronize() error {
+	log.Info("calling sincronize")
+	return conn.Client.FetchAppState(WAPatchRegular, true, true)
 }
 
 // Retorna algum titulo válido apartir de um jid
@@ -185,6 +190,7 @@ func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan string) (err e
 
 func (conn *WhatsmeowConnection) UpdateHandler(handlers IWhatsappHandlers) {
 	conn.Handlers.WAHandlers = handlers
+	_ = conn.Syncronize()
 }
 
 //endregion
