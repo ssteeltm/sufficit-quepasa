@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )

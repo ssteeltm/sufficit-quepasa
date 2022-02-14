@@ -4,7 +4,7 @@ package models
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	whatsapp "go.mau.fi/whatsmeow"
 )
