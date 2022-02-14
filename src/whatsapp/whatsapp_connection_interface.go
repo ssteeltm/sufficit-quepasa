@@ -1,5 +1,9 @@
 package whatsapp
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 type IWhatsappConnection interface {
 	// Returns Connection Version (beta|multi|single)
 	GetVersion() string
@@ -19,4 +23,7 @@ type IWhatsappConnection interface {
 
 	// Default send message method
 	Send(WhatsappMessage) (IWhatsappSendResponse, error)
+
+	// Define the log level for this connection
+	LogLevel(log.Level)
 }

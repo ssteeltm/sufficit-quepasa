@@ -14,6 +14,7 @@ type WhatsmeowHandlers struct {
 	WAHandlers               IWhatsappHandlers
 	eventHandlerID           uint32
 	unregisterRequestedToken bool
+	log                      *log.Entry
 }
 
 func (handler *WhatsmeowHandlers) UnRegister() {
@@ -36,7 +37,7 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 // Aqui se define se vamos processar mensagens | confirmações de leitura | etc
 func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 	if handler.unregisterRequestedToken {
-		log.Debug("unregister event handler requested")
+		handler.log.Debug("unregister event handler requested")
 		go handler.Client.RemoveEventHandler(handler.eventHandlerID)
 		return
 	}
@@ -52,7 +53,7 @@ func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 		handler.Client.AutoReconnectErrors = 0
 
 	case *events.LoggedOut:
-		log.Error("loggedout ....")
+		handler.log.Error("loggedout ....")
 	}
 }
 
@@ -62,7 +63,7 @@ func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 
 	if evt.Message == nil {
-		log.Error("nil message on receiving whatsmeow events | try use rawMessage !")
+		handler.log.Error("nil message on receiving whatsmeow events | try use rawMessage !")
 		return
 	}
 
@@ -90,9 +91,9 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 	}
 
 	// Process diferent message types
-	HandleKnowingMessages(message, evt.Message)
+	HandleKnowingMessages(handler.log, message, evt.Message)
 	if message.Type == UnknownMessageType {
-		HandleUnknownMessage(evt)
+		HandleUnknownMessage(handler.log, evt)
 	}
 
 	if handler.WAHandlers != nil {
