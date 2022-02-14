@@ -26,4 +26,5 @@ type IWhatsappConnection interface {
 
 	// Define the log level for this connection
 	LogLevel(log.Level)
+	PrintStatus()
 }

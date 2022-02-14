@@ -192,3 +192,8 @@ func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
 		//conn.waLogger.SetLevel(level)
 	}
 }
+
+func (conn *WhatsmeowConnection) PrintStatus() {
+	conn.log.Warnf("STATUS IS CONNECTED: %v", conn.Client.IsConnected())
+	conn.log.Warnf("STATUS IS LOGGED IN: %v", conn.Client.IsLoggedIn())
+}
