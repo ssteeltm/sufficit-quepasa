@@ -9,7 +9,6 @@ import (
 
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "go.mau.fi/whatsmeow"
-	. "go.mau.fi/whatsmeow/appstate"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	. "go.mau.fi/whatsmeow/types"
 )
@@ -40,11 +39,6 @@ func (conn *WhatsmeowConnection) GetWid() (wid string, err error) {
 	}
 
 	return
-}
-
-func (conn *WhatsmeowConnection) Syncronize() error {
-	log.Info("calling sincronize")
-	return conn.Client.FetchAppState(WAPatchRegular, true, true)
 }
 
 // Retorna algum titulo válido apartir de um jid

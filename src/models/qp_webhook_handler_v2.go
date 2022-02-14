@@ -9,7 +9,7 @@ type QPWebhookHandlerV2 struct {
 	Server *QPWhatsappServer
 }
 
-func (w QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
+func (w *QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
 	if payload.Type == UnknownMessageType {
 		log.Debug("ignoring unknown message type on webhook request")
 		return
