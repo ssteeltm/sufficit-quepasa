@@ -25,12 +25,14 @@ type QPWhatsappServer struct {
 //region CONSTRUCTORS
 
 // Instanciando um novo servidor para controle de whatsapp
-func NewQPWhatsappServer(bot *QPBot) (server *QPWhatsappServer, err error) {
+func NewQPWhatsappServer(bot *QPBot, connection IWhatsappConnection) (server *QPWhatsappServer, err error) {
 
-	// Definindo conexão com whatsapp
-	connection, err := NewConnection(bot.ID)
-	if err != nil {
-		return
+	if connection == nil {
+		// Definindo conexão com whatsapp
+		connection, err = NewConnection(bot.ID)
+		if err != nil {
+			return
+		}
 	}
 
 	state := Created
@@ -392,8 +394,19 @@ func (server *QPWhatsappServer) Version() string {
 
 //endregion
 
-func (server *QPWhatsappServer) Delete() error {
-	return server.Bot.Delete()
+func (server *QPWhatsappServer) Delete() (err error) {
+	err = server.Bot.Delete()
+	if err != nil {
+		return
+	}
+
+	server.Disconnect("server deleted")
+	err = server.Shutdown()
+	if err != nil {
+		return
+	}
+
+	return server.Connection.Delete()
 }
 
 func (server *QPWhatsappServer) WebHookSincronize() error {

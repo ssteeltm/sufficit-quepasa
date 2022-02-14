@@ -27,7 +27,7 @@ func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
 
 // Envia o QRCode para o usuário e aguarda pela resposta
 // Retorna um novo BOT
-func SignInWithQRCode(user QPUser, out chan<- []byte) (bot *QPBot, err error) {
+func SignInWithQRCode(user QPUser, out chan<- []byte) (server *QPWhatsappServer, err error) {
 	con, err := NewConnection("")
 	if err != nil {
 		return
@@ -59,17 +59,15 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (bot *QPBot, err error) {
 		return
 	}
 
-	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
-	databaseBot, err := WhatsappService.DB.Bot.GetOrCreate(wid, user.ID)
+	// Se chegou até aqui é pq o QasdadRCode foi validado e sincronizado
+	server, err = WhatsappService.GetOrCreate(con, user.ID)
 	if err != nil {
 		log.Printf("(ERR) Error on get or create bot after login :: %v\r", err.Error())
 		return
 	}
 
-	bot = &databaseBot
-
 	// Updating connection version information
-	bot.UpdateVersion(con.GetVersion())
+	server.SetVersion(con.GetVersion())
 
 	return
 }

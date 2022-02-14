@@ -153,6 +153,11 @@ func (conn *WhatsmeowConnection) Disconnect() error {
 	return nil
 }
 
+func (conn *WhatsmeowConnection) Delete() error {
+	conn.Client.Disconnect()
+	return conn.Client.Store.Delete()
+}
+
 func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan string) (err error) {
 	// No ID stored, new login
 	qrChan, _ := conn.Client.GetQRChannel(context.Background())

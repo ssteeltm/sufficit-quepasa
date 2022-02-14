@@ -1,6 +1,7 @@
 package library
 
-import(
+import (
+	"reflect"
 	"regexp"
 )
 
@@ -13,4 +14,13 @@ func IsValidEMail(s string) bool {
 	}
 
 	return false
+}
+
+// Returns a string representation of source type interface
+func GetTypeString(myvar interface{}) string {
+	if t := reflect.TypeOf(myvar); t.Kind() == reflect.Ptr {
+		return "*" + t.Elem().Name()
+	} else {
+		return t.Name()
+	}
 }

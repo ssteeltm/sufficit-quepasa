@@ -73,7 +73,7 @@ func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
 func (bot *QPBot) Toggle() (err error) {
 	server, err := GetServerFromBot(*bot)
 	if err != nil {
-		go WhatsappService.AppendNewServer(bot)
+		go WhatsappService.AppendNewServer(bot, nil)
 	} else {
 		if server.GetStatus() == Stopped || server.GetStatus() == Created {
 			err = server.Start()

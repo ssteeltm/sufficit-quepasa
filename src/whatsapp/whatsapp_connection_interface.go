@@ -10,6 +10,7 @@ type IWhatsappConnection interface {
 
 	Connect() error
 	Disconnect() error
+	Delete() error
 	GetWhatsAppQRChannel(chan string) error
 	UpdateHandler(IWhatsappHandlers)
 

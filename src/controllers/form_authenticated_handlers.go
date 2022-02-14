@@ -30,7 +30,7 @@ func RegisterFormAuthenticatedControllers(r chi.Router) {
 	r.Get(FormAccountEndpoint, FormAccountController)
 	r.Get(FormVerifyEndpoint, VerifyFormHandler)
 
-	r.Post(FormDeleteEndpoint, DeleteHandler)
+	r.Post(FormDeleteEndpoint, FormDeleteController)
 	r.Post(FormEndpointPrefix+"/cycle", FormCycleController)
 	r.Post(FormEndpointPrefix+"/debug", FormDebugController)
 	r.Post(FormEndpointPrefix+"/toggle", FormToggleController)
