@@ -27,7 +27,7 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err
 
 func PostToWebHook(wid string, url string, message interface{}) (err error) {
 	typeOfMessage := reflect.TypeOf(message)
-	log.Info("dispatching webhook from: (%s): %s", typeOfMessage, wid)
+	log.Infof("dispatching webhook from: (%s): %s", typeOfMessage, wid)
 
 	payloadJson, _ := json.Marshal(&message)
 	log.Debug(string(payloadJson))
