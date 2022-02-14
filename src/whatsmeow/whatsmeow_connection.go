@@ -190,7 +190,6 @@ func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan string) (err e
 
 func (conn *WhatsmeowConnection) UpdateHandler(handlers IWhatsappHandlers) {
 	conn.Handlers.WAHandlers = handlers
-	_ = conn.Syncronize()
 }
 
 //endregion

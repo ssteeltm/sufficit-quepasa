@@ -19,4 +19,6 @@ type IWhatsappConnection interface {
 
 	// Default send message method
 	Send(WhatsappMessage) (IWhatsappSendResponse, error)
+
+	Syncronize() error
 }
