@@ -25,8 +25,9 @@ func HandleKnowingMessages(out *WhatsappMessage, in *Message) {
 		HandleExtendedTextMessage(out, in.ExtendedTextMessage)
 	} else if in.ProtocolMessage != nil || in.SenderKeyDistributionMessage != nil {
 		out.Type = DiscardMessageType
-	} else if len(out.Text) > 0 {
+	} else if len(in.GetConversation()) > 0 {
 		out.Type = TextMessageType
+		out.Text = in.GetConversation()
 	}
 }
 
@@ -57,7 +58,7 @@ func HandleExtendedTextMessage(out *WhatsappMessage, in *ExtendedTextMessage) {
 		}
 
 		if info.StanzaId != nil {
-			out.InReply = *info.StanzaId  
+			out.InReply = *info.StanzaId
 		}
 	}
 }
