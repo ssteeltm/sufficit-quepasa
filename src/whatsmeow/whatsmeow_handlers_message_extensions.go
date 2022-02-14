@@ -13,6 +13,8 @@ import (
 func HandleKnowingMessages(out *WhatsappMessage, in *Message) {
 	if in.ImageMessage != nil {
 		HandleImageMessage(out, in.ImageMessage)
+	} else if in.StickerMessage != nil {
+		HandleStickerMessage(out, in.StickerMessage)
 	} else if in.DocumentMessage != nil {
 		HandleDocumentMessage(out, in.DocumentMessage)
 	} else if in.AudioMessage != nil {
@@ -20,23 +22,16 @@ func HandleKnowingMessages(out *WhatsappMessage, in *Message) {
 	} else if in.VideoMessage != nil {
 		HandleVideoMessage(out, in.VideoMessage)
 	} else if in.ExtendedTextMessage != nil {
-		HandleTextMessage(out, in.ExtendedTextMessage)
+		HandleExtendedTextMessage(out, in.ExtendedTextMessage)
+	} else if in.ProtocolMessage != nil || in.SenderKeyDistributionMessage != nil {
+		out.Type = DiscardMessageType
 	} else if len(out.Text) > 0 {
 		out.Type = TextMessageType
 	}
 }
 
-func HandleTextMessage(out *WhatsappMessage, in *ExtendedTextMessage) {
-	b, err := json.Marshal(in)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("LOGGING EXTENDED ::: " + string(b))
-}
-
 func HandleUnknownMessage(in interface{}) {
-
+	log.Debug("Received an unknown message !")
 	b, err := json.Marshal(in)
 	if err != nil {
 		fmt.Println(err)
@@ -44,6 +39,27 @@ func HandleUnknownMessage(in interface{}) {
 	}
 	fmt.Println(string(b))
 
+}
+
+// Msg em resposta a outra
+func HandleExtendedTextMessage(out *WhatsappMessage, in *ExtendedTextMessage) {
+	log.Debug("Received a text|extended message !")
+	out.Type = TextMessageType
+
+	if in.Text != nil {
+		out.Text = *in.Text
+	}
+
+	info := in.ContextInfo
+	if info != nil {
+		if info.ForwardingScore != nil {
+			out.ForwardingScore = *info.ForwardingScore
+		}
+
+		if info.StanzaId != nil {
+			out.InReply = *info.StanzaId  
+		}
+	}
 }
 
 func HandleImageMessage(out *WhatsappMessage, in *ImageMessage) {
@@ -56,7 +72,21 @@ func HandleImageMessage(out *WhatsappMessage, in *ImageMessage) {
 		out.Text = *in.Caption
 	}
 
-	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
+	jpeg := GetStringFromBytes(in.JpegThumbnail)
+	out.Attachment = &WhatsappAttachment{
+		Mimetype:   *in.Mimetype,
+		FileLength: *in.FileLength,
+
+		JpegThumbnail: jpeg,
+	}
+}
+
+func HandleStickerMessage(out *WhatsappMessage, in *StickerMessage) {
+	log.Debug("Received a image|sticker message !")
+	out.Content = in
+	out.Type = ImageMessageType
+
+	jpeg := GetStringFromBytes(in.PngThumbnail)
 	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
@@ -66,7 +96,7 @@ func HandleImageMessage(out *WhatsappMessage, in *ImageMessage) {
 }
 
 func HandleVideoMessage(out *WhatsappMessage, in *VideoMessage) {
-	log.Debug("Received an video message !")
+	log.Debug("Received a video message !")
 	out.Content = in
 	out.Type = VideoMessageType
 
@@ -85,7 +115,7 @@ func HandleVideoMessage(out *WhatsappMessage, in *VideoMessage) {
 }
 
 func HandleDocumentMessage(out *WhatsappMessage, in *DocumentMessage) {
-	log.Debug("Received an document message !")
+	log.Debug("Received a document message !")
 	out.Content = in
 	out.Type = DocumentMessageType
 

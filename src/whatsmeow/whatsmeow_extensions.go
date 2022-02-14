@@ -1,6 +1,7 @@
 package whatsmeow
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -193,4 +194,11 @@ func NewWhatsmeowMessageAttachment(response UploadResponse, attach *WhatsappAtta
 		msg = &waProto.Message{DocumentMessage: internal}
 		return
 	}
+}
+
+func GetStringFromBytes(bytes []byte) string {
+	if bytes != nil {
+		return base64.StdEncoding.EncodeToString(bytes)
+	}
+	return ""
 }

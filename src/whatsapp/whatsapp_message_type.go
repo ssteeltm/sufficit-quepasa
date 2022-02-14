@@ -9,6 +9,9 @@ const (
 	AudioMessageType
 	VideoMessageType
 	TextMessageType
+
+	// Messages that isn't important for this whatsapp service
+	DiscardMessageType
 )
 
 func (Type WhatsappMessageType) String() string {
