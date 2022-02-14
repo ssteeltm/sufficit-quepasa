@@ -185,6 +185,11 @@ func (server *QPWhatsappServer) Start() (err error) {
 			return
 		}
 
+		err = server.Connection.Syncronize()
+		if err != nil {
+			return
+		}
+
 		// Inicializando conexões e handlers
 		err = server.startHandlers()
 		if err != nil {
