@@ -27,6 +27,8 @@ type WhatsappMessage struct {
 	Attachment *WhatsappAttachment `json:"attachment,omitempty"`
 
 	Chat WhatsappChat `json:"chat"`
+
+	Type WhatsappMessageType `json:"type"`
 }
 
 //region ORDER BY TIMESTAMP

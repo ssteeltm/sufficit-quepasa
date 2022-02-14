@@ -36,16 +36,9 @@ func WebSocketProtocol() string {
 
 // CycleHandler renders route POST "/bot/cycle"
 func FormCycleController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
-		RedirectToLogin(w, r)
-		return
-	}
-
-	r.ParseForm()
-	server, err := GetServerFromAuthenticatedRequest(user, r)
-	if err != nil {
-		RespondServerError(server, w, err)
+		// retorno já tratado pela funcao
 		return
 	}
 
@@ -60,16 +53,9 @@ func FormCycleController(w http.ResponseWriter, r *http.Request) {
 
 // DebugHandler renders route POST "/bot/debug"
 func FormDebugController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
-		RedirectToLogin(w, r)
-		return
-	}
-
-	r.ParseForm()
-	server, err := GetServerFromAuthenticatedRequest(user, r)
-	if err != nil {
-		RespondServerError(server, w, err)
+		// retorno já tratado pela funcao
 		return
 	}
 
@@ -84,16 +70,9 @@ func FormDebugController(w http.ResponseWriter, r *http.Request) {
 
 // ToggleHandler renders route POST "/bot/toggle"
 func FormToggleController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
-		RedirectToLogin(w, r)
-		return
-	}
-
-	r.ParseForm()
-	server, err := GetServerFromAuthenticatedRequest(user, r)
-	if err != nil {
-		RespondServerError(server, w, err)
+		// retorno já tratado pela funcao
 		return
 	}
 
@@ -108,16 +87,9 @@ func FormToggleController(w http.ResponseWriter, r *http.Request) {
 
 // ToggleHandler renders route POST "/bot/toggle"
 func FormToggleBroadcastController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
-		RedirectToLogin(w, r)
-		return
-	}
-
-	r.ParseForm()
-	server, err := GetServerFromAuthenticatedRequest(user, r)
-	if err != nil {
-		RespondServerError(server, w, err)
+		// retorno já tratado pela funcao
 		return
 	}
 
@@ -131,16 +103,9 @@ func FormToggleBroadcastController(w http.ResponseWriter, r *http.Request) {
 }
 
 func FormToggleGroupsController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
-		RedirectToLogin(w, r)
-		return
-	}
-
-	r.ParseForm()
-	server, err := GetServerFromAuthenticatedRequest(user, r)
-	if err != nil {
-		RespondServerError(server, w, err)
+		// retorno já tratado pela funcao
 		return
 	}
 
@@ -260,7 +225,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 			}()
 
 			// Exibindo código QR
-			bot, err := SignInWithQRCode(user, out)
+			server, err := SignInWithQRCode(user, out)
 			//panic("finalizando")
 			if err != nil {
 				if strings.Contains(err.Error(), "timed out") {
@@ -273,20 +238,18 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 					log.Println("SignInWithQRCode Unknown Error:", err)
 				}
 			} else {
-				log.Printf("(%s) SignInWithQRCode success ...", bot.GetNumber())
+				log.Printf("(%s) SignInWithQRCode success ...", server.GetNumber())
 
 				// Marking as verified
-				err = bot.UpdateVerified(true)
+				err = server.MarkVerified(true)
 				if err != nil {
-					log.Printf("(%s)(ERR) Error on update verified state :: %s", bot.GetNumber(), err)
+					log.Printf("(%s)(ERR) Error on update verified state :: %s", server.GetNumber(), err)
 				}
 
 				err = connection.WriteMessage(websocket.TextMessage, []byte("complete"))
 				if err != nil {
-					log.Printf("(%s)(ERR) Error on write complete message after qrcode verified :: %s", bot.GetNumber(), err)
+					log.Printf("(%s)(ERR) Error on write complete message after qrcode verified :: %s", server.GetNumber(), err)
 				}
-
-				go WhatsappService.AppendNewServer(bot)
 				return
 			}
 		} else {
@@ -300,25 +263,15 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 //
 
 // DeleteHandler renders route POST "/bot/{botID}/delete"
-func DeleteHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+func FormDeleteController(w http.ResponseWriter, r *http.Request) {
+	_, server, err := GetUserAndServer(w, r)
 	if err != nil {
+		// retorno já tratado pela funcao
 		return
 	}
 
-	r.ParseForm()
-	botID := r.Form.Get("botID")
-
-	bot, err := WhatsappService.DB.Bot.FindForUser(user.ID, botID)
-	if err != nil {
-		return
-	}
-
-	if err := WhatsappService.DB.Store.Delete(bot.ID); err != nil {
-		return
-	}
-
-	if err := bot.Delete(); err != nil {
+	if err := WhatsappService.Delete(server); err != nil {
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -328,6 +281,24 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request) {
 //
 // Helpers
 //
+
+// Facilitador que traz usuario e servidor para quem esta autenticado
+func GetUserAndServer(w http.ResponseWriter, r *http.Request) (user QPUser, server *QPWhatsappServer, err error) {
+	user, err = GetUser(r)
+	if err != nil {
+		RedirectToLogin(w, r)
+		return
+	}
+
+	r.ParseForm()
+	server, err = GetServerFromAuthenticatedRequest(user, r)
+	if err != nil {
+		RespondServerError(server, w, err)
+		return
+	}
+
+	return
+}
 
 // Returns bot from http form request using E164 id
 func GetBotFromRequest(r *http.Request) (QPBot, error) {

@@ -10,8 +10,8 @@
 {{ range .Messages }}
 <pre>
   On: {{ .Timestamp }} => ID: {{ .ID }} => From Me: {{ .FromMe }}{{ if .HasAttachment }} => Attachment: <a download target="_blank" href="{{ $DOWNLOADPREFIX }}{{ .ID }}">Download</a>{{ end }}  
-  Chat:  {{ .Chat }}
-  Participant:  {{ .Participant }}
+  Type: {{ .Type }} => Chat:  {{ .Chat }}{{ if .Participant.ID }}
+  Participant:  {{ .Participant }}{{ end }} 
   Text: {{ .Text}}
 </pre>
 <br/>

@@ -10,9 +10,14 @@ import (
 )
 
 type WhatsmeowHandlers struct {
-	Client         *Client
-	WAHandlers     IWhatsappHandlers
-	eventHandlerID uint32
+	Client                   *Client
+	WAHandlers               IWhatsappHandlers
+	eventHandlerID           uint32
+	unregisterRequestedToken bool
+}
+
+func (handler *WhatsmeowHandlers) UnRegister() {
+	handler.unregisterRequestedToken = true
 }
 
 func (handler *WhatsmeowHandlers) Register() (err error) {
@@ -22,16 +27,27 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 	}
 
 	handler.eventHandlerID = handler.Client.AddEventHandler(handler.EventsHandler)
+	handler.unregisterRequestedToken = false
 	return
 }
 
 // Define os diferentes tipos de eventos a serem reconhecidos
 // Aqui se define se vamos processar mensagens | confirmações de leitura | etc
 func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
+	if handler.unregisterRequestedToken {
+		go handler.Client.RemoveEventHandler(handler.eventHandlerID)
+		return
+	}
+
 	switch v := evt.(type) {
 	case *events.Message:
 		handler.Message(v)
 		//case *events.Receipt: fmt.Println("Received a receipt! %s", v)
+
+	case *events.Connected:
+		// zerando contador de tentativas de reconexão
+		// importante para zerar o tempo entre tentativas em caso de erro
+		handler.Client.AutoReconnectErrors = 0
 
 	case *events.LoggedOut:
 		log.Error("loggedout ....")
@@ -47,15 +63,6 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 		log.Error("nil message on receiving whatsmeow events | try use rawMessage !")
 		return
 	}
-
-	/* for testing porpouses
-	b, err := json.Marshal(evt)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(b))
-	*/
 
 	message := &WhatsappMessage{Content: evt.Message}
 
@@ -83,9 +90,14 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 	message.Text = evt.Message.GetConversation()
 
 	// Process diferent message types
-	HandleMessage(message, evt.Message)
+	HandleKnowingMessages(message, evt.Message)
+	if message.Type == UnknownMessageType {
+		HandleUnknownMessage(evt)
+	}
 
-	go handler.WAHandlers.Message(message)
+	if handler.WAHandlers != nil {
+		go handler.WAHandlers.Message(message)
+	}
 }
 
 //endregion
