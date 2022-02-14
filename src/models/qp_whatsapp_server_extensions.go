@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -25,7 +26,8 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err
 }
 
 func PostToWebHook(wid string, url string, message interface{}) (err error) {
-	log.Info("dispatching webhook from: ", wid)
+	typeOfMessage := reflect.TypeOf(message)
+	log.Info("dispatching webhook from: (%s): %s", typeOfMessage, wid)
 
 	payloadJson, _ := json.Marshal(&message)
 	log.Debug(string(payloadJson))

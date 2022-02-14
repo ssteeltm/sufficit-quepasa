@@ -169,7 +169,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 	} else {
 
 		// Registrando webhook
-		webhookDispatcher := QPWebhookHandlerV2{Server: server}
+		webhookDispatcher := &QPWebhookHandlerV2{Server: server}
 		server.Handler.Register(webhookDispatcher)
 
 		// Atualizando manipuladores de eventos
@@ -181,11 +181,6 @@ func (server *QPWhatsappServer) Start() (err error) {
 
 		log.Printf("(%s) Requesting connection ...", server.Bot.GetNumber())
 		err = server.Connection.Connect()
-		if err != nil {
-			return
-		}
-
-		err = server.Connection.Syncronize()
 		if err != nil {
 			return
 		}
