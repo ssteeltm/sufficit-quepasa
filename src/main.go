@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
-	"github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -32,7 +32,7 @@ func main() {
 		log.Fatalf("Database migration error: %s", err.Error())
 	}
 
-	whatsmeow.WhatsmeowStart()
+	WhatsmeowService.Start()
 
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona

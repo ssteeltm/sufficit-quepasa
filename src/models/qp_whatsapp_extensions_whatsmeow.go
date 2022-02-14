@@ -10,7 +10,7 @@ import (
 )
 
 func NewConnection(wid string, logger *log.Logger) (IWhatsappConnection, error) {
-	return NewWhatsappConnection(wid, logger)
+	return WhatsmeowService.CreateConnection(wid, logger)
 }
 
 func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {

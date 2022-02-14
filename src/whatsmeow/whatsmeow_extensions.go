@@ -2,14 +2,9 @@ package whatsmeow
 
 import (
 	"encoding/base64"
-	"fmt"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	_ "github.com/mattn/go-sqlite3"
-	"go.mau.fi/whatsmeow/store"
-	waLog "go.mau.fi/whatsmeow/util/log"
 
 	. "go.mau.fi/whatsmeow"
 	//. "go.mau.fi/whatsmeow/types"
@@ -25,78 +20,6 @@ const (
 	WarnLevel                    = "WARN"
 	ErrorLevel                   = "ERROR"
 )
-
-// Flush entire Whatsmeow Database
-// Use with wisdom !
-func FlushDatabase() (err error) {
-	devices, err := WhatsmeowService.Container.GetAllDevices()
-	if err != nil {
-		return
-	}
-
-	for _, element := range devices {
-		err = element.Delete()
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func NewWhatsappConnection(wid string, logger *log.Logger) (conn *WhatsmeowConnection, err error) {
-	client, err := GetWhatsAppClient(wid, logger)
-	if err != nil {
-		return
-	}
-
-	handlers := &WhatsmeowHandlers{Client: client}
-	err = handlers.Register()
-	if err != nil {
-		return
-	}
-
-	loggerEntry := logger.WithField("wid", wid)
-	conn = &WhatsmeowConnection{Client: client, Handlers: handlers, Logger: logger, log: loggerEntry}
-	return
-}
-
-func GetWhatsAppClient(wid string, logger *log.Logger) (client *Client, err error) {
-	deviceStore, err := GetStoreFromWid(wid)
-	if err != nil {
-		err = fmt.Errorf("error on getting whatsapp client: %s", err)
-	} else {
-		clientLog := waLog.Stdout("Whatsmeow/Client", logger.Level.String(), true)
-		client = NewClient(deviceStore, clientLog)
-	}
-	return
-}
-
-func GetStoreFromWid(wid string) (str *store.Device, err error) {
-	if wid == "" {
-		str = WhatsmeowService.Container.NewDevice()
-	} else {
-		devices, err := WhatsmeowService.Container.GetAllDevices()
-		if err != nil {
-			err = fmt.Errorf("error on getting store from wid (%s): %v", wid, err)
-			return str, err
-		} else {
-			for _, element := range devices {
-				if element.ID.User == wid {
-					str = element
-					break
-				}
-			}
-
-			if str == nil {
-				err = &WhatsmeowStoreNotFoundException{Wid: wid}
-				return str, err
-			}
-		}
-	}
-
-	return
-}
 
 func FormatEndpoint(destination string) string {
 	if strings.Contains(destination, "-") {

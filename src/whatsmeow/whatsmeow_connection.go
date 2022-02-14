@@ -11,13 +11,15 @@ import (
 	. "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	. "go.mau.fi/whatsmeow/types"
+	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
 // Must Implement IWhatsappConnection
 type WhatsmeowConnection struct {
 	Client   *Client
 	Handlers *WhatsmeowHandlers
-	Logger   *log.Logger
+	waLogger waLog.Logger
+	logger   *log.Logger
 	log      *log.Entry
 }
 
@@ -71,7 +73,7 @@ func (conn *WhatsmeowConnection) Download(imsg IWhatsappMessage) (data []byte, e
 	msg := imsg.GetSource()
 	downloadable, ok := msg.(DownloadableMessage)
 	if !ok {
-		log.Debug("not downloadable, trying default message")
+		conn.log.Debug("not downloadable, trying default message")
 		waMsg, ok := msg.(*waProto.Message)
 		if !ok {
 			err = fmt.Errorf("parameter msg cannot be converted to an original message")
@@ -106,7 +108,7 @@ func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendRespons
 
 	jid, err := ParseJID(formatedDestiantion)
 	if err != nil {
-		log.Printf("Send error on get jid: %s", err)
+		conn.log.Infof("Send error on get jid: %s", err)
 		return response, err
 	}
 
@@ -115,13 +117,13 @@ func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendRespons
 
 	timestamp, err := conn.Client.SendMessage(jid, response.ID, newMessage)
 	if err != nil {
-		log.Printf("Send error: %s", err)
+		conn.log.Infof("Send error: %s", err)
 		return response, err
 	}
 
 	response.Timestamp = timestamp
 
-	log.Printf("Send: %s, on: %s", response.ID, response.Timestamp)
+	conn.log.Infof("Send: %s, on: %s", response.ID, response.Timestamp)
 	return response, err
 }
 
@@ -184,3 +186,9 @@ func (conn *WhatsmeowConnection) UpdateHandler(handlers IWhatsappHandlers) {
 }
 
 //endregion
+
+func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
+	if conn.waLogger != nil {
+		//conn.waLogger.SetLevel(level)
+	}
+}
