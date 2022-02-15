@@ -10,7 +10,6 @@ import (
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
-	"go.mau.fi/whatsmeow/types"
 	. "go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
@@ -195,9 +194,11 @@ func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
 }
 
 func (conn *WhatsmeowConnection) PrintStatus() {
-	conn.log.Warnf("STATUS IS CONNECTED: %v", conn.Client.IsConnected())
-	conn.log.Warnf("STATUS IS LOGGED IN: %v", conn.Client.IsLoggedIn())
+	/*
+		conn.log.Warnf("STATUS IS CONNECTED: %v", conn.Client.IsConnected())
+		conn.log.Warnf("STATUS IS LOGGED IN: %v", conn.Client.IsLoggedIn())
 
-	conn.Client.SendPresence(types.PresenceAvailable)
-	conn.Client.SetPassive(false)
+		conn.Client.SendPresence(types.PresenceAvailable)
+		conn.Client.SetPassive(false)
+	*/
 }
