@@ -123,20 +123,13 @@ func FormToggleGroupsController(w http.ResponseWriter, r *http.Request) {
 // Verify
 //
 
-type verifyFormData struct {
-	PageTitle    string
-	ErrorMessage string
-	Bot          QPBot
-	Protocol     string
-	Host         string
-}
-
 // VerifyFormHandler renders route GET "/bot/verify"
 func VerifyFormHandler(w http.ResponseWriter, r *http.Request) {
-	data := verifyFormData{
-		PageTitle: "Verify To Add or Update",
-		Protocol:  WebSocketProtocol(),
-		Host:      r.Host,
+	data := QPFormVerifyData{
+		PageTitle:   "Verify To Add or Update",
+		Protocol:    WebSocketProtocol(),
+		Host:        r.Host,
+		Destination: FormAccountEndpoint,
 	}
 
 	templates := template.Must(template.ParseFiles(
