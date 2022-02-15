@@ -59,6 +59,14 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (server *QPWhatsappServer,
 		return
 	}
 
+	// Descartando conexão anterior e criando uma nova com um novo wid
+	_ = con.Disconnect()
+
+	con, err = NewConnection(wid, log.StandardLogger())
+	if err != nil {
+		return
+	}
+
 	// Se chegou até aqui é pq o QasdadRCode foi validado e sincronizado
 	server, err = WhatsappService.GetOrCreate(con, user.ID)
 	if err != nil {

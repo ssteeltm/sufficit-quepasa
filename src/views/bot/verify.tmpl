@@ -62,7 +62,7 @@
   function onWebSocketMessage(event){
     if (event) {
       if (event.data === "complete") {
-        window.location.replace(FormAccountEndpoint);
+        window.location.replace({{ .Destination }});
       } else if (event.data === "echo") {
         //console.debug("websocket echo keep alive");
       } else if (event.data === "timeout") {
