@@ -10,6 +10,7 @@ import (
 	. "github.com/sufficit/sufficit-quepasa-fork/library"
 	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Renders route GET "/{version}/bot/{token}/receive"

@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type QPBot struct {

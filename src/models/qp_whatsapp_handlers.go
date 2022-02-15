@@ -14,6 +14,7 @@ type QPWhatsappHandlers struct {
 	messages     map[string]WhatsappMessage
 	sync         *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
 	syncRegister *sync.Mutex
+	log          *log.Entry
 
 	// Appended events handler
 	aeh []interface{ Handle(WhatsappMessage) }
@@ -26,21 +27,27 @@ type QPWhatsappHandlers struct {
 //region CONTRUCTORS
 
 // Create a new QuePasa WhatsApp Event Handler
-func NewQPWhatsappHandlers(groups bool, broadcast bool) (handler *QPWhatsappHandlers) {
+func NewQPWhatsappHandlers(groups bool, broadcast bool, logger *log.Entry) (handler *QPWhatsappHandlers) {
 	handlerMessages := make(map[string]WhatsappMessage)
 	handler = &QPWhatsappHandlers{
-		messages:        handlerMessages,
 		HandleGroups:    groups,
 		HandleBroadcast: broadcast,
 
+		messages:     handlerMessages,
 		sync:         &sync.Mutex{},
 		syncRegister: &sync.Mutex{},
+		log:          logger,
 	}
+
+	if handler.log == nil {
+		handler.log = log.NewEntry(log.StandardLogger())
+	}
+
 	return
 }
 
 //endregion
-//region EVENTS FROM WHATSAPP SERVICE
+//#region EVENTS FROM WHATSAPP SERVICE
 
 func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
 
@@ -54,19 +61,15 @@ func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
 		return
 	}
 
-	log.Trace("msg recebida/(enviada por outro meio) em models: %s", msg.ID)
-
-	err := handler.appendMsgToCache(msg)
-	if err != nil {
-		log.Error("error on append msg to cache: %s", err)
-	}
-
+	handler.log.Trace("msg recebida/(enviada por outro meio) em models: %s", msg.ID)
+	handler.appendMsgToCache(msg)
 }
 
-//endregion
+//#endregion
+//region MESSAGE CONTROL REGION HANDLE A LOCK
 
 // Salva em cache e inicia gatilhos assíncronos
-func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) error {
+func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
 
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
@@ -77,8 +80,6 @@ func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) error 
 
 	// Executando WebHook de forma assincrona
 	handler.Trigger(*msg)
-
-	return nil
 }
 
 func (handler *QPWhatsappHandlers) GetMessages(timestamp time.Time) (messages []WhatsappMessage) {
@@ -109,6 +110,7 @@ func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, e
 	return msg, err
 }
 
+//endregion
 //region EVENT HANDLER TO INTERNAL USE, GENERALY TO WEBHOOK
 
 func (handler *QPWhatsappHandlers) Trigger(payload WhatsappMessage) {

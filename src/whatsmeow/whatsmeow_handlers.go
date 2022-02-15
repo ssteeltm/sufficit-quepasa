@@ -37,31 +37,43 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 // Aqui se define se vamos processar mensagens | confirmações de leitura | etc
 func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 	if handler.unregisterRequestedToken {
-		handler.log.Debug("unregister event handler requested")
-		go handler.Client.RemoveEventHandler(handler.eventHandlerID)
+		handler.log.Info("unregister event handler requested")
+		handler.Client.RemoveEventHandler(handler.eventHandlerID)
 		return
 	}
 
 	switch v := evt.(type) {
+
 	case *events.Message:
-		handler.Message(v)
-		//case *events.Receipt: fmt.Println("Received a receipt! %s", v)
+		go handler.Message(*v)
 
 	case *events.Connected:
 		// zerando contador de tentativas de reconexão
 		// importante para zerar o tempo entre tentativas em caso de erro
 		handler.Client.AutoReconnectErrors = 0
+		return
 
-	case *events.LoggedOut:
-		handler.log.Error("loggedout ....")
+		/*
+			case *events.LoggedOut:
+				handler.log.Error("loggedout ...")
+				return
+
+			case *events.Receipt, *events.PushName, *events.OfflineSyncPreview:
+				return // ignore
+
+			default:
+				handler.log.Infof("event not handled: %v", reflect.TypeOf(v))
+				return
+
+		*/
 	}
 }
 
 //region EVENT MESSAGE
 
 // Aqui se processar um evento de recebimento de uma mensagem genérica
-func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
-
+func (handler *WhatsmeowHandlers) Message(evt events.Message) {
+	handler.log.Trace("event Message !")
 	if evt.Message == nil {
 		handler.log.Error("nil message on receiving whatsmeow events | try use rawMessage !")
 		return
@@ -97,6 +109,8 @@ func (handler *WhatsmeowHandlers) Message(evt *events.Message) {
 	}
 
 	if handler.WAHandlers != nil {
+
+		// following to internal handlers
 		go handler.WAHandlers.Message(message)
 	}
 }

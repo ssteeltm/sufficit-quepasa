@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // SendAPIHandler renders route "/v1/bot/{token}/send"

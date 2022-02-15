@@ -6,6 +6,7 @@ import (
 
 	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // FormReceiveController renders route GET "/bot/{botID}/receive"
