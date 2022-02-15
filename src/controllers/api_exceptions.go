@@ -3,12 +3,12 @@ package controllers
 import (
 	"fmt"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type ApiServerNotReadyException struct {
 	Wid    string
-	Status QPWhatsappState
+	Status WhatsappConnectionState
 }
 
 func (e *ApiServerNotReadyException) Error() string {

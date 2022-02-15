@@ -17,12 +17,12 @@ type QPWhatsappServer struct {
 	Connection     IWhatsappConnection  `json:"-"`
 	syncConnection *sync.Mutex          `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
 	syncMessages   *sync.Mutex          `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
-	Status         QPWhatsappState      `json:"status"`
 	Battery        WhatsAppBateryStatus `json:"battery"`
 	Timestamp      time.Time            `json:"starttime"`
 	Handler        *QPWhatsappHandlers  `json:"-"`
-	logger         *log.Logger          `json:"-"`
-	log            *log.Entry           `json:"-"`
+
+	logger *log.Logger `json:"-"`
+	log    *log.Entry  `json:"-"`
 }
 
 //region CONSTRUCTORS
@@ -49,15 +49,12 @@ func NewQPWhatsappServer(bot *QPBot, connection IWhatsappConnection) (server *QP
 		}
 	}
 
-	state := Created
-	handler := NewQPWhatsappHandlers(bot.HandleGroups, bot.HandleBroadcast)
-
+	handler := NewQPWhatsappHandlers(bot.HandleGroups, bot.HandleBroadcast, serverLogEntry)
 	server = &QPWhatsappServer{
 		Bot:            bot,
 		Connection:     connection,
 		syncConnection: &sync.Mutex{},
 		syncMessages:   &sync.Mutex{},
-		Status:         state,
 		Battery:        WhatsAppBateryStatus{},
 		Timestamp:      time.Now(),
 		Handler:        handler,
@@ -71,8 +68,13 @@ func NewQPWhatsappServer(bot *QPBot, connection IWhatsappConnection) (server *QP
 //endregion
 //region IMPLEMENT OF INTERFACE STATE RECOVERY
 
-func (server *QPWhatsappServer) GetStatus() QPWhatsappState {
-	return server.Status
+func (server *QPWhatsappServer) GetStatus() (state WhatsappConnectionState) {
+	if server.Connection != nil {
+		state = server.Connection.GetStatus()
+	} else {
+		state = Created
+	}
+	return
 }
 
 //endregion
@@ -132,28 +134,24 @@ func (server *QPWhatsappServer) GetMessages(timestamp time.Time) (messages []Wha
 	return
 }
 
-// Inicializa um repetidor eterno que confere o estado da conexão e tenta novamente a cada 10 segundos
-func (server *QPWhatsappServer) Initialize() (err error) {
-	server.log.Info("Initializing WhatsApp Server ...")
-	for {
-		err = server.Start()
-		if err == nil {
-			break
-		} else {
-			server.log.Warn("Error on initializing")
-		}
-
-		// Aguardaremos 10 segundos e vamos tentar novamente
-		time.Sleep(10 * time.Second)
+// Roda de forma assíncrona, não interessa o resultado ao chamador
+// Inicia o processo de tentativas de conexão de um servidor individual
+func (server *QPWhatsappServer) Initialize() {
+	if server == nil {
+		panic("nil server, code error")
 	}
-	return nil
+
+	server.log.Info("Initializing WhatsApp Server ...")
+	err := server.Start()
+	if err != nil {
+		server.log.Error(err)
+	}
 }
 
 // Inicializa um repetidor eterno que confere o estado da conexão e tenta novamente a cada 10 segundos
 func (server *QPWhatsappServer) Shutdown() (err error) {
 	//server.syncConnection.Lock() // Travando
 
-	server.Status = Halting
 	server.log.Info("Shutting Down WhatsApp Server ...")
 
 	err = server.Connection.Disconnect()
@@ -161,8 +159,6 @@ func (server *QPWhatsappServer) Shutdown() (err error) {
 	// caso erro diferente de nulo e não seja pq já esta desconectado
 	if err != nil && !strings.Contains(err.Error(), "not connected") {
 		server.log.Error("Shutting WhatsApp Server", err)
-	} else {
-		server.Status = Stopped
 	}
 
 	//server.syncConnection.Unlock() // Destravando
@@ -173,12 +169,11 @@ func (server *QPWhatsappServer) Start() (err error) {
 	server.syncConnection.Lock() // Travando
 
 	state := server.GetStatus()
-	if state != Created && state != Stopped {
+	if state != Created && state != Stopped && state != Disconnected {
 		err = fmt.Errorf("(%s) trying to start a server not an created|stopped state", server.Bot.ID)
 		return
 	}
 
-	server.Status = Starting
 	server.log.Infof("Starting WhatsApp Server ...")
 
 	// conectar dispositivo
@@ -202,31 +197,32 @@ func (server *QPWhatsappServer) Start() (err error) {
 		if err != nil {
 			return
 		}
-
-		// Inicializando conexões e handlers
-		err = server.startHandlers()
-		if err != nil {
-			server.Status = Failed
-			switch err.(type) {
-			default:
-				if strings.Contains(err.Error(), "401") {
-					server.log.Infof(" WhatsApp return a unauthorized state, please verify again")
-					err = server.MarkVerified(false)
-				} else if strings.Contains(err.Error(), "restore session connection timed out") {
-					server.log.Infof("WhatsApp returns after a timeout, trying again in 10 seconds, please wait ...")
-				} else {
-					server.log.Infof("(ERR) SUFF ERROR F :: Starting Handlers error ... %s :", err)
+		/*
+			// Inicializando conexões e handlers
+			err = server.startHandlers()
+			if err != nil {
+				server.Status = Failed
+				switch err.(type) {
+				default:
+					if strings.Contains(err.Error(), "401") {
+						server.log.Infof(" WhatsApp return a unauthorized state, please verify again")
+						err = server.MarkVerified(false)
+					} else if strings.Contains(err.Error(), "restore session connection timed out") {
+						server.log.Infof("WhatsApp returns after a timeout, trying again in 10 seconds, please wait ...")
+					} else {
+						server.log.Infof("(ERR) SUFF ERROR F :: Starting Handlers error ... %s :", err)
+					}
+				case *ServiceUnreachableError:
+					server.log.Error(err)
 				}
-			case *ServiceUnreachableError:
-				server.log.Error(err)
+
+				// Importante para evitar que a conexão em falha continue aberta
+				server.Connection.Disconnect()
+
+			} else {
+				server.Status = Ready
 			}
-
-			// Importante para evitar que a conexão em falha continue aberta
-			server.Connection.Disconnect()
-
-		} else {
-			server.Status = Ready
-		}
+		*/
 	}
 
 	server.syncConnection.Unlock() // Destravando
@@ -236,20 +232,22 @@ func (server *QPWhatsappServer) Start() (err error) {
 func (server *QPWhatsappServer) Restart() {
 	// Somente executa caso não esteja em estado de processo de conexão
 	// Evita chamadas simultâneas desnecessárias
-	if server.Status != Starting {
-		server.Status = Restarting
-		server.log.Infof("Restarting WhatsApp Server ...")
+	/*
+		if server.Status != Starting {
+			server.Status = Restarting
+			server.log.Infof("Restarting WhatsApp Server ...")
 
-		server.Connection.Disconnect()
-		server.Status = Disconnected
+			server.Connection.Disconnect()
+			server.Status = Disconnected
 
-		// Inicia novamente o servidor e os Handlers(alças)
-		err := server.Initialize()
-		if err != nil {
-			server.Status = Failed
-			server.log.Infof("(ERR) Critical error on WhatsApp Server: %s", err.Error())
+			// Inicia novamente o servidor e os Handlers(alças)
+			err := server.Initialize()
+			if err != nil {
+				server.Status = Failed
+				server.log.Infof("(ERR) Critical error on WhatsApp Server: %s", err.Error())
+			}
 		}
-	}
+	*/
 }
 
 // Somente usar em caso de não ser permitida a reconxão automática
@@ -265,6 +263,7 @@ func (server *QPWhatsappServer) Disconnect(cause string) {
 	server.syncConnection.Unlock() // Destravando
 }
 
+/*
 func (server *QPWhatsappServer) startHandlers() (err error) {
 	// Definindo handlers para mensagens assincronas
 	//startupHandler := &QPMessageHandler{&server.Bot, true, server}
@@ -283,6 +282,7 @@ func (server *QPWhatsappServer) startHandlers() (err error) {
 	//con.AddHandler(asyncMessageHandler)
 	return
 }
+*/
 
 // Retorna o titulo em cache (se houver) do id passado em parametro
 func (server *QPWhatsappServer) GetTitle(Wid string) string {

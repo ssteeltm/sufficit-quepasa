@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 const CurrentAPIVersion string = "v3"

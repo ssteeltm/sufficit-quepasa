@@ -8,6 +8,8 @@ type IWhatsappConnection interface {
 	// Returns Connection Version (beta|multi|single)
 	GetVersion() string
 
+	GetStatus() WhatsappConnectionState
+
 	// Retorna o ID do controlador whatsapp
 	GetWid() (string, error)
 	GetTitle() string

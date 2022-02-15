@@ -45,6 +45,23 @@ func (conn *WhatsmeowConnection) GetWid() (wid string, err error) {
 	return
 }
 
+func (conn *WhatsmeowConnection) GetStatus() (state WhatsappConnectionState) {
+	if conn != nil {
+		state = Created
+		if conn.Client != nil {
+			if conn.Client.IsConnected() {
+				state = Connected
+				if conn.Client.IsLoggedIn() {
+					state = Ready
+				}
+			} else {
+				state = Disconnected
+			}
+		}
+	}
+	return
+}
+
 // Retorna algum titulo válido apartir de um jid
 func (conn *WhatsmeowConnection) GetTitle() string {
 	var result string
