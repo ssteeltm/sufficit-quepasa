@@ -11,8 +11,9 @@ import (
 
 // Serviço que controla os servidores / bots individuais do whatsapp
 type QPWhatsappHandlers struct {
-	messages map[string]WhatsappMessage
-	sync     *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
+	messages     map[string]WhatsappMessage
+	sync         *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
+	syncRegister *sync.Mutex
 
 	// Appended events handler
 	aeh []interface{ Handle(WhatsappMessage) }
@@ -27,12 +28,13 @@ type QPWhatsappHandlers struct {
 // Create a new QuePasa WhatsApp Event Handler
 func NewQPWhatsappHandlers(groups bool, broadcast bool) (handler *QPWhatsappHandlers) {
 	handlerMessages := make(map[string]WhatsappMessage)
-	handlerSync := &sync.Mutex{}
 	handler = &QPWhatsappHandlers{
 		messages:        handlerMessages,
-		sync:            handlerSync,
 		HandleGroups:    groups,
 		HandleBroadcast: broadcast,
+
+		sync:         &sync.Mutex{},
+		syncRegister: &sync.Mutex{},
 	}
 	return
 }
@@ -117,9 +119,13 @@ func (handler *QPWhatsappHandlers) Trigger(payload WhatsappMessage) {
 
 // Register an event handler that triggers on a new message received on cache
 func (handler *QPWhatsappHandlers) Register(evt interface{ Handle(WhatsappMessage) }) {
+	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
+
 	if !handler.IsRegistered(evt) {
 		handler.aeh = append(handler.aeh, evt)
 	}
+
+	handler.sync.Unlock()
 }
 
 func (handler *QPWhatsappHandlers) IsRegistered(evt interface{}) bool {
