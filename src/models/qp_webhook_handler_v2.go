@@ -15,6 +15,11 @@ func (w *QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
 		return
 	}
 
+	if payload.Type == TextMessageType && len(payload.Text) == 0 {
+		log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
+		return
+	}
+
 	msg := ToQPMessageV2(payload, w.Server.GetWid())
 	PostToWebHookFromServer(w.Server, msg)
 }
