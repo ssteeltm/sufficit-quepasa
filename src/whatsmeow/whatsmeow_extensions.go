@@ -6,9 +6,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	. "go.mau.fi/whatsmeow"
-	//. "go.mau.fi/whatsmeow/types"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
@@ -30,11 +29,11 @@ func FormatEndpoint(destination string) string {
 }
 
 func GetMediaTypeFromAttachment(source *WhatsappAttachment) MediaType {
-	return GetMediaType(source.Mimetype)
+	return GetMediaTypeFromString(source.Mimetype)
 }
 
 // Traz o MediaType para download do whatsapp
-func GetMediaType(Mimetype string) MediaType {
+func GetMediaTypeFromString(Mimetype string) MediaType {
 
 	// usado pela API para garantir o envio como documento de qualquer anexo
 	if strings.Contains(Mimetype, "wa-document") {
@@ -68,7 +67,7 @@ func ToWhatsmeowMessage(source IWhatsappMessage) (msg *waProto.Message, err erro
 }
 
 func NewWhatsmeowMessageAttachment(response UploadResponse, attach *WhatsappAttachment) (msg *waProto.Message) {
-	media := GetMediaType(attach.Mimetype)
+	media := GetMediaTypeFromString(attach.Mimetype)
 	switch media {
 	case MediaImage:
 		msg = &waProto.Message{ImageMessage: &waProto.ImageMessage{

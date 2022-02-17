@@ -1,10 +1,10 @@
 module github.com/sufficit/sufficit-quepasa-fork
 
 require (
-	github.com/sufficit/sufficit-quepasa-fork/controllers v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/controllers v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000
 	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -30,13 +30,18 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect
 	go.mau.fi/libsignal v0.0.0-20211109153248-a67163214910 // indirect
-	go.mau.fi/whatsmeow v0.0.0-20220128124639-e64fb976bf15 // indirect
-	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
+	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+)
+
+require (
+	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/metrics v0.0.0-00010101000000-000000000000 // indirect
 )
 
 replace github.com/sufficit/sufficit-quepasa-fork/controllers => ./controllers/
