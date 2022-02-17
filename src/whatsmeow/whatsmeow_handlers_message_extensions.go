@@ -125,7 +125,9 @@ func HandleDocumentMessage(log *log.Entry, out *WhatsappMessage, in *DocumentMes
 	out.Content = in
 	out.Type = DocumentMessageType
 
-	out.Text = *in.Title
+	if in.Title != nil {
+		out.Text = *in.Title
+	}
 
 	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
 	out.Attachment = &WhatsappAttachment{
