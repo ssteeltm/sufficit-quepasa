@@ -45,7 +45,7 @@ func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 	switch v := evt.(type) {
 
 	case *events.Message:
-		handler.Message(*v)
+		go handler.Message(*v)
 
 	case *events.Connected:
 		// zerando contador de tentativas de reconexão
