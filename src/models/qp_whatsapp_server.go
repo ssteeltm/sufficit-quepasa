@@ -119,6 +119,7 @@ func (server *QPWhatsappServer) SendAttachment(recipient string, text string, at
 }
 
 func (server *QPWhatsappServer) SendMessage(msg *WhatsappMessage) (err error) {
+	server.log.Debugf("sending msg to: %v", msg.Chat.ID)
 	response, err := server.Connection.Send(*msg)
 	msg.ID = response.GetID()
 	msg.Timestamp = response.GetTime()
