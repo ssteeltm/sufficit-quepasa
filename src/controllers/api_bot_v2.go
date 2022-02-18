@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
+	log "github.com/sirupsen/logrus"
 	. "github.com/sufficit/sufficit-quepasa-fork/library"
 	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
@@ -76,6 +77,9 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		RespondServerError(server, w, err)
 		return
 	}
+
+	log.Infof("sending requested: %v", request)
+
 	recipient, err := FormatEndpoint(request.Recipient)
 	if err != nil {
 		MessageSendErrors.Inc()
