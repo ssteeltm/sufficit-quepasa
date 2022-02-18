@@ -15,17 +15,20 @@ type WhatsmeowLogLevel string
 
 const (
 	DebugLevel WhatsmeowLogLevel = "DEBUG"
-	InfoLevel                    = "INFO"
-	WarnLevel                    = "WARN"
-	ErrorLevel                   = "ERROR"
+	InfoLevel  WhatsmeowLogLevel = "INFO"
+	WarnLevel  WhatsmeowLogLevel = "WARN"
+	ErrorLevel WhatsmeowLogLevel = "ERROR"
 )
 
 func FormatEndpoint(destination string) string {
-	if strings.Contains(destination, "-") {
-		return destination + "@g.us"
-	} else {
-		return destination + "@s.whatsapp.net"
+	if !strings.Contains(destination, "@") {
+		if strings.Contains(destination, "-") {
+			return destination + "@g.us"
+		} else {
+			return destination + "@s.whatsapp.net"
+		}
 	}
+	return destination
 }
 
 func GetMediaTypeFromAttachment(source *WhatsappAttachment) MediaType {
