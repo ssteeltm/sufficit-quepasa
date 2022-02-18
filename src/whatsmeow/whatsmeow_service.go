@@ -22,7 +22,7 @@ func (service *WhatsmeowServiceModel) Start() {
 	if service == nil {
 		log.Trace("Starting Whatsmeow Service ....")
 
-		dbLog := waLog.Stdout("whatsmeow/database", WarnLevel, true)
+		dbLog := waLog.Stdout("whatsmeow/database", string(WarnLevel), true)
 		container, err := sqlstore.New("sqlite3", "file:whatsmeow.db?_foreign_keys=on", dbLog)
 		if err != nil {
 			panic(err)
