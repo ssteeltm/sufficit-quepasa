@@ -122,6 +122,7 @@ func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendRespons
 
 	// Formatting destination accordly
 	formatedDestiantion := FormatEndpoint(msg.GetChatID())
+	conn.log.Debugf("sending msg to: %v", formatedDestiantion)
 
 	jid, err := ParseJID(formatedDestiantion)
 	if err != nil {
