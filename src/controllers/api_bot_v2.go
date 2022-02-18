@@ -78,7 +78,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("sending requested: %v", request)
+	log.Tracef("sending requested: %v", request)
 	recipient, err := FormatEndpoint(request.Recipient)
 	if err != nil {
 		MessageSendErrors.Inc()
