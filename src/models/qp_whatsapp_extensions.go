@@ -118,6 +118,8 @@ func ToQPEndPointV1(source WhatsappEndpoint) (destination QPEndpointV1) {
 		} else {
 			destination.ID = source.ID + "@s.whatsapp.net"
 		}
+	} else {
+		destination.ID = source.ID
 	}
 
 	destination.Title = source.Title
@@ -137,6 +139,8 @@ func ToQPEndPointV2(source WhatsappEndpoint) (destination QPEndpointV2) {
 		} else {
 			destination.ID = source.ID + "@s.whatsapp.net"
 		}
+	} else {
+		destination.ID = source.ID
 	}
 
 	destination.Title = source.Title
@@ -156,6 +160,8 @@ func ChatToQPEndPointV1(source WhatsappChat) (destination QPEndpointV1) {
 		} else {
 			destination.ID = source.ID + "@s.whatsapp.net"
 		}
+	} else {
+		destination.ID = source.ID
 	}
 
 	destination.Title = source.Title
@@ -171,6 +177,8 @@ func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
 		} else {
 			destination.ID = source.ID + "@s.whatsapp.net"
 		}
+	} else {
+		destination.ID = source.ID
 	}
 
 	destination.Title = source.Title
@@ -187,6 +195,8 @@ func ChatToQPEndPointV2(source WhatsappChat) (destination QPEndpointV2) {
 			destination.ID = source.ID + "@s.whatsapp.net"
 			destination.UserName = "+" + source.ID
 		}
+	} else {
+		destination.ID = source.ID
 	}
 
 	destination.Title = source.Title
