@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
@@ -15,7 +17,7 @@ func (w *QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
 		return
 	}
 
-	if payload.Type == TextMessageType && len(payload.Text) == 0 {
+	if payload.Type == TextMessageType && len(strings.TrimSpace(payload.Text)) == 0 {
 		log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
 		return
 	}
