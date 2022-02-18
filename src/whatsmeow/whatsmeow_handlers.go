@@ -87,7 +87,8 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 	message.FromMe = evt.Info.IsFromMe
 
 	message.Chat = WhatsappChat{}
-	message.Chat.ID = evt.Info.Chat.User
+	chatID := fmt.Sprint(evt.Info.Chat.User, "@", evt.Info.Chat.Server)
+	message.Chat.ID = chatID
 
 	if evt.Info.IsGroup {
 		gInfo, _ := handler.Client.GetGroupInfo(evt.Info.Chat)
@@ -96,7 +97,9 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 		}
 
 		message.Participant = WhatsappEndpoint{}
-		message.Participant.ID = evt.Info.Sender.User
+
+		participantID := fmt.Sprint(evt.Info.Sender.User, "@", evt.Info.Sender.Server)
+		message.Participant.ID = participantID
 		message.Participant.Title = evt.Info.PushName
 	} else {
 		message.Chat.Title = evt.Info.PushName
