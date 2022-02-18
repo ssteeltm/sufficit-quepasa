@@ -20,19 +20,6 @@ const (
 	ErrorLevel WhatsmeowLogLevel = "ERROR"
 )
 
-func FormatEndpoint(destination string) string {
-	if !strings.Contains(destination, "@") {
-
-		// E164 format has maximum of 15 caracters
-		if strings.Contains(destination, "-") || len(destination) > 15 {
-			return destination + "@g.us"
-		} else {
-			return destination + "@s.whatsapp.net"
-		}
-	}
-	return destination
-}
-
 func GetMediaTypeFromAttachment(source *WhatsappAttachment) MediaType {
 	return GetMediaTypeFromString(source.Mimetype)
 }

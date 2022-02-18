@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/base64"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/library"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 

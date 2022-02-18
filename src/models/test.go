@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "github.com/sufficit/sufficit-quepasa-fork/library"
+	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 func SendMessageFromBOT(botID string, recipient string, text string, attachment QPAttachment) (messageID string, err error) {

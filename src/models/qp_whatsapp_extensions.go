@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/library"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
