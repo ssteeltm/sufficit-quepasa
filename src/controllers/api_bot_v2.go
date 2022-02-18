@@ -67,8 +67,6 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("sending requested: %v", r.Body)
-
 	// Declare a new Person struct.
 	var request QPSendRequest
 
@@ -80,6 +78,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Infof("sending requested: %v", request)
 	recipient, err := FormatEndpoint(request.Recipient)
 	if err != nil {
 		MessageSendErrors.Inc()
