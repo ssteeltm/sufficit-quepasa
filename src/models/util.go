@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -27,6 +26,7 @@ func GetUser(r *http.Request) (QPUser, error) {
 	return WhatsappService.DB.User.FindByID(userID)
 }
 
+/*
 // CleanPhoneNumber removes all non-numeric characters from a string
 func CleanPhoneNumber(number string) (string, error) {
 	var out string
@@ -36,6 +36,7 @@ func CleanPhoneNumber(number string) (string, error) {
 
 	return GetPhoneByID(number)
 }
+*/
 
 // Usado também para identificar o número do bot
 // Meramente visual

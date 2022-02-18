@@ -78,7 +78,7 @@ func (source *WhatsappMessage) GetSource() interface{} {
 }
 
 func (source *WhatsappMessage) FromGroup() bool {
-	return strings.Contains(source.Chat.ID, "-")
+	return strings.HasSuffix(source.Chat.ID, "@g.us")
 }
 
 func (source *WhatsappMessage) FromBroadcast() bool {
