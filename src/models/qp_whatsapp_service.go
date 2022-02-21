@@ -136,3 +136,8 @@ func (service *QPWhatsappService) GetServersForUser(userid string) (servers map[
 	}
 	return
 }
+
+func (service *QPWhatsappService) GetUser(email string, password string) (user QPUser, err error) {
+	log.Debug("finding user ...")
+	return service.DB.User.Check(email, password)
+}

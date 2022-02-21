@@ -10,6 +10,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
+	"github.com/prometheus/common/log"
+	"github.com/prometheus/common@v0.9.1/log"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
@@ -45,7 +47,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := WhatsappService.DB.User.Check(email, password)
+	user, err := WhatsappService.GetUser(email, password)
 	if err != nil {
 		RespondUnauthorized(w, errors.New("Incorrect username or password"))
 		return
@@ -55,7 +57,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	claims := jwt.MapClaims{"user_id": user.ID}
 	jwtauth.SetIssuedNow(claims)
 	jwtauth.SetExpiryIn(claims, 24*time.Hour)
-	_, tokenString, _ := tokenAuth.Encode(claims)
+	_, tokenString, err := tokenAuth.Encode(claims)
+	if err != nil {
+		RespondServerError(w, errors.New("Cannot encode token to save"))
+		return
+	}
+
 	cookie := &http.Cookie{
 		Name:     "jwt",
 		Value:    tokenString,
@@ -64,7 +71,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	}
 
+	log.Debugf("setting cookie and redirecting to: %v", FormAccountEndpoint)
 	http.SetCookie(w, cookie)
-
 	http.Redirect(w, r, FormAccountEndpoint, http.StatusFound)
 }
