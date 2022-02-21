@@ -10,8 +10,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/jwtauth"
-	"github.com/prometheus/common/log"
-	"github.com/prometheus/common@v0.9.1/log"
+	log "github.com/sirupsen/logrus"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
@@ -59,7 +58,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwtauth.SetExpiryIn(claims, 24*time.Hour)
 	_, tokenString, err := tokenAuth.Encode(claims)
 	if err != nil {
-		RespondServerError(w, errors.New("Cannot encode token to save"))
+		RespondError(w, errors.New("Cannot encode token to save"), 500)
 		return
 	}
 
