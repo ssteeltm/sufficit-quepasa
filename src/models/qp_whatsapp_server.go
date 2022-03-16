@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -170,11 +169,10 @@ func (server *QPWhatsappServer) Shutdown() (err error) {
 	//server.syncConnection.Lock() // Travando
 
 	server.log.Info("Shutting Down WhatsApp Server ...")
-
 	err = server.Connection.Disconnect()
 
 	// caso erro diferente de nulo e não seja pq já esta desconectado
-	if err != nil && !strings.Contains(err.Error(), "not connected") {
+	if err != nil {
 		server.log.Error("Shutting WhatsApp Server", err)
 	}
 

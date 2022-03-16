@@ -145,12 +145,14 @@ func (conn *WhatsrhymenConnection) UploadAttachment(msg whatsapp.WhatsappMessage
 }
 
 func (conn *WhatsrhymenConnection) Disconnect() (err error) {
-	session, err := conn.Client.Disconnect()
-	if err != nil {
-		return
-	}
+	if conn.Client.Info.Connected {
+		session, err := conn.Client.Disconnect()
+		if err != nil {
+			return err
+		}
 
-	conn.Session = &session
+		conn.Session = &session
+	}
 	return
 }
 
@@ -175,6 +177,9 @@ func (conn *WhatsrhymenConnection) GetWhatsAppQRChannel(result chan<- string) (e
 	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
 	// Saving session data
 	err = WhatsrhymenService.Container.Update(session)
+
+	// Updating wid on logs
+	conn.log.WithField("wid", session.Wid)
 	return
 }
 
