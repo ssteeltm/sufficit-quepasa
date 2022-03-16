@@ -29,14 +29,19 @@ func (service *WhatsrhymenServiceModel) Start() {
 }
 
 func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log.Logger) (conn *WhatsrhymenConnection, err error) {
-	clientLog := log.New()
-	client, err := service.GetWhatsAppClient(wid, clientLog)
+	client, err := service.GetWhatsAppClient()
 	if err != nil {
 		return
 	}
 
 	logger.SetLevel(log.DebugLevel)
-	loggerEntry := logger.WithField("wid", wid)
+	var loggerEntry *log.Entry
+	if len(wid) > 0 {
+		loggerEntry = logger.WithField("wid", wid)
+	} else {
+		loggerEntry = logger.WithField("wid", "unknown")
+	}
+
 	handlers := &WhatsrhymenHandlers{
 		Connection: client,
 		log:        loggerEntry,
@@ -66,12 +71,7 @@ func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log
 	return
 }
 
-/*
-func (service *WhatsrhymenServiceModel) GetStoreFromWid(wid string) (str *store.Device, err error) {
-	return
-}
-*/
-func (service *WhatsrhymenServiceModel) GetWhatsAppClient(wid string, logger *log.Logger) (client *whatsrhymen.Conn, err error) {
+func (service *WhatsrhymenServiceModel) GetWhatsAppClient() (client *whatsrhymen.Conn, err error) {
 	client, err = whatsrhymen.NewConn(20 * time.Second)
 
 	client.SetClientName("QuePasa for Link", "QuePasa", "0.9")
@@ -84,9 +84,11 @@ func (service *WhatsrhymenServiceModel) GetWhatsAppClient(wid string, logger *lo
 // Flush entire Whatsrhymen Database
 // Use with wisdom !
 func (service *WhatsrhymenServiceModel) FlushDatabase() (err error) {
+	service.Container.logger.Warn("flushing entire database of whatsrhymen")
 	return
 }
 
 func (service *WhatsrhymenServiceModel) Delete(wid string) error {
+	service.Container.logger.Info("deleting whatsrhymen")
 	return service.Container.Delete(wid)
 }
