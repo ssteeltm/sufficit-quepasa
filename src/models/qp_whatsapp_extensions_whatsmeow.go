@@ -5,15 +5,15 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 )
 
-func NewConnection(wid string, logger *log.Logger) (IWhatsappConnection, error) {
-	return WhatsmeowService.CreateConnection(wid, logger)
+func NewWhatsmeowConnection(wid string, logger *log.Logger) (whatsapp.IWhatsappConnection, error) {
+	return whatsmeow.WhatsmeowService.CreateConnection(wid, logger)
 }
 
-func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
+func ToQPMessageV2(source whatsapp.WhatsappMessage, wid string) (message QPMessageV2) {
 	message.ID = source.ID
 	message.Timestamp = uint64(source.Timestamp.Unix())
 	message.Text = source.Text
@@ -29,7 +29,7 @@ func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
 	message.ReplyTo = ChatToQPEndPointV2(source.Chat)
 	message.Chat = ChatToQPChatV2(source.Chat)
 
-	if (WhatsappEndpoint{}) != source.Participant {
+	if (whatsapp.WhatsappEndpoint{}) != source.Participant {
 		message.Participant = ToQPEndPointV2(source.Participant)
 	}
 
@@ -48,7 +48,7 @@ func ToQPMessageV2(source WhatsappMessage, wid string) (message QPMessageV2) {
 	return
 }
 
-func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
+func ToQPMessageV1(source whatsapp.WhatsappMessage, wid string) (message QPMessageV1) {
 	message.ID = source.ID
 	message.Timestamp = uint64(source.Timestamp.Unix())
 	message.Text = source.Text
@@ -63,7 +63,7 @@ func ToQPMessageV1(source WhatsappMessage, wid string) (message QPMessageV1) {
 
 	message.ReplyTo = ChatToQPEndPointV1(source.Chat)
 
-	if (WhatsappEndpoint{}) != source.Participant {
+	if (whatsapp.WhatsappEndpoint{}) != source.Participant {
 		message.Participant = ToQPEndPointV1(source.Participant)
 	}
 

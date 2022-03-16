@@ -63,14 +63,14 @@ func (conn *WhatsmeowConnection) GetStatus() (state WhatsappConnectionState) {
 }
 
 // Retorna algum titulo válido apartir de um jid
-func (conn *WhatsmeowConnection) GetTitle() string {
+func (conn *WhatsmeowConnection) GetTitle(Wid string) string {
+	jid := NewJID(Wid, "")
 	var result string
-	/*
-		contact, ok := store.Contacts[jid]
-		if ok {
-			result = getContactTitle(contact)
-		}
-	*/
+	contact, err := conn.Client.Store.Contacts.GetContact(jid)
+	if err == nil {
+		result = contact.PushName
+	}
+
 	return result
 }
 
@@ -164,6 +164,7 @@ func (conn *WhatsmeowConnection) UploadAttachment(msg WhatsappMessage) (result *
 }
 
 func (conn *WhatsmeowConnection) Disconnect() error {
+	conn.Client.Disconnect()
 	return nil
 }
 
@@ -172,7 +173,7 @@ func (conn *WhatsmeowConnection) Delete() error {
 	return conn.Client.Store.Delete()
 }
 
-func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan string) (err error) {
+func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
 	// No ID stored, new login
 	qrChan, _ := conn.Client.GetQRChannel(context.Background())
 	err = conn.Client.Connect()
@@ -204,9 +205,11 @@ func (conn *WhatsmeowConnection) UpdateHandler(handlers IWhatsappHandlers) {
 //endregion
 
 func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
-	if conn.waLogger != nil {
-		//conn.waLogger.SetLevel(level)
-	}
+	/*
+		if conn.waLogger != nil {
+			conn.waLogger.SetLevel(level)
+		}
+	*/
 }
 
 func (conn *WhatsmeowConnection) PrintStatus() {

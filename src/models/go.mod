@@ -1,9 +1,10 @@
 module github.com/sufficit/sufficit-quepasa-fork/models
 
 require (
-	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/whatsrhymen v0.0.0-00010101000000-000000000000 // indirect
 )
 
 require (
@@ -23,15 +24,9 @@ require (
 	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	google.golang.org/protobuf v1.27.1 // indirect
-)
-
-require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/joncalhoun/migrate v0.0.2
-)
-
-require (
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 )
@@ -39,6 +34,8 @@ require (
 replace github.com/sufficit/sufficit-quepasa-fork/library => ../library
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
+
+replace github.com/sufficit/sufficit-quepasa-fork/whatsrhymen => ../whatsrhymen
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
 
