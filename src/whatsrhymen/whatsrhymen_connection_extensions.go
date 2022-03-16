@@ -102,7 +102,6 @@ func (conn *WhatsrhymenConnection) SendImage(msg whatsapp.WhatsappMessage) (what
 func (conn *WhatsrhymenConnection) SendDocument(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 	response := &whatsapp.WhatsappSendResponse{}
 	var err error
-	messageText := msg.GetText()
 
 	// Informações basicas para todo tipo de mensagens
 	info := whatsrhymen.MessageInfo{
@@ -116,19 +115,14 @@ func (conn *WhatsrhymenConnection) SendDocument(msg whatsapp.WhatsappMessage) (w
 		// Futuramente fazer download de uma URL para permitir tamanhos maiores
 		reader := bytes.NewReader(content)
 
-		if len(messageText) == 0 {
-			messageText := msg.Attachment.FileName
-			if idx := strings.IndexByte(messageText, '.'); idx >= 0 {
-				messageText = messageText[:idx]
-			}
-		}
+		filename := msg.Attachment.FileName
+		conn.log.Tracef("sending file, filename: %s", filename)
 
 		wamsg := whatsrhymen.DocumentMessage{
-			Info:     info,
-			Title:    messageText,
-			FileName: msg.Attachment.FileName,
-			Type:     msg.Attachment.Mimetype,
-			Content:  reader,
+			Info:    info,
+			Title:   filename,
+			Type:    msg.Attachment.Mimetype,
+			Content: reader,
 		}
 		response.ID, err = conn.Client.Send(wamsg)
 	} else {
@@ -136,4 +130,38 @@ func (conn *WhatsrhymenConnection) SendDocument(msg whatsapp.WhatsappMessage) (w
 	}
 
 	return response, err
+}
+
+// Traz o MediaType para download do whatsapp
+func WAMediaType(m whatsapp.WhatsappAttachment) whatsrhymen.MediaType {
+
+	if strings.Contains(m.Mimetype, "wa-document") {
+		return whatsrhymen.MediaDocument
+	}
+
+	// apaga informações após o ;
+	// fica somente o mime mesmo
+	mimeOnly := strings.Split(m.Mimetype, ";")
+	switch mimeOnly[0] {
+	case "image/png", "image/jpeg":
+		return whatsrhymen.MediaImage
+	case "audio/ogg", "audio/mpeg", "audio/mp4", "audio/x-wav":
+		return whatsrhymen.MediaAudio
+	default:
+		return whatsrhymen.MediaDocument
+	}
+}
+
+func MessageTypeFromAttachment(m whatsapp.WhatsappAttachment) whatsapp.WhatsappMessageType {
+	mediatype := WAMediaType(m)
+	switch mediatype {
+	case whatsrhymen.MediaImage:
+		return whatsapp.ImageMessageType
+	case whatsrhymen.MediaAudio:
+		return whatsapp.AudioMessageType
+	case whatsrhymen.MediaDocument:
+		return whatsapp.DocumentMessageType
+	default:
+		return whatsapp.UnknownMessageType
+	}
 }

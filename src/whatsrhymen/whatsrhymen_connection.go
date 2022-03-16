@@ -134,6 +134,13 @@ func (conn *WhatsrhymenConnection) Download(imsg whatsapp.IWhatsappMessage) (att
 
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsrhymenConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
+
+	if msg.Type == whatsapp.UnknownMessageType {
+		if msg.HasAttachment() {
+			msg.Type = MessageTypeFromAttachment(*msg.Attachment)
+		}
+	}
+
 	switch msg.Type {
 	case whatsapp.AudioMessageType:
 		return conn.SendAudio(msg)
@@ -141,6 +148,9 @@ func (conn *WhatsrhymenConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.
 		return conn.SendImage(msg)
 	case whatsapp.DocumentMessageType:
 		return conn.SendDocument(msg)
+	case whatsapp.DiscardMessageType:
+		// discarding
+		return &whatsapp.WhatsappSendResponse{}, nil
 	default:
 		return conn.SendText(msg)
 	}
