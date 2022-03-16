@@ -6,6 +6,10 @@
 {{ end }}
 
 <script>
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const mode = urlParams.get('mode')
+
   window.onload = getQRCode;
   var myWebSocket;
 
@@ -42,7 +46,8 @@
 
   function onWebSocketOpen(event){
     if (event) {
-      myWebSocket.send("start");
+      console.debug("sending start with mode: " + mode)
+      myWebSocket.send("start:" + mode);
     } else { formatDebug("no event passed"); }
   }
 
@@ -67,7 +72,10 @@
         //console.debug("websocket echo keep alive");
       } else if (event.data === "timeout") {
         console.debug("timeout: regenerating qr code and trying again");
-        myWebSocket.send("start");
+        myWebSocket.send("start:" + mode);
+      } else if (event.data === "error") {
+        console.debug("unknown error: regenerating qr code and trying again");
+        myWebSocket.send("start:" + mode);
       } else {
         loadQrCode(event.data);
       }

@@ -1,10 +1,13 @@
 module github.com/sufficit/sufficit-quepasa-fork
 
 require (
-	github.com/sufficit/sufficit-quepasa-fork/controllers v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa-fork/controllers v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000 // indirect
 	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/whatsrhymen v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/metrics v0.0.0-00010101000000-000000000000 // indirect
 )
 
 require (
@@ -15,7 +18,6 @@ require (
 	github.com/go-chi/chi v4.1.1+incompatible
 	github.com/go-chi/jwtauth v4.0.4+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jinzhu/copier v0.3.5 // indirect
@@ -31,17 +33,19 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/sirupsen/logrus v1.8.1
-	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect
-	go.mau.fi/libsignal v0.0.0-20211109153248-a67163214910 // indirect
-	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
+	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect	
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 )
 
+require github.com/Rhymen/go-whatsapp v0.1.1
+
 require (
-	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/metrics v0.0.0-00010101000000-000000000000 // indirect
+	go.mau.fi/libsignal v0.0.0-20211109153248-a67163214910 // indirect
+	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
 )
 
 replace github.com/sufficit/sufficit-quepasa-fork/controllers => ./controllers/
@@ -53,6 +57,8 @@ replace github.com/sufficit/sufficit-quepasa-fork/library => ./library/
 replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ./whatsapp/
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ./whatsmeow/
+
+replace github.com/sufficit/sufficit-quepasa-fork/whatsrhymen => ./whatsrhymen/
 
 replace github.com/sufficit/sufficit-quepasa-fork/metrics => ./metrics/
 

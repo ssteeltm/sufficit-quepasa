@@ -9,7 +9,16 @@ import (
 	"github.com/skip2/go-qrcode"
 
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
+
+func NewConnection(wid string, multidevice bool, logger *log.Logger) (whatsapp.IWhatsappConnection, error) {
+	if multidevice {
+		return NewWhatsmeowConnection(wid, logger)
+	} else {
+		return NewWhatsrhymenConnection(wid, logger)
+	}
+}
 
 func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
 	defer func() {
@@ -26,26 +35,34 @@ func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
 
 // Envia o QRCode para o usuário e aguarda pela resposta
 // Retorna um novo BOT
-func SignInWithQRCode(user QPUser, out chan<- []byte) (server *QPWhatsappServer, err error) {
-	con, err := NewConnection("", log.StandardLogger())
+func SignInWithQRCode(user QPUser, multidevice bool, out chan<- []byte) (server *QPWhatsappServer, err error) {
+
+	con, err := NewConnection("", multidevice, log.StandardLogger())
 	if err != nil {
 		return
 	}
 
 	log.Info("GetWhatsAppQRChannel ...")
 	qrChan := make(chan string)
-	go con.GetWhatsAppQRChannel(qrChan)
-	for qrBase64 := range qrChan {
-		var png []byte
-		png, err := qrcode.Encode(qrBase64, qrcode.Medium, 256)
-		if err != nil {
-			log.Printf("(ERR) Error on QrCode encode :: %v\r", err.Error())
-		}
-		encodedPNG := base64.StdEncoding.EncodeToString(png)
+	go func() {
+		for qrBase64 := range qrChan {
+			var png []byte
+			png, err := qrcode.Encode(qrBase64, qrcode.Medium, 256)
+			if err != nil {
+				log.Printf("(ERR) Error on QrCode encode :: %v", err.Error())
+			}
+			encodedPNG := base64.StdEncoding.EncodeToString(png)
 
-		if !TryUpdateHttpChannel(out, []byte(encodedPNG)) {
-			break
+			if !TryUpdateHttpChannel(out, []byte(encodedPNG)) {
+				log.Printf("(ERR) Cant write to output")
+				break
+			}
 		}
+	}()
+
+	err = con.GetWhatsAppQRChannel(qrChan)
+	if err != nil {
+		return
 	}
 
 	wid, err := con.GetWid()
@@ -58,12 +75,14 @@ func SignInWithQRCode(user QPUser, out chan<- []byte) (server *QPWhatsappServer,
 		return
 	}
 
-	// Descartando conexão anterior e criando uma nova com um novo wid
-	_ = con.Disconnect()
+	if multidevice {
+		// Descartando conexão anterior e criando uma nova com um novo wid
+		_ = con.Disconnect()
 
-	con, err = NewConnection(wid, log.StandardLogger())
-	if err != nil {
-		return
+		con, err = NewConnection(wid, multidevice, log.StandardLogger())
+		if err != nil {
+			return
+		}
 	}
 
 	// Se chegou até aqui é pq o QasdadRCode foi validado e sincronizado

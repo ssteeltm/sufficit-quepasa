@@ -12,12 +12,12 @@ type IWhatsappConnection interface {
 
 	// Retorna o ID do controlador whatsapp
 	GetWid() (string, error)
-	GetTitle() string
+	GetTitle(Wid string) string
 
 	Connect() error
 	Disconnect() error
 	Delete() error
-	GetWhatsAppQRChannel(chan string) error
+	GetWhatsAppQRChannel(chan<- string) error
 	UpdateHandler(IWhatsappHandlers)
 
 	// Download message attachment if exists

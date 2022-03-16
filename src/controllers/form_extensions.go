@@ -123,7 +123,7 @@ func FormToggleGroupsController(w http.ResponseWriter, r *http.Request) {
 // Verify
 //
 
-// VerifyFormHandler renders route GET "/bot/verify"
+// VerifyFormHandler renders route GET "/bot/verify" ?mode={sd|md}
 func VerifyFormHandler(w http.ResponseWriter, r *http.Request) {
 	data := QPFormVerifyData{
 		PageTitle:   "Verify To Add or Update",
@@ -208,7 +208,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 			return
 		}
 
-		if strings.EqualFold(string(msg), "start") {
+		if strings.EqualFold(string(msg), "start:sd") || strings.EqualFold(string(msg), "start:md") {
 			out := make(chan []byte)
 			go func() {
 				defer close(out)
@@ -218,9 +218,10 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 				}
 			}()
 
+			multidevice := strings.EqualFold(string(msg), "start:md")
+
 			// Exibindo código QR
-			server, err := SignInWithQRCode(user, out)
-			//panic("finalizando")
+			server, err := SignInWithQRCode(user, multidevice, out)
 			if err != nil {
 				if strings.Contains(err.Error(), "timed out") {
 					err = connection.WriteMessage(mt, []byte("timeout"))
@@ -247,7 +248,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 				return
 			}
 		} else {
-			log.Printf("Received Unknown msg from WebSocket: %s\n", msg)
+			log.Printf("Received Unknown msg from WebSocket: %s", msg)
 		}
 	}
 }
