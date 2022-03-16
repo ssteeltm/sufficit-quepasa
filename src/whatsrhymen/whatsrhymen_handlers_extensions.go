@@ -1,7 +1,7 @@
 package whatsrhymen
 
 import (
-	"log"
+	"mime"
 	"time"
 
 	whatsrhymen "github.com/Rhymen/go-whatsapp"
@@ -10,8 +10,8 @@ import (
 
 // Cria uma mensagem no formato do QuePasa apartir de uma msg do WhatsApp
 // Preenche somente as propriedades padrões e comuns a todas as msgs
-func CreateMessageFromInfo(Info whatsrhymen.MessageInfo) (message *whatsapp.WhatsappMessage) {
-	message = &whatsapp.WhatsappMessage{}
+func CreateMessageFromInfo(Info whatsrhymen.MessageInfo) (message *WhatsrhymenMessage) {
+	message = &WhatsrhymenMessage{}
 	message.ID = Info.Id
 	message.Timestamp = time.Unix(int64(Info.Timestamp), 0)
 
@@ -20,7 +20,7 @@ func CreateMessageFromInfo(Info whatsrhymen.MessageInfo) (message *whatsapp.What
 	return
 }
 
-func FillHeader(message *whatsapp.WhatsappMessage, Info whatsrhymen.MessageInfo, Conn *whatsrhymen.Conn) (err error) {
+func FillHeader(message *WhatsrhymenMessage, Info whatsrhymen.MessageInfo, Conn *whatsrhymen.Conn) (err error) {
 
 	// Endereço correto para onde deve ser devolvida a msg
 	message.Chat.ID = Info.RemoteJid
@@ -58,53 +58,94 @@ func getContactTitle(contact whatsrhymen.Contact) string {
 	return result
 }
 
-func FillImageAttachment(message *whatsapp.WhatsappMessage, msg whatsrhymen.ImageMessage, con *whatsrhymen.Conn) {
-	if msg.Info.Source.Message.ImageMessage.Url == nil {
-		// Aconteceu na primeira vez, quando cadastrei o número de whatsapp errado
-		log.Println("erro on filling image attachement, url not avail")
-		return
-	}
+func FillImageAttachment(message *WhatsrhymenMessage, msg whatsrhymen.ImageMessage, con *whatsrhymen.Conn) {
+	innerMSG := msg.Info.Source.Message.ImageMessage
 
-	// getKey := msg.Info.Source.Message.ImageMessage.MediaKey
-	getUrl := *msg.Info.Source.Message.ImageMessage.Url
-	getLength := *msg.Info.Source.Message.ImageMessage.FileLength
-	getMIME := *msg.Info.Source.Message.ImageMessage.Mimetype
+	getKey := innerMSG.GetMediaKey()
+	getUrl := innerMSG.GetUrl()
+	getLength := innerMSG.GetFileLength()
+	getMIME := innerMSG.GetMimetype()
+	getFileName := GetFileName(message.ID, getMIME, whatsrhymen.MediaImage)
 
 	message.Attachment = &whatsapp.WhatsappAttachment{
+		FileName:   getFileName,
 		FileLength: getLength,
 		Mimetype:   getMIME,
-		FileName:   getUrl,
+	}
+
+	message.AttachmentInfo = &WhatsrhymenAttachmentInfo{
+		Url:       getUrl,
+		MediaKey:  getKey,
+		Length:    int(getLength),
+		MediaType: whatsrhymen.MediaImage,
 	}
 }
 
-func FillAudioAttachment(message *whatsapp.WhatsappMessage, msg whatsrhymen.AudioMessage, con *whatsrhymen.Conn) {
-	// getKey := msg.Info.Source.Message.AudioMessage.MediaKey
-	getUrl := *msg.Info.Source.Message.AudioMessage.Url
-	getLength := *msg.Info.Source.Message.AudioMessage.FileLength
-	getMIME := *msg.Info.Source.Message.AudioMessage.Mimetype
+func FillAudioAttachment(message *WhatsrhymenMessage, msg whatsrhymen.AudioMessage, con *whatsrhymen.Conn) {
+	innerMSG := msg.Info.Source.Message.AudioMessage
+
+	getKey := innerMSG.GetMediaKey()
+	getUrl := innerMSG.GetUrl()
+	getLength := innerMSG.GetFileLength()
+	getMIME := innerMSG.GetMimetype()
+	getFileName := GetFileName(message.ID, getMIME, whatsrhymen.MediaAudio)
 
 	message.Attachment = &whatsapp.WhatsappAttachment{
+		FileName:   getFileName,
 		FileLength: getLength,
 		Mimetype:   getMIME,
-		FileName:   getUrl,
+	}
+
+	message.AttachmentInfo = &WhatsrhymenAttachmentInfo{
+		Url:       getUrl,
+		MediaKey:  getKey,
+		Length:    int(getLength),
+		MediaType: whatsrhymen.MediaAudio,
 	}
 }
 
-func FillDocumentAttachment(message *whatsapp.WhatsappMessage, msg whatsrhymen.DocumentMessage, con *whatsrhymen.Conn) {
+// using mime database to apply an extension on filename
+func GetFileName(id string, mimetype string, mediatype whatsrhymen.MediaType) string {
+	extensions, err := mime.ExtensionsByType(mimetype)
+	if err != nil {
+		if mediatype == whatsrhymen.MediaAudio {
+			return id + ".ogg"
+		} else if mediatype == whatsrhymen.MediaImage {
+			return id + ".jpg"
+		} else {
+			return ""
+		}
+	} else {
+		return id + extensions[0]
+	}
+}
+
+func FillDocumentAttachment(message *WhatsrhymenMessage, msg whatsrhymen.DocumentMessage, con *whatsrhymen.Conn) {
 	innerMSG := msg.Info.Source.Message.DocumentMessage
 
+	getKey := innerMSG.GetMediaKey()
+	getUrl := innerMSG.GetUrl()
+	getLength := innerMSG.GetFileLength()
+	getMIME := innerMSG.GetMimetype()
+
 	message.Attachment = &whatsapp.WhatsappAttachment{
-		FileLength: *innerMSG.FileLength,
+		FileLength: getLength,
 
 		// Adicionando document no final do mime para saber que foi enviado como documento pelo whatsapp
 		// Acontece de enviarem imagens como documento e não como imagens
 		// Essa informação adicional é importante para realizar o download da media depois
-		Mimetype: msg.Type + "; wa-document",
+		Mimetype: getMIME + "; wa-document",
 		FileName: msg.FileName,
+	}
+
+	message.AttachmentInfo = &WhatsrhymenAttachmentInfo{
+		Url:       getUrl,
+		MediaKey:  getKey,
+		Length:    int(getLength),
+		MediaType: whatsrhymen.MediaDocument,
 	}
 }
 
-func Download(url string, mediakey []byte, media whatsrhymen.MediaType, length int) (data []byte, err error) {
-	data, err = whatsrhymen.Download(url, mediakey, media, length)
-	return
+func DownloadAttachment(url string, mediakey []byte, media whatsrhymen.MediaType, length int) (data []byte, err error) {
+	return whatsrhymen.Download(url, mediakey, media, length)
 }

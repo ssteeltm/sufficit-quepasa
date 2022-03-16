@@ -28,14 +28,15 @@ func (service *WhatsrhymenServiceModel) Start() {
 	}
 }
 
-func (service *WhatsrhymenServiceModel) CreateConnection(wid string, serverLogger *log.Logger) (conn *WhatsrhymenConnection, err error) {
+func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log.Logger) (conn *WhatsrhymenConnection, err error) {
 	clientLog := log.New()
 	client, err := service.GetWhatsAppClient(wid, clientLog)
 	if err != nil {
 		return
 	}
 
-	loggerEntry := serverLogger.WithField("wid", wid)
+	logger.SetLevel(log.DebugLevel)
+	loggerEntry := logger.WithField("wid", wid)
 	handlers := &WhatsrhymenHandlers{
 		Connection: client,
 		log:        loggerEntry,
@@ -59,7 +60,7 @@ func (service *WhatsrhymenServiceModel) CreateConnection(wid string, serverLogge
 		Client:   client,
 		Handlers: handlers,
 		Session:  &session,
-		logger:   serverLogger,
+		logger:   logger,
 		log:      loggerEntry,
 	}
 	return
@@ -84,4 +85,8 @@ func (service *WhatsrhymenServiceModel) GetWhatsAppClient(wid string, logger *lo
 // Use with wisdom !
 func (service *WhatsrhymenServiceModel) FlushDatabase() (err error) {
 	return
+}
+
+func (service *WhatsrhymenServiceModel) Delete(wid string) error {
+	return service.Container.Delete(wid)
 }

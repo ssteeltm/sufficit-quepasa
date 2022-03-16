@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	. "go.mau.fi/whatsmeow/types"
@@ -45,17 +45,17 @@ func (conn *WhatsmeowConnection) GetWid() (wid string, err error) {
 	return
 }
 
-func (conn *WhatsmeowConnection) GetStatus() (state WhatsappConnectionState) {
+func (conn *WhatsmeowConnection) GetStatus() (state whatsapp.WhatsappConnectionState) {
 	if conn != nil {
-		state = Created
+		state = whatsapp.Created
 		if conn.Client != nil {
 			if conn.Client.IsConnected() {
-				state = Connected
+				state = whatsapp.Connected
 				if conn.Client.IsLoggedIn() {
-					state = Ready
+					state = whatsapp.Ready
 				}
 			} else {
-				state = Disconnected
+				state = whatsapp.Disconnected
 			}
 		}
 	}
@@ -86,7 +86,7 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 }
 
 // func (cli *Client) Download(msg DownloadableMessage) (data []byte, err error)
-func (conn *WhatsmeowConnection) Download(imsg IWhatsappMessage) (data []byte, err error) {
+func (conn *WhatsmeowConnection) DownloadData(imsg whatsapp.IWhatsappMessage) (data []byte, err error) {
 	msg := imsg.GetSource()
 	downloadable, ok := msg.(DownloadableMessage)
 	if !ok {
@@ -101,10 +101,20 @@ func (conn *WhatsmeowConnection) Download(imsg IWhatsappMessage) (data []byte, e
 	return conn.Client.Download(downloadable)
 }
 
-// Default SEND method using WhatsappMessage Interface
-func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendResponse, error) {
+func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att whatsapp.WhatsappAttachment, err error) {
+	data, err := conn.DownloadData(imsg)
+	if err != nil {
+		return
+	}
 
-	response := &WhatsappSendResponse{}
+	att.SetContent(&data)
+	return
+}
+
+// Default SEND method using WhatsappMessage Interface
+func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
+
+	response := &whatsapp.WhatsappSendResponse{}
 	var err error
 
 	messageText := msg.GetText()
@@ -121,7 +131,7 @@ func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendRespons
 	}
 
 	// Formatting destination accordly
-	formatedDestiantion, _ := FormatEndpoint(msg.GetChatID())
+	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatID())
 	jid, err := ParseJID(formatedDestiantion)
 	if err != nil {
 		conn.log.Infof("Send error on get jid: %s", err)
@@ -144,7 +154,7 @@ func (conn *WhatsmeowConnection) Send(msg WhatsappMessage) (IWhatsappSendRespons
 }
 
 // func (cli *Client) Upload(ctx context.Context, plaintext []byte, appInfo MediaType) (resp UploadResponse, err error)
-func (conn *WhatsmeowConnection) UploadAttachment(msg WhatsappMessage) (result *waProto.Message, err error) {
+func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) (result *waProto.Message, err error) {
 
 	content := *msg.Attachment.GetContent()
 	if content == nil {
@@ -198,18 +208,14 @@ func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err
 	return
 }
 
-func (conn *WhatsmeowConnection) UpdateHandler(handlers IWhatsappHandlers) {
+func (conn *WhatsmeowConnection) UpdateHandler(handlers whatsapp.IWhatsappHandlers) {
 	conn.Handlers.WAHandlers = handlers
 }
 
 //endregion
 
 func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
-	/*
-		if conn.waLogger != nil {
-			conn.waLogger.SetLevel(level)
-		}
-	*/
+	conn.logger.SetLevel(level)
 }
 
 func (conn *WhatsmeowConnection) PrintStatus() {

@@ -204,13 +204,20 @@ func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	ss := strings.Split(p.Url, "/")
 	id := ss[len(ss)-1]
 
-	data, err := server.Download(id)
+	att, err := server.Download(id)
 	if err != nil {
 		RespondServerError(server, w, err)
 		return
 	}
 
+	if len(att.FileName) > 0 {
+		w.Header().Set("Content-Disposition", "attachment; filename="+att.FileName)
+	}
+
+	if len(att.Mimetype) > 0 {
+		w.Header().Set("Content-Type", att.Mimetype)
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", p.MIME)
-	w.Write(data)
+	w.Write(*att.GetContent())
 }

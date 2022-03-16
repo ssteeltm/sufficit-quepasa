@@ -12,11 +12,11 @@ import (
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
-func NewConnection(wid string, multidevice bool, logger *log.Logger) (whatsapp.IWhatsappConnection, error) {
+func NewConnection(wid string, multidevice bool, serverLogger *log.Logger) (whatsapp.IWhatsappConnection, error) {
 	if multidevice {
-		return NewWhatsmeowConnection(wid, logger)
+		return NewWhatsmeowConnection(wid, serverLogger)
 	} else {
-		return NewWhatsrhymenConnection(wid, logger)
+		return NewWhatsrhymenConnection(wid, serverLogger)
 	}
 }
 
