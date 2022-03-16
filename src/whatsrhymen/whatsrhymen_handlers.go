@@ -21,12 +21,8 @@ type WhatsrhymenHandlers struct {
 // Aqui se processar um evento de recebimento de uma mensagem genérica
 func (handler *WhatsrhymenHandlers) Message(message *WhatsrhymenMessage) {
 	if handler.WAHandlers != nil {
-
-		wamsg, err := message.ToWhatsappMessage()
-		if err != nil {
-			handler.log.Error(err)
-			return
-		}
+		wamsg := &message.WhatsappMessage
+		wamsg.Content = message
 
 		// following to internal handlers
 		go handler.WAHandlers.Message(wamsg)

@@ -78,14 +78,19 @@ func DownloadController(w http.ResponseWriter, r *http.Request) {
 		id = r.URL.Query().Get("id")
 	}
 
-	data, err := server.Download(id)
+	att, err := server.Download(id)
 	if err != nil {
+		log.Error(err)
 		RespondServerError(server, w, fmt.Errorf("cannot download data: %s", err))
 		return
 	}
 
+	if len(att.FileName) > 0 {
+		w.Header().Set("Content-Disposition", "attachment; filename="+att.FileName)
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	w.Write(*att.GetContent())
 }
 
 //endregion

@@ -21,7 +21,10 @@ type IWhatsappConnection interface {
 	UpdateHandler(IWhatsappHandlers)
 
 	// Download message attachment if exists
-	Download(IWhatsappMessage) (data []byte, err error)
+	DownloadData(IWhatsappMessage) ([]byte, error)
+
+	// Download message attachment if exists and informations
+	Download(IWhatsappMessage) (WhatsappAttachment, error)
 
 	// Default send message method
 	Send(WhatsappMessage) (IWhatsappSendResponse, error)

@@ -91,12 +91,23 @@ func (server *QPWhatsappServer) GetWid() string {
 	return server.Bot.ID
 }
 
-func (server *QPWhatsappServer) Download(id string) ([]byte, error) {
+func (server *QPWhatsappServer) DownloadData(id string) ([]byte, error) {
 	msg, err := server.Handler.GetMessage(id)
 	if err != nil {
 		return nil, err
 	}
 
+	server.log.Infof("downloading msg %s", id)
+	return server.Connection.DownloadData(&msg)
+}
+
+func (server *QPWhatsappServer) Download(id string) (att WhatsappAttachment, err error) {
+	msg, err := server.Handler.GetMessage(id)
+	if err != nil {
+		return
+	}
+
+	server.log.Infof("downloading msg %s", id)
 	return server.Connection.Download(&msg)
 }
 

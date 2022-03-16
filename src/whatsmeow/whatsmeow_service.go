@@ -32,14 +32,14 @@ func (service *WhatsmeowServiceModel) Start() {
 	}
 }
 
-func (service *WhatsmeowServiceModel) CreateConnection(wid string, serverLogger *log.Logger) (conn *WhatsmeowConnection, err error) {
-	clientLog := waLog.Stdout("Whatsmeow/Client", serverLogger.Level.String(), true)
+func (service *WhatsmeowServiceModel) CreateConnection(wid string, logger *log.Logger) (conn *WhatsmeowConnection, err error) {
+	clientLog := waLog.Stdout("Whatsmeow/Client", logger.Level.String(), true)
 	client, err := service.GetWhatsAppClient(wid, clientLog)
 	if err != nil {
 		return
 	}
 
-	loggerEntry := serverLogger.WithField("wid", wid)
+	loggerEntry := logger.WithField("wid", wid)
 	handlers := &WhatsmeowHandlers{
 		Client: client,
 		log:    loggerEntry,
@@ -52,7 +52,7 @@ func (service *WhatsmeowServiceModel) CreateConnection(wid string, serverLogger 
 	conn = &WhatsmeowConnection{
 		Client:   client,
 		Handlers: handlers,
-		logger:   serverLogger,
+		logger:   logger,
 		waLogger: clientLog,
 		log:      loggerEntry,
 	}

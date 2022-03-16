@@ -18,10 +18,6 @@ type WhatsrhymenConnection struct {
 	log    *log.Entry
 }
 
-//wac.AddHandler(WhatsrhymenHandlers{})
-//wac, err := whatsapp.NewConn(20 * time.Second)
-//region IMPLEMENT INTERFACE WHATSAPP CONNECTION
-
 func (conn *WhatsrhymenConnection) GetVersion() string { return "single" }
 
 func (conn *WhatsrhymenConnection) GetWid() (wid string, err error) {
@@ -86,16 +82,61 @@ func (conn *WhatsrhymenConnection) Connect() (err error) {
 	return
 }
 
+func (conn *WhatsrhymenConnection) FindMessage(imsg whatsapp.IWhatsappMessage) (msg *WhatsrhymenMessage, err error) {
+	source := imsg.GetSource()
+	if source == nil {
+		err = fmt.Errorf("cannot get a valid source for download on: %s", imsg.GetChatID())
+		return
+	}
+
+	msg, ok := source.(*WhatsrhymenMessage)
+	if !ok {
+		err = fmt.Errorf("cannot convert interface in WhatsrhymenMessage from: %s", imsg.GetChatID())
+		return
+	}
+	return
+}
+
 // func (cli *Client) Download(msg DownloadableMessage) (data []byte, err error)
-func (conn *WhatsrhymenConnection) Download(imsg whatsapp.IWhatsappMessage) (data []byte, err error) {
-	conn.log.Info(imsg.GetSource())
+func (conn *WhatsrhymenConnection) DownloadData(imsg whatsapp.IWhatsappMessage) (data []byte, err error) {
+	msg, err := conn.FindMessage(imsg)
+	if err != nil {
+		return
+	}
+
+	conn.log.Tracef("downloading msg from %s", imsg.GetChatID())
+	return whatsrhymen.Download(msg.AttachmentInfo.Url, msg.AttachmentInfo.MediaKey, msg.AttachmentInfo.MediaType, msg.AttachmentInfo.Length)
+}
+
+// func (cli *Client) Download(msg DownloadableMessage) (data []byte, err error)
+func (conn *WhatsrhymenConnection) Download(imsg whatsapp.IWhatsappMessage) (att whatsapp.WhatsappAttachment, err error) {
+	msg, err := conn.FindMessage(imsg)
+	if err != nil {
+		return
+	}
+
+	data, err := conn.DownloadData(imsg)
+	if err != nil {
+		return
+	}
+
+	att = *msg.Attachment
+	att.SetContent(&data)
 	return
 }
 
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsrhymenConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
-	conn.log.Debug("sending message")
-	return nil, nil
+	switch msg.Type {
+	case whatsapp.AudioMessageType:
+		return conn.SendAudio(msg)
+	case whatsapp.ImageMessageType:
+		return conn.SendImage(msg)
+	case whatsapp.DocumentMessageType:
+		return conn.SendDocument(msg)
+	default:
+		return conn.SendText(msg)
+	}
 }
 
 // func (cli *Client) Upload(ctx context.Context, plaintext []byte, appInfo MediaType) (resp UploadResponse, err error)
@@ -114,7 +155,12 @@ func (conn *WhatsrhymenConnection) Disconnect() (err error) {
 }
 
 func (conn *WhatsrhymenConnection) Delete() error {
-	return nil
+	wid, err := conn.GetWid()
+	if err != nil {
+		return err
+	}
+
+	return WhatsrhymenService.Delete(wid)
 }
 
 func (conn *WhatsrhymenConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
@@ -139,7 +185,7 @@ func (conn *WhatsrhymenConnection) UpdateHandler(handlers whatsapp.IWhatsappHand
 //endregion
 
 func (conn *WhatsrhymenConnection) LogLevel(level log.Level) {
-
+	conn.logger.SetLevel(level)
 }
 
 func (conn *WhatsrhymenConnection) PrintStatus() {

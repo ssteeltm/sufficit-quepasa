@@ -5,8 +5,6 @@ import (
 )
 
 type WhatsrhymenMessage struct {
-}
-
-func (source *WhatsrhymenMessage) ToWhatsappMessage() (message *whatsapp.WhatsappMessage, err error) {
-
+	whatsapp.WhatsappMessage
+	AttachmentInfo *WhatsrhymenAttachmentInfo
 }
