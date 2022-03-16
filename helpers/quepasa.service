@@ -11,7 +11,8 @@ ExecStartPre=+/bin/chown syslog:adm /var/log/quepasa
 ExecStartPre=+/bin/chmod 755 /var/log/quepasa
 
 ExecStart=/usr/local/go/bin/go run main.go  
-WorkingDirectory=/opt/quepasa/  
+WorkingDirectory=/opt/quepasa/
+EnvironmentFile=/opt/quepasa/.env
 Type=simple
 User=quepasa     
 Group=quepasa
