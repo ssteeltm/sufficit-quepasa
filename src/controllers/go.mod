@@ -1,22 +1,17 @@
 module github.com/sufficit/sufficit-quepasa-fork/controllers
 
 require (
-	github.com/Rhymen/go-whatsapp v0.0.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/dlclark/regexp2 v1.1.6 // indirect
-	github.com/go-chi/chi v4.1.1+incompatible
-	github.com/go-chi/jwtauth v4.0.4+incompatible
-	github.com/gorilla/websocket v1.4.2
-	github.com/jmoiron/sqlx v1.2.0
-	github.com/lib/pq v1.5.2
-	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d
-	github.com/prometheus/client_golang v1.6.0
-	github.com/trustelem/zxcvbn v1.0.1
+	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sufficit/sufficit-quepasa-fork/metrics v0.0.0-00010101000000-000000000000 // indirect
+    github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000 // indirect
+    github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000 // indirect
+    github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
 )
 
-replace github.com/sufficit/sufficit-quepasa-fork/controllers => ./
+replace github.com/sufficit/sufficit-quepasa-fork/library => ../library
+replace github.com/sufficit/sufficit-quepasa-fork/metrics => ../metrics
+replace github.com/sufficit/sufficit-quepasa-fork/models => ../models
+replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
+replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
 
-replace github.com/Rhymen/go-whatsapp => github.com/sufficit/sufficit-go-whatsapp v0.1.12
-// replace github.com/Rhymen/go-whatsapp => Z:\Desenvolvimento\sufficit-go-whatsapp
-
-go 1.14
+go 1.17

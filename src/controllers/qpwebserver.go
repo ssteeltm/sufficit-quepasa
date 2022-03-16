@@ -1,16 +1,16 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/jwtauth"
 	"github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
@@ -34,17 +34,21 @@ func newRouter() chi.Router {
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	
+
 	shouldLog, _ := models.GetEnvBool("HTTPLOGS", false)
 	if shouldLog {
 		r.Use(middleware.Logger)
 	}
-	
+
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// web routes
-	addWebRoutes(r)
+	// authenticated web routes
+	r.Group(RegisterFormAuthenticatedControllers)
+
+	// unauthenticated web routes
+	r.Group(RegisterFormControllers)
 
 	// api routes
 	addAPIRoutes(r)
@@ -57,55 +61,10 @@ func newRouter() chi.Router {
 	return r
 }
 
-func addWebRoutes(r chi.Router) {
-	tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("SIGNING_SECRET")), nil)
-
-	// authenticated web routes
-	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(authenticator)
-
-		r.HandleFunc("/bot/verify/ws", VerifyHandler)
-
-		r.Get("/account", AccountFormHandler)
-		r.Get("/bot/verify", VerifyFormHandler)
-		r.Post("/bot/delete", DeleteHandler)
-		r.Post("/bot/cycle", CycleHandler)
-		r.Post("/bot/debug", DebugHandler)
-		r.Post("/bot/toggle", ToggleHandler)
-		r.Get("/bot/{botID}", SendFormHandler)
-		r.Get("/bot/{botID}/send", SendFormHandler)
-		r.Post("/bot/{botID}/send", SendHandler)
-		r.Get("/bot/{botID}/receive", ReceiveFormHandler)
-	})
-
-	// unauthenticated web routes
-	r.Group(func(r chi.Router) {
-		r.Get("/", IndexHandler)
-		r.Get("/login", LoginFormHandler)
-		r.Post("/login", LoginHandler)
-		r.Get("/setup", SetupFormHandler)
-		r.Post("/setup", SetupHandler)
-		r.Get("/logout", LogoutHandler)
-	})
-}
-
 func addAPIRoutes(r chi.Router) {
-	r.Group(func(r chi.Router) {
-		r.Get("/v1/bot/{token}", InfoAPIHandlerV1)
-		r.Post("/v1/bot/{token}/send", SendAPIHandlerV1)
-		r.Get("/v1/bot/{token}/receive", ReceiveAPIHandlerV1)
-		r.Post("/v1/bot/{token}/attachment", AttachmentAPIHandlerV1)
-		r.Post("/v1/bot/{token}/webhook", WebHookAPIHandlerV1)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get("/v2/bot/{token}", InfoAPIHandlerV2)
-		r.Post("/v2/bot/{token}/sendtext", SendTextAPIHandlerV2)
-		r.Post("/v2/bot/{token}/senddocument", SendDocumentAPIHandlerV2)
-		r.Get("/v2/bot/{token}/receive", ReceiveAPIHandlerV2)
-		r.Post("/v2/bot/{token}/attachment", AttachmentAPIHandlerV2)
-		r.Post("/v2/bot/{token}/webhook", WebHookAPIHandlerV2)
-	})
+	r.Group(RegisterAPIControllers)
+	r.Group(RegisterAPIV1Controllers)
+	r.Group(RegisterAPIV2Controllers)
 }
 
 func fileServer(r chi.Router, path string, root http.FileSystem) {
@@ -122,22 +81,4 @@ func fileServer(r chi.Router, path string, root http.FileSystem) {
 	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	}))
-}
-
-func authenticator(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, _, err := jwtauth.FromContext(r.Context())
-
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		if token == nil || !token.Valid {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }

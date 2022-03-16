@@ -1,5 +1,6 @@
 {{ define "content" }}
-{{ if .ErrorMessage}}
+{{ $DOWNLOADPREFIX := .DownloadPrefix }}
+{{ if .ErrorMessage }}
 <div class="notification is-warning">
   {{ .ErrorMessage }}
 </div>
@@ -8,14 +9,13 @@
 <h2 class="title is-2">Messages for {{ .Number }}</h2>
 {{ range .Messages }}
 <pre>
-From Me: {{ .FromMe }} :: Attachment: {{.Attachment }}
-ReplyTo:  {{ .ReplyTo }}
-Participant:  {{ .Participant }}
-On:  {{ .Timestamp }}
-Text: {{ .Text}}
+  On: {{ .Timestamp }} => ID: {{ .ID }} => From Me: {{ .FromMe }}{{ if .HasAttachment }} => Attachment: <a download target="_blank" href="{{ $DOWNLOADPREFIX }}{{ .ID }}">Download</a>{{ end }}  
+  Type: {{ .Type }} => Chat:  {{ .Chat }}{{ if .Participant.ID }}
+  Participant:  {{ .Participant }}{{ end }} 
+  Text: {{ .Text}}
 </pre>
 <br/>
 {{ end }}
 
-<a href="/account">Back</a>
+<a href="/form/account">Back</a>
 {{ end }}

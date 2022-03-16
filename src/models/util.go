@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/go-chi/jwtauth"
 )
 
@@ -23,9 +23,10 @@ func GetUser(r *http.Request) (QPUser, error) {
 		return user, errors.New("User ID missing")
 	}
 
-	return WhatsAppService.DB.User.FindByID(userID)
+	return WhatsappService.DB.User.FindByID(userID)
 }
 
+/*
 // CleanPhoneNumber removes all non-numeric characters from a string
 func CleanPhoneNumber(number string) (string, error) {
 	var out string
@@ -35,13 +36,30 @@ func CleanPhoneNumber(number string) (string, error) {
 
 	return GetPhoneByID(number)
 }
+*/
 
 // Usado também para identificar o número do bot
 // Meramente visual
 func GetPhoneByID(id string) (out string, err error) {
-	spacesRemoved := strings.Replace(id, " ", "", -1)
+
+	// removing whitespaces
+	out = strings.Replace(id, " ", "", -1)
+	if strings.Contains(out, "@") {
+		// capturando tudo antes do @
+		splited := strings.Split(out, "@")
+		out = splited[0]
+
+		if strings.Contains(out, ".") {
+			// capturando tudo antes do "."
+			splited = strings.Split(out, ".")
+			out = splited[0]
+
+			return
+		}
+	}
+
 	re, err := regexp.Compile(`\d*`)
-	matches := re.FindAllString(spacesRemoved, -1)
+	matches := re.FindAllString(out, -1)
 	if len(matches) > 0 {
 		out = matches[0]
 	}

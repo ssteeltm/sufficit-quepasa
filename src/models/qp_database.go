@@ -1,21 +1,22 @@
 package models
 
 import (
-	"log"
+	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
-	"fmt"
-	"strings"	
-	"io/ioutil"
-	
+
+	log "github.com/sirupsen/logrus"
+
 	"path/filepath"
 	"runtime"
 	"strconv"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/jmoiron/sqlx"
 	"github.com/joncalhoun/migrate"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type QPDatabase struct {
@@ -38,12 +39,12 @@ func GetDB() *sqlx.DB {
 		config := GetDBConfig()
 
 		// Tenta realizar a conexão
-		dbconn, err := sqlx.Connect(config.Driver, config.GetConnectionString())		
+		dbconn, err := sqlx.Connect(config.Driver, config.GetConnectionString())
 		if err != nil {
 			log.Println(err)
 		}
 
-		dbconn.DB.SetMaxIdleConns(500)		
+		dbconn.DB.SetMaxIdleConns(500)
 		dbconn.DB.SetMaxOpenConns(1000)
 		dbconn.DB.SetConnMaxLifetime(30 * time.Second)
 
@@ -76,16 +77,18 @@ func GetDatabase() *QPDatabase {
 		log.Fatal("database driver not supported")
 	}
 
-	return &QPDatabase{*config, db, istore, iuser, ibot}
+	return &QPDatabase{config, db, istore, iuser, ibot}
 }
 
-func GetDBConfig() *QPDatabaseConfig {
-	config := &QPDatabaseConfig{}
-	
-	config.Driver = os.Getenv("DBDRIVER")
-	if len(config.Driver) == 0 { config.Driver = "sqlite3" }
+func GetDBConfig() QPDatabaseConfig {
+	config := QPDatabaseConfig{}
 
-	config.Host = os.Getenv("DBHOST") 
+	config.Driver = os.Getenv("DBDRIVER")
+	if len(config.Driver) == 0 {
+		config.Driver = "sqlite3"
+	}
+
+	config.Host = os.Getenv("DBHOST")
 	config.DataBase = os.Getenv("DBDATABASE")
 	config.Port = os.Getenv("DBPORT")
 	config.User = os.Getenv("DBUSER")
@@ -144,8 +147,8 @@ func MigrateToLatest() (err error) {
 		},
 		Migrations: Migrations(fullPath),
 	}
-	
-	log.Println("Migrating ...")	
+
+	log.Println("Migrating ...")
 	err = migrator.Migrate(db, config.Driver)
 	if err != nil {
 		log.Fatal(err)
@@ -154,21 +157,21 @@ func MigrateToLatest() (err error) {
 }
 
 func Migrations(fullPath string) (migrations []migrate.SqlxMigration) {
-	log.Println("Migrating files from: ", fullPath)	
+	log.Println("Migrating files from: ", fullPath)
 	files, err := ioutil.ReadDir(fullPath)
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	log.Println("Migrating creating array with definitions")	
+	log.Println("Migrating creating array with definitions")
 	confMap := make(map[string]*QPMigrationFile)
 
 	for _, file := range files {
 		info := file.Name()
 		extension := strings.Split(info, ".")[2]
 		if extension == "sql" {
-			id := strings.Split(info, "_")[0]		
-			title := strings.TrimPrefix(strings.Split(info, ".")[0], id + "_")
+			id := strings.Split(info, "_")[0]
+			title := strings.TrimPrefix(strings.Split(info, ".")[0], id+"_")
 			status := strings.Split(info, ".")[1]
 			filepath := fullPath + "/" + info
 			if v, ok := confMap[id]; ok {
@@ -179,10 +182,10 @@ func Migrations(fullPath string) (migrations []migrate.SqlxMigration) {
 				}
 			} else {
 				if status == "up" {
-					confMap[id] = &QPMigrationFile{ id, title, filepath, "" } 
+					confMap[id] = &QPMigrationFile{id, title, filepath, ""}
 				} else if status == "down" {
-					confMap[id] = &QPMigrationFile{ id, title, "", filepath } 
-				}				
+					confMap[id] = &QPMigrationFile{id, title, "", filepath}
+				}
 			}
 		}
 	}
@@ -190,6 +193,6 @@ func Migrations(fullPath string) (migrations []migrate.SqlxMigration) {
 	for _, migration := range confMap {
 		migrations = append(migrations, migrate.SqlxFileMigration(migration.ID, migration.FileUp, migration.FileDown))
 	}
-	
+
 	return
 }

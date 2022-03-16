@@ -5,7 +5,13 @@
 </div>
 {{ end }}
 
-<form class="" method="post" action="/bot/{{ .Bot.ID }}/send">
+{{ if .MessageId }}
+<div class="notification is-success">
+  Last message send successful: {{ .MessageId }}
+</div>
+{{ end }}
+
+<form enctype="multipart/form-data" class="" method="post" action="/form/server/{{ .Bot.ID }}/send">
   <div class="field">
     <label class="label" for="recipient">Recipient:</label>
     <div class="control">
@@ -20,8 +26,15 @@
       </div>
     </div>
 
+    <div class="field">
+      <label class="label" for="attachment">Attachment:</label>
+      <div class="control">
+        <input type="file" name="attachment" />
+      </div>
+    </div>
+
     <button class="button is-block is-info is-large is-fullwidth">Send</button>
 </form>
 
-<a href="/account">Back</a>
+<a href="/form/account">Back</a>
 {{ end }}

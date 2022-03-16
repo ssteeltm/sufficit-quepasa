@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -10,22 +9,39 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
-	"github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+	whatsrhymen "github.com/sufficit/sufficit-quepasa-fork/whatsrhymen"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+
 	// Carregando variaveis de ambiente apartir de arquivo .env
 	godotenv.Load()
 
+	if ENV.DEBUGJsonMessages() {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+
 	// Verifica se é necessario realizar alguma migração de base de dados
-	err := models.MigrateToLatest()
+	err := MigrateToLatest()
 	if err != nil {
 		log.Fatalf("Database migration error: %s", err.Error())
 	}
 
+	whatsmeow.WhatsmeowService.Start()
+	whatsrhymen.WhatsrhymenService.Start()
+
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona
-	go models.QPWhatsAppStart()
+	err = QPWhatsappStart()
+	if err != nil {
+		panic(err.Error())
+	}
 
 	go func() {
 		m := chi.NewRouter()

@@ -20,6 +20,9 @@ PrivateTmp=true
 # ensure the service restarts after crashing
 Restart=on-failure
 
+# Time to wait on abort signal 
+TimeoutStopSec=5
+
 # amount of time to wait before restarting the service              
 RestartSec=5  
 

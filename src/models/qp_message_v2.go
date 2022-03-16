@@ -4,16 +4,16 @@ package models
 // Utilizada na API do QuePasa para troca com outros sistemas
 type QPMessageV2 struct {
 	ID        string `json:"message_id"`
-	Timestamp int    `json:"timestamp"`
+	Timestamp uint64 `json:"timestamp"`
 
 	// Whatsapp que gerencia a bagaça toda
-	Controller QPEndPoint `json:"controller"`
+	Controller QPEndpointV2 `json:"controller"`
 
 	// Endereço garantido que deve receber uma resposta
-	ReplyTo QPEndPoint `json:"replyto"`
+	ReplyTo QPEndpointV2 `json:"replyto"`
 
 	// Se a msg foi postado em algum grupo ? quem postou !
-	Participant QPEndPoint `json:"participant,omitempty"`
+	Participant QPEndpointV2 `json:"participant,omitempty"`
 
 	// Fui eu quem enviou a msg ?
 	FromMe bool `json:"fromme"`
@@ -21,7 +21,13 @@ type QPMessageV2 struct {
 	// Texto da msg
 	Text string `json:"text"`
 
-	Attachment QPAttachment `json:"attachment,omitempty"`
+	Attachment *QPAttachmentV1 `json:"attachment,omitempty"`
 
 	Chat QPChatV2 `json:"chat"`
 }
+
+type ByTimestampV2 []QPMessageV2
+
+func (m ByTimestampV2) Len() int           { return len(m) }
+func (m ByTimestampV2) Less(i, j int) bool { return m[i].Timestamp > m[j].Timestamp }
+func (m ByTimestampV2) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
