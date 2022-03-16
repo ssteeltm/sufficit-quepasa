@@ -44,14 +44,17 @@ func (conn *WhatsrhymenConnection) GetStatus() (state whatsapp.WhatsappConnectio
 		state = whatsapp.Created
 		if conn.Client != nil {
 			state = whatsapp.Stopped
-			if conn.Client.Info != nil {
-				if conn.Client.Info.Connected {
-					state = whatsapp.Connected
-					if conn.Handlers != nil {
-						state = whatsapp.Ready
+			if conn.Handlers.WAHandlers != nil {
+				state = whatsapp.Fetching
+				if conn.Client.Info != nil {
+					if conn.Client.Info.Connected {
+						state = whatsapp.Connected
+						if conn.Handlers != nil {
+							state = whatsapp.Ready
+						}
+					} else {
+						state = whatsapp.Disconnected
 					}
-				} else {
-					state = whatsapp.Disconnected
 				}
 			}
 		}
@@ -72,11 +75,15 @@ func (conn *WhatsrhymenConnection) GetTitle(Wid string) string {
 func (conn *WhatsrhymenConnection) Connect() (err error) {
 	conn.log.Info("starting whatsrhymen connecting ...")
 
-	// Agora sim, restaura a conexão com o whatsapp apartir de uma seção salva
-	_, err = conn.Client.RestoreWithSession(*conn.Session)
-	if err != nil {
-		conn.log.Printf("(ERR) Error on restore session :: %s", err)
-		return
+	// if not logged
+	if !conn.Client.GetLoggedIn() {
+
+		// Agora sim, restaura a conexão com o whatsapp apartir de uma seção salva
+		_, err = conn.Client.RestoreWithSession(*conn.Session)
+		if err != nil {
+			conn.log.Errorf("(ERR) Error on restore session :: %s", err)
+			return
+		}
 	}
 
 	return
@@ -157,11 +164,28 @@ func (conn *WhatsrhymenConnection) Disconnect() (err error) {
 }
 
 func (conn *WhatsrhymenConnection) Delete() error {
-	wid, err := conn.GetWid()
+	client := conn.Client
+
+	// getting wid
+	wid := client.Info.Wid
+
+	// removing handlers if exists
+	client.RemoveHandlers()
+
+	// logging out from whatsapp
+	err := client.Logout()
 	if err != nil {
 		return err
 	}
 
+	if client.Info.Connected {
+		_, err = client.Disconnect()
+		if err != nil {
+			return err
+		}
+	}
+
+	// deleting from store
 	return WhatsrhymenService.Delete(wid)
 }
 
@@ -179,7 +203,9 @@ func (conn *WhatsrhymenConnection) GetWhatsAppQRChannel(result chan<- string) (e
 	err = WhatsrhymenService.Container.Update(session)
 
 	// Updating wid on logs
-	conn.log.WithField("wid", session.Wid)
+	conn.log = conn.log.WithField("wid", session.Wid)
+	conn.Handlers.log = conn.log
+
 	return
 }
 

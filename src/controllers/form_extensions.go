@@ -233,17 +233,17 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 					log.Println("SignInWithQRCode Unknown Error:", err)
 				}
 			} else {
-				log.Printf("(%s) SignInWithQRCode success ...", server.GetNumber())
+				server.Log.Info("SignInWithQRCode success ...")
 
 				// Marking as verified
 				err = server.MarkVerified(true)
 				if err != nil {
-					log.Printf("(%s)(ERR) Error on update verified state :: %s", server.GetNumber(), err)
+					server.Log.Errorf("Error on update verified state :: %s", err)
 				}
 
 				err = connection.WriteMessage(websocket.TextMessage, []byte("complete"))
 				if err != nil {
-					log.Printf("(%s)(ERR) Error on write complete message after qrcode verified :: %s", server.GetNumber(), err)
+					server.Log.Errorf("Error on write complete message after qrcode verified :: %s", err)
 				}
 				return
 			}

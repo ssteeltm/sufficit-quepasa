@@ -80,7 +80,7 @@ func (bot *QPBot) Toggle() (err error) {
 		if server.GetStatus() == Stopped || server.GetStatus() == Created {
 			err = server.Start()
 		} else {
-			err = server.Shutdown()
+			server.Disconnect("toggling bot")
 		}
 	}
 	return
