@@ -85,9 +85,11 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 	err = conn.Client.Connect()
 	if err != nil {
 		conn.failedToken = true
-		if strings.Contains(err.Error(), "401") {
+		if strings.Contains(err.Error(), "logged out") {
 			return &whatsapp.UnauthorizedError{Inner: err}
 		}
+
+		conn.log.Errorf("error on connecting whatsmeow: %s", err.Error())
 		return
 	}
 
