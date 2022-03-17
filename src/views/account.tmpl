@@ -27,7 +27,7 @@
         {{ range .Servers }}   
           <tr>
             <td>
-              <span title="{{ .GetStartedTime }}">{{ .GetNumber }}</span>
+              <span title="{{ .Version }}">{{ .GetNumber }}</span>
             </td>
             <td>
               <span class="button" disabled>
@@ -140,7 +140,7 @@
                 <span class="icon has-text-danger" title="power save mode !"><i class="fas fa-battery-empty"></i> </span>              
               {{ end }}              
             </td>
-            <td>{{ .GetStatusString }}</td>
+            <td><span title="{{ .GetStartedTime }}">{{ .GetStatusString }}</span></td>
             </tr>            
         {{ end }}
         </tbody>
