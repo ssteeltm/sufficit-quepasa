@@ -3,6 +3,7 @@ package whatsmeow
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -55,7 +56,11 @@ func (conn *WhatsmeowConnection) GetStatus() (state whatsapp.WhatsappConnectionS
 					state = whatsapp.Ready
 				}
 			} else {
-				state = whatsapp.Disconnected
+				if conn.Client.IsLoggedIn() {
+					state = whatsapp.Disconnected
+				} else {
+					state = whatsapp.Failed
+				}
 			}
 		}
 	}
@@ -79,6 +84,9 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 
 	err = conn.Client.Connect()
 	if err != nil {
+		if strings.Contains(err.Error(), "401") {
+			return &whatsapp.UnauthorizedError{Inner: err}
+		}
 		return
 	}
 

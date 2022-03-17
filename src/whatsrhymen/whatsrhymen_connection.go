@@ -14,8 +14,9 @@ type WhatsrhymenConnection struct {
 	Handlers *WhatsrhymenHandlers
 	Session  *whatsrhymen.Session
 
-	logger *log.Logger
-	log    *log.Entry
+	logger      *log.Logger
+	log         *log.Entry
+	failedToken bool
 }
 
 func (conn *WhatsrhymenConnection) GetVersion() string { return "single" }
@@ -46,6 +47,10 @@ func (conn *WhatsrhymenConnection) GetStatus() (state whatsapp.WhatsappConnectio
 			state = whatsapp.Stopped
 			if conn.Handlers.WAHandlers != nil {
 				state = whatsapp.Fetching
+				if conn.failedToken {
+					state = whatsapp.Failed
+				}
+
 				if conn.Client.Info != nil {
 					if conn.Client.Info.Connected {
 						state = whatsapp.Connected
@@ -81,9 +86,12 @@ func (conn *WhatsrhymenConnection) Connect() (err error) {
 		// Agora sim, restaura a conexão com o whatsapp apartir de uma seção salva
 		_, err = conn.Client.RestoreWithSession(*conn.Session)
 		if err != nil {
-			conn.log.Errorf("(ERR) Error on restore session :: %s", err)
+			conn.failedToken = true
+			conn.log.Errorf("error on restore session :: %s", err)
 			return
 		}
+
+		conn.failedToken = false
 	}
 
 	return

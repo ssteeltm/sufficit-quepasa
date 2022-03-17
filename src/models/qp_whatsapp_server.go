@@ -198,34 +198,16 @@ func (server *QPWhatsappServer) Start() (err error) {
 	server.Log.Infof("Requesting connection ...")
 	err = server.Connection.Connect()
 	if err != nil {
+		if unauthorized, ok := err.(*UnauthorizedError); ok {
+			server.Log.Warningf("unauthorized, setting unverified")
+			err = unauthorized
+
+			err = server.Bot.UpdateVerified(false)
+		}
 		return
 	}
-	/*
-		// Inicializando conexões e handlers
-		err = server.startHandlers()
-		if err != nil {
-			server.Status = Failed
-			switch err.(type) {
-			default:
-				if strings.Contains(err.Error(), "401") {
-					server.log.Infof(" WhatsApp return a unauthorized state, please verify again")
-					err = server.MarkVerified(false)
-				} else if strings.Contains(err.Error(), "restore session connection timed out") {
-					server.log.Infof("WhatsApp returns after a timeout, trying again in 10 seconds, please wait ...")
-				} else {
-					server.log.Infof("(ERR) SUFF ERROR F :: Starting Handlers error ... %s :", err)
-				}
-			case *ServiceUnreachableError:
-				server.log.Error(err)
-			}
 
-			// Importante para evitar que a conexão em falha continue aberta
-			server.Connection.Disconnect()
-
-		} else {
-			server.Status = Ready
-		}
-	*/
+	server.MarkVerified(true)
 
 	server.syncConnection.Unlock() // Destravando
 	return
