@@ -49,6 +49,7 @@ func NewQPWhatsappServer(bot *QPBot, connection IWhatsappConnection) (server *QP
 			// ignoring and continuing
 			// not impedtive
 			err = nil
+			connection = nil // ensure created state
 		}
 	}
 
