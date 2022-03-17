@@ -184,9 +184,22 @@ func (conn *WhatsmeowConnection) Disconnect() error {
 	return nil
 }
 
-func (conn *WhatsmeowConnection) Delete() error {
-	conn.Client.Disconnect()
-	return conn.Client.Store.Delete()
+func (conn *WhatsmeowConnection) Delete() (err error) {
+	if conn.Client != nil {
+		if conn.Client.IsLoggedIn() {
+			err = conn.Client.Logout()
+			if err != nil {
+				return
+			}
+		}
+
+		if conn.Client.IsConnected() {
+			conn.Client.Disconnect()
+		}
+
+		err = conn.Client.Store.Delete()
+	}
+	return
 }
 
 func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
