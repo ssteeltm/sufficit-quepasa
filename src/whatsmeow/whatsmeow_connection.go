@@ -190,20 +190,23 @@ func (conn *WhatsmeowConnection) Disconnect() (err error) {
 }
 
 func (conn *WhatsmeowConnection) Delete() (err error) {
-	if conn.Client != nil {
-		if conn.Client.IsLoggedIn() {
-			err = conn.Client.Logout()
-			if err != nil {
+	if conn != nil {
+		if conn.Client != nil {
+			if conn.Client.IsLoggedIn() {
+				err = conn.Client.Logout()
+				if err != nil {
+					return
+				}
+			}
+
+			if conn.Client.IsConnected() {
+				conn.Client.Disconnect()
+			}
+
+			if conn.Client.Store != nil {
+				err = conn.Client.Store.Delete()
 				return
 			}
-		}
-
-		if conn.Client.IsConnected() {
-			conn.Client.Disconnect()
-		}
-
-		if conn.Client.Store != nil {
-			err = conn.Client.Store.Delete()
 		}
 	}
 	return
