@@ -179,9 +179,14 @@ func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) 
 	return
 }
 
-func (conn *WhatsmeowConnection) Disconnect() error {
+func (conn *WhatsmeowConnection) Disconnect() (err error) {
+	if conn.Client == nil {
+		err = fmt.Errorf("client not available to disconnect")
+		return
+	}
+
 	conn.Client.Disconnect()
-	return nil
+	return
 }
 
 func (conn *WhatsmeowConnection) Delete() (err error) {

@@ -435,9 +435,11 @@ func (server *QPWhatsappServer) Version() string {
 //endregion
 
 func (server *QPWhatsappServer) Delete() (err error) {
-	err = server.connection.Delete()
-	if err != nil {
-		return
+	if server.connection != nil {
+		err = server.connection.Delete()
+		if err != nil {
+			return
+		}
 	}
 
 	return server.Bot.Delete()
