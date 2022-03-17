@@ -44,7 +44,11 @@ func NewQPWhatsappServer(bot *QPBot, connection IWhatsappConnection) (server *QP
 		// Definindo conexão com whatsapp
 		connection, err = NewConnection(wid, bot.Version == "multi", serverLogger)
 		if err != nil {
-			return
+			serverLogger.Errorf("error on creating connection: %s", err.Error())
+
+			// ignoring and continuing
+			// not impedtive
+			err = nil
 		}
 	}
 
