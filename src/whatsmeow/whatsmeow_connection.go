@@ -202,7 +202,9 @@ func (conn *WhatsmeowConnection) Delete() (err error) {
 			conn.Client.Disconnect()
 		}
 
-		err = conn.Client.Store.Delete()
+		if conn.Client.Store != nil {
+			err = conn.Client.Store.Delete()
+		}
 	}
 	return
 }
