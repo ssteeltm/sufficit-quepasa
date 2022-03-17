@@ -18,7 +18,9 @@ type IWhatsappConnection interface {
 	Disconnect() error
 	Delete() error
 	GetWhatsAppQRChannel(chan<- string) error
+
 	UpdateHandler(IWhatsappHandlers)
+	EnsureHandlers() error
 
 	// Download message attachment if exists
 	DownloadData(IWhatsappMessage) ([]byte, error)
@@ -30,6 +32,8 @@ type IWhatsappConnection interface {
 	Send(WhatsappMessage) (IWhatsappSendResponse, error)
 
 	// Define the log level for this connection
-	LogLevel(log.Level)
-	PrintStatus()
+	UpdateLog(*log.Entry)
+
+	// Release all resources
+	Dispose()
 }

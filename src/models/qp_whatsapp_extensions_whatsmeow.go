@@ -9,6 +9,10 @@ import (
 	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
 )
 
+func NewWhatsmeowEmptyConnection() (whatsapp.IWhatsappConnection, error) {
+	return whatsmeow.WhatsmeowService.CreateEmptyConnection()
+}
+
 func NewWhatsmeowConnection(wid string, logger *log.Logger) (whatsapp.IWhatsappConnection, error) {
 	return whatsmeow.WhatsmeowService.CreateConnection(wid, logger)
 }

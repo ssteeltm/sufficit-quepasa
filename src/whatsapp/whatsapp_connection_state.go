@@ -3,16 +3,39 @@ package whatsapp
 type WhatsappConnectionState uint
 
 const (
+	// Unknown, not treated state
 	Unknown WhatsappConnectionState = iota
+
+	// Instantiated
 	Created
+
+	// Starting variables
 	Starting
+
+	// Connecting to whatsapp servers
+	Connecting
+
+	// Stopped requested
 	Stopped
+
 	Restarting
-	Disconnected
+
+	// Connected to whatsapp servers
 	Connected
+
+	// Fetching messages from servers
 	Fetching
+
+	// Ready and Fully operational
 	Ready
+
+	// Finalizing
 	Halting
+
+	// Disconnected from whatsapp servers
+	Disconnected
+
+	// Failed state, for any reason
 	Failed
 )
 
@@ -26,13 +49,14 @@ func (s WhatsappConnectionState) String() string {
 		"Unknown",
 		"Created",
 		"Starting",
+		"Connecting",
 		"Stopped",
 		"Restarting",
-		"Disconnected",
 		"Connected",
 		"Fetching",
 		"Ready",
 		"Halting",
+		"Disconnected",
 		"Failed",
 	}[s]
 }

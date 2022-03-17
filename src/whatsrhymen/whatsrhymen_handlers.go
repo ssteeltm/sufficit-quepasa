@@ -12,38 +12,57 @@ import (
 )
 
 type WhatsrhymenHandlers struct {
-	Connection               *whatsrhymen.Conn
-	WAHandlers               whatsapp.IWhatsappHandlers
+	Connection               *WhatsrhymenConnection
 	unregisterRequestedToken bool
+	attached                 bool
 	log                      *log.Entry
+}
+
+func (handler *WhatsrhymenHandlers) Client() *whatsrhymen.Conn {
+	return handler.Connection.Client
+}
+
+func (handler *WhatsrhymenHandlers) Store() *whatsrhymen.Store {
+	return handler.Connection.Client.Store
 }
 
 // Aqui se processar um evento de recebimento de uma mensagem genérica
 func (handler *WhatsrhymenHandlers) Message(message *WhatsrhymenMessage) {
-	if handler.WAHandlers != nil {
+	if handler.Connection.WAHandlers != nil {
 		wamsg := &message.WhatsappMessage
 		wamsg.Content = message
 
 		// following to internal handlers
-		go handler.WAHandlers.Message(wamsg)
+		go handler.Connection.WAHandlers.Message(wamsg)
 	}
 }
 
+func (h *WhatsrhymenHandlers) IsRegistered() bool {
+	return h.attached
+}
+
 func (h *WhatsrhymenHandlers) Register() (err error) {
-	if h.Connection.Store == nil {
+	connection := h.Client()
+	if connection == nil {
+		return fmt.Errorf("not connected, on trying to register handlers")
+	}
+
+	if connection.Store == nil {
 		err = fmt.Errorf("this client lost the store, probably a logout from whatsapp phone")
 		return
 	}
 
 	h.unregisterRequestedToken = false
-	h.Connection.AddHandler(h)
-
+	connection.AddHandler(h)
+	h.attached = true
 	return
 }
 
 func (h *WhatsrhymenHandlers) UnRegister() {
 	h.unregisterRequestedToken = true
-	h.Connection.RemoveHandler(h)
+	if h.Client().RemoveHandler(h) {
+		h.attached = false
+	}
 }
 
 // Essencial
@@ -63,9 +82,12 @@ func (h *WhatsrhymenHandlers) HandleError(publicError error) {
 		}
 		return
 	} else if strings.Contains(publicError.Error(), "code: 1000") {
+
 		// Desconexão forçado é algum evento iniciado pelo whatsapp
-		h.log.Printf("Desconexão forçada pelo whatsapp, code: 1000")
-		// Se houve desconexão, reseta
+		// tested with user logout device on whatsapp
+		// tested with mobile phone lost internet connection
+		h.log.Errorf("forced by whatsapp: %s", publicError.Error())
+		h.Connection.Failed("handlers")
 		return
 	} else if strings.Contains(publicError.Error(), "close 1006") {
 		// Desconexão forçado é algum evento iniciado pelo whatsapp
@@ -133,11 +155,11 @@ func (h *WhatsrhymenHandlers) HandleImageMessage(msg whatsrhymen.ImageMessage) {
 	message := CreateMessageFromInfo(msg.Info)
 	message.Type = whatsapp.ImageMessageType
 
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = "Imagem recebida: " + msg.Type
-	FillImageAttachment(message, msg, h.Connection)
+	FillImageAttachment(message, msg)
 	//  <--
 
 	h.Message(message)
@@ -145,7 +167,7 @@ func (h *WhatsrhymenHandlers) HandleImageMessage(msg whatsrhymen.ImageMessage) {
 
 func (h *WhatsrhymenHandlers) HandleLocationMessage(msg whatsrhymen.LocationMessage) {
 	message := CreateMessageFromInfo(msg.Info)
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = "Localização recebida ... "
@@ -156,7 +178,7 @@ func (h *WhatsrhymenHandlers) HandleLocationMessage(msg whatsrhymen.LocationMess
 
 func (h *WhatsrhymenHandlers) HandleLiveLocationMessage(msg whatsrhymen.LiveLocationMessage) {
 	message := CreateMessageFromInfo(msg.Info)
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = "Localização em tempo real recebida ... "
@@ -169,13 +191,13 @@ func (h *WhatsrhymenHandlers) HandleDocumentMessage(msg whatsrhymen.DocumentMess
 	message := CreateMessageFromInfo(msg.Info)
 	message.Type = whatsapp.DocumentMessageType
 
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	innerMSG := msg.Info.Source.Message.DocumentMessage
 	message.Text = "Documento recebido: " + msg.Type + " :: " + *innerMSG.Mimetype + " :: " + msg.FileName
 
-	FillDocumentAttachment(message, msg, h.Connection)
+	FillDocumentAttachment(message, msg)
 	//  <--
 
 	h.Message(message)
@@ -183,7 +205,7 @@ func (h *WhatsrhymenHandlers) HandleDocumentMessage(msg whatsrhymen.DocumentMess
 
 func (h *WhatsrhymenHandlers) HandleContactMessage(msg whatsrhymen.ContactMessage) {
 	message := CreateMessageFromInfo(msg.Info)
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = "Contato VCARD recebido ... "
@@ -195,11 +217,11 @@ func (h *WhatsrhymenHandlers) HandleContactMessage(msg whatsrhymen.ContactMessag
 func (h *WhatsrhymenHandlers) HandleAudioMessage(msg whatsrhymen.AudioMessage) {
 	message := CreateMessageFromInfo(msg.Info)
 	message.Type = whatsapp.AudioMessageType
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = "Audio recebido: " + msg.Type
-	FillAudioAttachment(message, msg, h.Connection)
+	FillAudioAttachment(message, msg)
 	//  <--
 
 	h.Message(message)
@@ -208,7 +230,7 @@ func (h *WhatsrhymenHandlers) HandleAudioMessage(msg whatsrhymen.AudioMessage) {
 func (h *WhatsrhymenHandlers) HandleTextMessage(msg whatsrhymen.TextMessage) {
 	message := CreateMessageFromInfo(msg.Info)
 	message.Type = whatsapp.TextMessageType
-	FillHeader(message, msg.Info, h.Connection)
+	FillHeader(message, msg.Info, h.Store())
 
 	//  --> Personalizado para esta seção
 	message.Text = msg.Text

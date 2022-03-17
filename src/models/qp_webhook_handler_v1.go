@@ -10,6 +10,10 @@ type QPWebhookHandlerV1 struct {
 }
 
 func (w *QPWebhookHandlerV1) Handle(payload WhatsappMessage) {
+	if !w.HasWebhook() {
+		return
+	}
+
 	if payload.Type == UnknownMessageType {
 		log.Debug("ignoring unknown message type on webhook request")
 		return
@@ -22,4 +26,14 @@ func (w *QPWebhookHandlerV1) Handle(payload WhatsappMessage) {
 
 	msg := ToQPMessageV1(payload, w.Server.GetWid())
 	PostToWebHookFromServer(w.Server, msg)
+}
+
+func (w *QPWebhookHandlerV1) HasWebhook() bool {
+	if w.Server != nil {
+		url := w.Server.Webhook()
+		if len(url) > 0 {
+			return true
+		}
+	}
+	return false
 }

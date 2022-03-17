@@ -22,9 +22,6 @@ func FormReceiveController(w http.ResponseWriter, r *http.Request) {
 		data.DownloadPrefix = GetDownloadPrefix(server.Bot.Token)
 	}
 
-	// Testing
-	server.Connection.PrintStatus()
-
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
 	if status != Ready {

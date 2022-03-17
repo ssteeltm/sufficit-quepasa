@@ -12,6 +12,14 @@ import (
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
+func NewEmptyConnection(multidevice bool) (whatsapp.IWhatsappConnection, error) {
+	if multidevice {
+		return NewWhatsmeowEmptyConnection()
+	} else {
+		return NewWhatsrhymenEmptyConnection()
+	}
+}
+
 func NewConnection(wid string, multidevice bool, serverLogger *log.Logger) (whatsapp.IWhatsappConnection, error) {
 	if multidevice {
 		return NewWhatsmeowConnection(wid, serverLogger)
@@ -35,9 +43,9 @@ func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
 
 // Envia o QRCode para o usuário e aguarda pela resposta
 // Retorna um novo BOT
-func SignInWithQRCode(user QPUser, multidevice bool, out chan<- []byte) (server *QPWhatsappServer, err error) {
+func SignInWithQRCode(user QPUser, multidevice bool, out chan<- []byte) (err error) {
 
-	con, err := NewConnection("", multidevice, log.StandardLogger())
+	con, err := NewEmptyConnection(multidevice)
 	if err != nil {
 		return
 	}
@@ -75,26 +83,28 @@ func SignInWithQRCode(user QPUser, multidevice bool, out chan<- []byte) (server 
 		return
 	}
 
-	if multidevice {
-		// Descartando conexão anterior e criando uma nova com um novo wid
-		_ = con.Disconnect()
+	err = EnsureServerOnCache(user.ID, wid, con)
+	return
+}
 
-		con, err = NewConnection(wid, multidevice, log.StandardLogger())
-		if err != nil {
-			return
-		}
-	}
-
-	// Se chegou até aqui é pq o QasdadRCode foi validado e sincronizado
-	server, err = WhatsappService.GetOrCreate(con, user.ID)
+func EnsureServerOnCache(currentUserID string, wid string, connection whatsapp.IWhatsappConnection) (err error) {
+	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
+	server, err := WhatsappService.GetOrCreateServer(currentUserID, wid)
 	if err != nil {
-		log.Printf("(ERR) Error on get or create bot after login :: %v\r", err.Error())
+		log.Printf("(ERR) Error on get or create server after login :: %v\r", err.Error())
 		return
 	}
 
-	// Updating connection version information
-	server.SetVersion(con.GetVersion())
+	// updating verified state
+	server.MarkVerified(true)
 
+	// Updating connection version information
+	// Getting by current connection, ignoring old values
+	version := connection.GetVersion()
+	server.SetVersion(version)
+
+	// updating underlying connection
+	go server.UpdateConnection(connection)
 	return
 }
 

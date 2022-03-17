@@ -9,6 +9,14 @@ import (
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
+// Format wid to correspond only numeric info
+func FormatWid(wid string) string {
+	if strings.Contains(wid, "@") {
+		return strings.Split(wid, "@")[0]
+	}
+	return wid
+}
+
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsrhymenConnection) SendText(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 	response := &whatsapp.WhatsappSendResponse{}

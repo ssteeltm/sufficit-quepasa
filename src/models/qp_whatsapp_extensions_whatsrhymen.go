@@ -10,3 +10,7 @@ import (
 func NewWhatsrhymenConnection(wid string, logger *log.Logger) (whatsapp.IWhatsappConnection, error) {
 	return whatsrhymen.WhatsrhymenService.CreateConnection(wid, logger)
 }
+
+func NewWhatsrhymenEmptyConnection() (whatsapp.IWhatsappConnection, error) {
+	return whatsrhymen.WhatsrhymenService.CreateEmptyConnection()
+}

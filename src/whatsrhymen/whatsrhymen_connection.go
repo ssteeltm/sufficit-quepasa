@@ -3,6 +3,8 @@ package whatsrhymen
 import (
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
 	whatsrhymen "github.com/Rhymen/go-whatsapp"
 	log "github.com/sirupsen/logrus"
@@ -11,29 +13,35 @@ import (
 
 // Must Implement IWhatsappConnection
 type WhatsrhymenConnection struct {
-	Client   *whatsrhymen.Conn
-	Handlers *WhatsrhymenHandlers
-	Session  *whatsrhymen.Session
-
-	logger      *log.Logger
-	log         *log.Entry
-	failedToken bool
+	Client         *whatsrhymen.Conn
+	Handlers       *WhatsrhymenHandlers
+	Session        *whatsrhymen.Session
+	WAHandlers     whatsapp.IWhatsappHandlers
+	Reconnect      bool
+	log            *log.Entry
+	failedToken    bool
+	syncConnection *sync.Mutex `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
 }
 
 func (conn *WhatsrhymenConnection) GetVersion() string { return "single" }
 
 func (conn *WhatsrhymenConnection) GetWid() (wid string, err error) {
 	if conn.Client == nil {
+		if conn.Session != nil {
+			wid = FormatWid(conn.Session.Wid)
+			return
+		}
+
 		err = fmt.Errorf("client not defined on trying to get wid")
 	} else {
 		if conn.Client.Info == nil {
 			if conn.Session != nil {
-				wid = conn.Session.Wid
+				wid = FormatWid(conn.Session.Wid)
 				return
 			}
 			err = fmt.Errorf("session|&|client info not defined on trying to get wid")
 		} else {
-			wid = conn.Client.Info.Wid
+			wid = FormatWid(conn.Client.Info.Wid)
 			return
 		}
 	}
@@ -46,22 +54,30 @@ func (conn *WhatsrhymenConnection) GetStatus() (state whatsapp.WhatsappConnectio
 		state = whatsapp.Created
 		if conn.Client != nil {
 			state = whatsapp.Stopped
-			if conn.Handlers.WAHandlers != nil {
-				state = whatsapp.Fetching
+			if conn.Client.GetConnected() {
+				state = whatsapp.Connected
 				if conn.failedToken {
 					state = whatsapp.Failed
 				}
+				if conn.Client.GetLoggedIn() {
+					// indicates that underlying connection is ok & we are loggedin
+					// lets see the handlers ....
+					state = whatsapp.Fetching
 
-				if conn.Client.Info != nil {
-					if conn.Client.Info.Connected {
-						state = whatsapp.Connected
-						if conn.Handlers != nil {
-							state = whatsapp.Ready
-						}
-					} else {
-						state = whatsapp.Disconnected
+					if conn.WAHandlers != nil && conn.Handlers != nil {
+						state = whatsapp.Ready
 					}
 				}
+			} else {
+				state = whatsapp.Disconnected
+				if conn.failedToken {
+					return whatsapp.Failed
+				}
+			}
+		} else {
+			state = whatsapp.Starting
+			if conn.failedToken {
+				return whatsapp.Failed
 			}
 		}
 	}
@@ -79,25 +95,40 @@ func (conn *WhatsrhymenConnection) GetTitle(Wid string) string {
 }
 
 func (conn *WhatsrhymenConnection) Connect() (err error) {
-	conn.log.Info("starting whatsrhymen connecting ...")
+	err = conn.UpdateClient()
+	if err != nil {
+		return
+	}
 
 	// if not logged
 	if !conn.Client.GetLoggedIn() {
+		conn.log.Debug("restoring logged state with saved session ...")
 
 		// Agora sim, restaura a conexão com o whatsapp apartir de uma seção salva
 		_, err = conn.Client.RestoreWithSession(*conn.Session)
 		if err != nil {
 			conn.log.Errorf("error on restore whatsrhymen: %s", err.Error())
-			conn.failedToken = true
 			if strings.Contains(err.Error(), "401") {
-				return &whatsapp.UnauthorizedError{Inner: err}
+				conn.Failed("invalid unauthorized session")
+				inner := &whatsapp.UnauthorizedError{Inner: err}
+
+				// avoid recurring erros
+				conn.Client.RemoveHandlers()
+
+				err = conn.Client.Logout()
+				if err != nil {
+					return
+				}
+
+				return inner
 			}
+
+			conn.Failed("unknown")
 			return
 		}
-
-		conn.failedToken = false
 	}
 
+	conn.Success()
 	return
 }
 
@@ -168,13 +199,9 @@ func (conn *WhatsrhymenConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.
 	}
 }
 
-// func (cli *Client) Upload(ctx context.Context, plaintext []byte, appInfo MediaType) (resp UploadResponse, err error)
-func (conn *WhatsrhymenConnection) UploadAttachment(msg whatsapp.WhatsappMessage) (err error) {
-	return
-}
-
 func (conn *WhatsrhymenConnection) Disconnect() (err error) {
-	if conn.Client.Info.Connected {
+	conn.log.Info("disconnect requested")
+	if conn.Client.GetConnected() {
 		session, err := conn.Client.Disconnect()
 		if err != nil {
 			return err
@@ -182,71 +209,177 @@ func (conn *WhatsrhymenConnection) Disconnect() (err error) {
 
 		conn.Session = &session
 	}
+
+	conn.failedToken = false
 	return
 }
 
-func (conn *WhatsrhymenConnection) Delete() error {
-	client := conn.Client
-
-	// getting wid
-	wid := client.Info.Wid
-
-	// removing handlers if exists
-	client.RemoveHandlers()
-
-	// logging out from whatsapp
-	err := client.Logout()
+func (conn *WhatsrhymenConnection) Delete() (err error) {
+	// getting widclient
+	wid, err := conn.GetWid()
 	if err != nil {
-		return err
+		return
 	}
 
-	if client.Info.Connected {
-		_, err = client.Disconnect()
-		if err != nil {
-			return err
-		}
-	}
+	conn.Dispose()
 
 	// deleting from store
 	return WhatsrhymenService.Delete(wid)
 }
 
 func (conn *WhatsrhymenConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
+	err = conn.EnsureUnderlying()
+	if err != nil {
+		return
+	}
+
 	session, err := conn.Client.Login(result)
 	if err != nil {
 		return
 	}
 
-	log.Printf("login successful, session")
-	conn.Session = &session
+	conn.log.Debug("GetWhatsAppQRChannel: login successful")
 
 	// Se chegou até aqui é pq o QRCode foi validado e sincronizado
 	// Saving session data
-	err = WhatsrhymenService.Container.Update(session)
+	err = WhatsrhymenService.UpdateSession(session)
+	if err != nil {
+		return
+	}
 
-	// Updating wid on logs
-	conn.log = conn.log.WithField("wid", session.Wid)
-	conn.Handlers.log = conn.log
-
+	conn.Session = &session
+	conn.Success()
 	return
 }
 
+func (conn *WhatsrhymenConnection) UpdateLog(entry *log.Entry) {
+	conn.log = entry
+}
+
 func (conn *WhatsrhymenConnection) UpdateHandler(handlers whatsapp.IWhatsappHandlers) {
-	conn.Handlers.WAHandlers = handlers
+	conn.WAHandlers = handlers
 }
 
 //endregion
 
-func (conn *WhatsrhymenConnection) LogLevel(level log.Level) {
-	conn.logger.SetLevel(level)
+func (conn *WhatsrhymenConnection) Failed(reason string) {
+	conn.log.Debugf("updating failed token, reason: %s", reason)
+	conn.failedToken = true
+
+	if conn.Reconnect && !strings.Contains(reason, "invalid") {
+		conn.log.Debugf("trying to auto reconnect")
+		go conn.EnsureUnderlying()
+	}
 }
 
-func (conn *WhatsrhymenConnection) PrintStatus() {
-	/*
-		conn.log.Warnf("STATUS IS CONNECTED: %v", conn.Client.IsConnected())
-		conn.log.Warnf("STATUS IS LOGGED IN: %v", conn.Client.IsLoggedIn())
+func (conn *WhatsrhymenConnection) Success() {
+	conn.log.Debugf("updating success token")
+	conn.failedToken = false
+}
 
-		conn.Client.SendPresence(types.PresenceAvailable)
-		conn.Client.SetPassive(false)
-	*/
+// Ensure a valid underlying whatsapp server connection
+func (conn *WhatsrhymenConnection) EnsureUnderlying() (err error) {
+	conn.syncConnection.Lock()
+
+	if conn.Client == nil {
+		connection, err := conn.GetWhatsAppClient()
+		if err == nil {
+			conn.Client = connection
+			conn.log.Debugf("updating whatsrhymen connection")
+		}
+	} else if !conn.Client.GetConnected() {
+		err = conn.Client.Restore()
+		if err != nil {
+			conn.Failed("restoring")
+		}
+	}
+
+	conn.syncConnection.Unlock()
+	return
+}
+
+func (conn *WhatsrhymenConnection) EnsureHandlers() (err error) {
+
+	if conn.Handlers == nil {
+		conn.Handlers = &WhatsrhymenHandlers{
+			Connection: conn,
+			log:        conn.log,
+		}
+	}
+
+	if !conn.Handlers.IsRegistered() {
+		err = conn.Handlers.Register()
+		if err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+func (conn *WhatsrhymenConnection) UpdateClient() (err error) {
+	err = conn.EnsureUnderlying()
+	if err != nil {
+		return
+	}
+
+	err = conn.EnsureHandlers()
+	return
+}
+
+func (conn *WhatsrhymenConnection) GetWhatsAppClient() (client *whatsrhymen.Conn, err error) {
+	client, err = whatsrhymen.NewConn(20 * time.Second)
+
+	showing := whatsapp.WhatsappWebAppName + " Single"
+	if len(whatsapp.WhatsappWebAppSystem) > 0 {
+		showing += " " + whatsapp.WhatsappWebAppSystem
+	}
+
+	client.SetClientName(showing, whatsapp.WhatsappWebAppName, whatsapp.WhatsappWebAppVersion)
+	client.SetClientVersion(2, 2208, 7)
+	//client.SetClientVersion(2, 2142, 12)
+
+	log.Debugf("debug client version :: %v", client.GetClientVersion())
+	return
+}
+
+func (conn *WhatsrhymenConnection) Dispose() {
+	// desabling auto reconnect
+	conn.Reconnect = false
+
+	_ = conn.DisposeEnsureLogOut()
+	if conn.Client != nil {
+		conn.Client.RemoveHandlers()
+		if conn.Client.GetConnected() {
+			if conn.Client.GetLoggedIn() {
+				_ = conn.Client.Logout()
+			} else {
+				_, _ = conn.Client.Disconnect()
+			}
+		}
+		conn.Client = nil
+	}
+
+	conn.Handlers = nil
+	conn.Session = nil
+	conn.WAHandlers = nil
+	conn.log = nil
+	conn = nil
+}
+
+func (conn *WhatsrhymenConnection) DisposeEnsureLogOut() (err error) {
+	if conn.Session != nil {
+		err = conn.EnsureUnderlying()
+		if err != nil {
+			return
+		}
+
+		conn.Client.RemoveHandlers()
+		err = conn.Client.Logout()
+		if err != nil {
+			conn.log.Errorf("erro on trying to logout after a dispose connection: %s", err.Error())
+		}
+		return
+	}
+	return
 }

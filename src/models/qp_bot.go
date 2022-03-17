@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type QPBot struct {
@@ -33,15 +31,6 @@ func (bot *QPBot) GetNumber() string {
 	return "+" + phoneNumber
 }
 
-func (bot *QPBot) GetStatus() string {
-	server, err := GetServerFromBot(*bot)
-	if err != nil {
-		return Unknown.String()
-	}
-
-	return server.GetStatus().String()
-}
-
 func (bot *QPBot) GetTimestamp() (timestamp uint64) {
 	server, err := GetServerFromBot(*bot)
 	if err != nil {
@@ -69,20 +58,6 @@ func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
 	}
 
 	status = server.Battery
-	return
-}
-
-func (bot *QPBot) Toggle() (err error) {
-	server, err := GetServerFromBot(*bot)
-	if err != nil {
-		go WhatsappService.AppendNewServer(bot, nil)
-	} else {
-		if server.GetStatus() == Stopped || server.GetStatus() == Created {
-			err = server.Start()
-		} else {
-			server.Disconnect("toggling bot")
-		}
-	}
 	return
 }
 

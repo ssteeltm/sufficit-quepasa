@@ -49,7 +49,13 @@ func (source QPBotMysql) GetOrCreate(botID string, userID string) (bot QPBot, er
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			bot, err = source.Create(botID, userID)
+			return
 		}
+		return
+	} else if bot.UserID != userID {
+		bot.UserID = userID
+		err = source.updateUserID(bot.ID, bot.UserID)
+		return
 	}
 	return
 }
@@ -126,6 +132,14 @@ func (source QPBotMysql) UpdateDevel(id string, value bool) (err error) {
 func (source QPBotMysql) UpdateVersion(id string, value string) (err error) {
 	now := time.Now()
 	query := "UPDATE bots SET version = ?, updated_at = ? WHERE id = ?"
+	_, err = source.db.Exec(query, value, now, id)
+	return err
+}
+
+// Internal update user id for a bot
+func (source QPBotMysql) updateUserID(id string, value string) (err error) {
+	now := time.Now()
+	query := "UPDATE bots SET user_id = ?, updated_at = ? WHERE id = ?"
 	_, err = source.db.Exec(query, value, now, id)
 	return err
 }

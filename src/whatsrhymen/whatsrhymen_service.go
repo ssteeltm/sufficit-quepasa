@@ -2,7 +2,7 @@ package whatsrhymen
 
 import (
 	"strings"
-	"time"
+	"sync"
 
 	whatsrhymen "github.com/Rhymen/go-whatsapp"
 	log "github.com/sirupsen/logrus"
@@ -24,14 +24,32 @@ func (service *WhatsrhymenServiceModel) Start() {
 			panic(err)
 		}
 
-		WhatsrhymenService = &WhatsrhymenServiceModel{Container: container}
+		WhatsrhymenService = &WhatsrhymenServiceModel{
+			Container: container,
+		}
 	}
 }
 
+// Used for scan QR Codes
+// Dont forget to attach handlers after success login
+func (service *WhatsrhymenServiceModel) CreateEmptyConnection() (conn *WhatsrhymenConnection, err error) {
+	logger := log.StandardLogger()
+	logger.SetLevel(log.DebugLevel)
+	loggerEntry := log.NewEntry(logger)
+
+	conn = &WhatsrhymenConnection{
+		Reconnect:      true,
+		log:            loggerEntry,
+		syncConnection: &sync.Mutex{},
+	}
+
+	go conn.EnsureUnderlying()
+	return
+}
+
 func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log.Logger) (conn *WhatsrhymenConnection, err error) {
-	client, err := service.GetWhatsAppClient()
-	if err != nil {
-		return
+	if logger == nil {
+		logger = log.StandardLogger()
 	}
 
 	logger.SetLevel(log.DebugLevel)
@@ -39,17 +57,7 @@ func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log
 	if len(wid) > 0 {
 		loggerEntry = logger.WithField("wid", wid)
 	} else {
-		loggerEntry = logger.WithField("wid", "unknown")
-	}
-
-	handlers := &WhatsrhymenHandlers{
-		Connection: client,
-		log:        loggerEntry,
-	}
-
-	err = handlers.Register()
-	if err != nil {
-		return
+		loggerEntry = log.NewEntry(logger)
 	}
 
 	// Include search for session data here !
@@ -62,22 +70,17 @@ func (service *WhatsrhymenServiceModel) CreateConnection(wid string, logger *log
 	}
 
 	conn = &WhatsrhymenConnection{
-		Client:   client,
-		Handlers: handlers,
-		Session:  &session,
-		logger:   logger,
-		log:      loggerEntry,
+		Session:        &session,
+		log:            loggerEntry,
+		syncConnection: &sync.Mutex{},
+		failedToken:    false,
 	}
-	return
-}
 
-func (service *WhatsrhymenServiceModel) GetWhatsAppClient() (client *whatsrhymen.Conn, err error) {
-	client, err = whatsrhymen.NewConn(20 * time.Second)
-
-	client.SetClientName("QuePasa for Link", "QuePasa", "0.9")
-	client.SetClientVersion(2, 2142, 12)
-
-	log.Printf("debug client version :: %v", client.GetClientVersion())
+	if len(wid) > 0 {
+		go conn.UpdateClient()
+	} else {
+		go conn.EnsureUnderlying()
+	}
 	return
 }
 
@@ -91,4 +94,8 @@ func (service *WhatsrhymenServiceModel) FlushDatabase() (err error) {
 func (service *WhatsrhymenServiceModel) Delete(wid string) error {
 	service.Container.logger.Info("deleting whatsrhymen")
 	return service.Container.Delete(wid)
+}
+
+func (service *WhatsrhymenServiceModel) UpdateSession(session whatsrhymen.Session) error {
+	return service.Container.Update(session)
 }

@@ -214,22 +214,21 @@ func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err
 	return
 }
 
+func (conn *WhatsmeowConnection) UpdateLog(entry *log.Entry) {
+	conn.log = entry
+}
+
 func (conn *WhatsmeowConnection) UpdateHandler(handlers whatsapp.IWhatsappHandlers) {
 	conn.Handlers.WAHandlers = handlers
 }
 
 //endregion
 
-func (conn *WhatsmeowConnection) LogLevel(level log.Level) {
-	conn.logger.SetLevel(level)
+func (conn *WhatsmeowConnection) EnsureHandlers() error {
+	return nil
 }
 
-func (conn *WhatsmeowConnection) PrintStatus() {
-	/*
-		conn.log.Warnf("STATUS IS CONNECTED: %v", conn.Client.IsConnected())
-		conn.log.Warnf("STATUS IS LOGGED IN: %v", conn.Client.IsLoggedIn())
-
-		conn.Client.SendPresence(types.PresenceAvailable)
-		conn.Client.SetPassive(false)
-	*/
+func (conn *WhatsmeowConnection) Dispose() {
+	conn.logger.SetLevel(log.FatalLevel)
+	defer conn.Disconnect()
 }

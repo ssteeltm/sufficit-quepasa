@@ -6,6 +6,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	log "github.com/sirupsen/logrus"
 
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	. "go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -29,7 +30,50 @@ func (service *WhatsmeowServiceModel) Start() {
 		}
 
 		WhatsmeowService = &WhatsmeowServiceModel{Container: container}
+
+		showing := whatsapp.WhatsappWebAppName + " Multi"
+		if len(whatsapp.WhatsappWebAppSystem) > 0 {
+			showing += " " + whatsapp.WhatsappWebAppSystem
+		}
+
+		var version [3]uint32
+		version[0] = 0
+		version[1] = 9
+		version[2] = 0
+		store.SetOSInfo(showing, version)
 	}
+}
+
+// Used for scan QR Codes
+// Dont forget to attach handlers after success login
+func (service *WhatsmeowServiceModel) CreateEmptyConnection() (conn *WhatsmeowConnection, err error) {
+	logger := log.StandardLogger()
+	logger.SetLevel(log.DebugLevel)
+	loggerEntry := log.NewEntry(logger)
+
+	clientLog := waLog.Stdout("Whatsmeow/Client", log.DebugLevel.String(), true)
+	client, err := service.GetWhatsAppClient("", clientLog)
+	if err != nil {
+		return
+	}
+
+	handlers := &WhatsmeowHandlers{
+		Client: client,
+		log:    loggerEntry,
+	}
+	err = handlers.Register()
+	if err != nil {
+		return
+	}
+
+	conn = &WhatsmeowConnection{
+		Client:   client,
+		Handlers: handlers,
+		logger:   logger,
+		waLogger: clientLog,
+		log:      loggerEntry,
+	}
+	return
 }
 
 func (service *WhatsmeowServiceModel) CreateConnection(wid string, logger *log.Logger) (conn *WhatsmeowConnection, err error) {

@@ -204,7 +204,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 	for {
 		mt, msg, err := connection.ReadMessage()
 		if err != nil {
-			log.Println("Error in receive:", err)
+			log.Errorf("error in receive: %s", err.Error())
 			return
 		}
 
@@ -221,7 +221,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 			multidevice := strings.EqualFold(string(msg), "start:md")
 
 			// Exibindo código QR
-			server, err := SignInWithQRCode(user, multidevice, out)
+			err := SignInWithQRCode(user, multidevice, out)
 			if err != nil {
 				if strings.Contains(err.Error(), "timed out") {
 					err = connection.WriteMessage(mt, []byte("timeout"))
@@ -233,22 +233,14 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 					log.Println("SignInWithQRCode Unknown Error:", err)
 				}
 			} else {
-				server.Log.Info("SignInWithQRCode success ...")
-
-				// Marking as verified
-				err = server.MarkVerified(true)
-				if err != nil {
-					server.Log.Errorf("Error on update verified state :: %s", err)
-				}
-
 				err = connection.WriteMessage(websocket.TextMessage, []byte("complete"))
 				if err != nil {
-					server.Log.Errorf("Error on write complete message after qrcode verified :: %s", err)
+					log.Errorf("error on write complete message after qrcode verified: %s", err.Error())
 				}
 				return
 			}
 		} else {
-			log.Printf("Received Unknown msg from WebSocket: %s", msg)
+			log.Warnf("received unknown msg from websocket: %s", msg)
 		}
 	}
 }

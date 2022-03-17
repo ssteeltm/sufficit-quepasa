@@ -20,16 +20,16 @@ func CreateMessageFromInfo(Info whatsrhymen.MessageInfo) (message *WhatsrhymenMe
 	return
 }
 
-func FillHeader(message *WhatsrhymenMessage, Info whatsrhymen.MessageInfo, Conn *whatsrhymen.Conn) (err error) {
+func FillHeader(message *WhatsrhymenMessage, Info whatsrhymen.MessageInfo, Store *whatsrhymen.Store) (err error) {
 
 	// Endereço correto para onde deve ser devolvida a msg
 	message.Chat.ID = Info.RemoteJid
-	message.Chat.Title = getTitle(Conn.Store, Info.RemoteJid)
+	message.Chat.Title = getTitle(Store, Info.RemoteJid)
 
 	// Pessoa que enviou a msg dentro de um grupo
 	if Info.Source.Participant != nil {
 		message.Participant.ID = *Info.Source.Participant
-		message.Participant.Title = getTitle(Conn.Store, *Info.Source.Participant)
+		message.Participant.Title = getTitle(Store, *Info.Source.Participant)
 	}
 
 	return
@@ -58,7 +58,7 @@ func getContactTitle(contact whatsrhymen.Contact) string {
 	return result
 }
 
-func FillImageAttachment(message *WhatsrhymenMessage, msg whatsrhymen.ImageMessage, con *whatsrhymen.Conn) {
+func FillImageAttachment(message *WhatsrhymenMessage, msg whatsrhymen.ImageMessage) {
 	innerMSG := msg.Info.Source.Message.ImageMessage
 
 	getKey := innerMSG.GetMediaKey()
@@ -81,7 +81,7 @@ func FillImageAttachment(message *WhatsrhymenMessage, msg whatsrhymen.ImageMessa
 	}
 }
 
-func FillAudioAttachment(message *WhatsrhymenMessage, msg whatsrhymen.AudioMessage, con *whatsrhymen.Conn) {
+func FillAudioAttachment(message *WhatsrhymenMessage, msg whatsrhymen.AudioMessage) {
 	innerMSG := msg.Info.Source.Message.AudioMessage
 
 	getKey := innerMSG.GetMediaKey()
@@ -120,7 +120,7 @@ func GetFileName(id string, mimetype string, mediatype whatsrhymen.MediaType) st
 	}
 }
 
-func FillDocumentAttachment(message *WhatsrhymenMessage, msg whatsrhymen.DocumentMessage, con *whatsrhymen.Conn) {
+func FillDocumentAttachment(message *WhatsrhymenMessage, msg whatsrhymen.DocumentMessage) {
 	innerMSG := msg.Info.Source.Message.DocumentMessage
 
 	getKey := innerMSG.GetMediaKey()

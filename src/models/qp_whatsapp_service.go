@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Serviço que controla os servidores / bots individuais do whatsapp
@@ -43,26 +42,25 @@ func QPWhatsappStart() (err error) {
 // Inclui um novo servidor em um serviço já em andamento
 // *Usado quando se passa pela verificação do QRCode
 // *Usado quando se inicializa o sistema
-func (service *QPWhatsappService) AppendNewServer(bot *QPBot, con IWhatsappConnection) (server *QPWhatsappServer, err error) {
+func (service *QPWhatsappService) AppendNewServer(bot *QPBot) (server *QPWhatsappServer, err error) {
+	wid := bot.ID
 
-	// Trava simultaneos
-	service.appendlock.Lock()
-
-	// Vinculando base de dados
-	bot.db = service.DB.Bot
-
-	// Cria um novo servidor
-	server, err = NewQPWhatsappServer(bot, con)
-	if err != nil {
-		log.Error(err, "error on append new server")
-		bot.UpdateVerified(false)
-	} else {
-		// Adiciona na lista de servidores
-		service.Servers[bot.ID] = server
+	// Important for use in update bot info to base
+	// Attaching sql store
+	if bot.db == nil {
+		bot.db = service.DB.Bot
 	}
 
-	// Trava simultaneos
-	service.appendlock.Unlock()
+	// Creating a new instance
+	server, err = NewQPWhatsappServer(bot)
+	if err != nil {
+		log.Errorf("error on append new server: %s, :: %s", wid, err.Error())
+		return
+	}
+
+	// Adiciona na lista de servidores
+	log.Infof("updating server on cache: %s", wid)
+	service.Servers[wid] = server
 
 	// Inicializa o servidor
 	if server != nil {
@@ -72,20 +70,25 @@ func (service *QPWhatsappService) AppendNewServer(bot *QPBot, con IWhatsappConne
 	return
 }
 
-func (service *QPWhatsappService) GetOrCreate(con IWhatsappConnection, userid string) (server *QPWhatsappServer, err error) {
-	wid, err := con.GetWid()
-	if err != nil {
-		return
-	}
-
+func (service *QPWhatsappService) GetOrCreateServer(currentUserID string, wid string) (server *QPWhatsappServer, err error) {
+	log.Debugf("locating server: %s", wid)
 	server, ok := service.Servers[wid]
 	if !ok {
-		bot, err := service.DB.Bot.GetOrCreate(wid, userid)
+		log.Debugf("server: %s, not in cache, looking up database", wid)
+		bot, err := service.DB.Bot.GetOrCreate(wid, currentUserID)
 		if err != nil {
 			return nil, err
 		}
-		server, err = service.AppendNewServer(&bot, con)
+
+		// Vinculando base de dados
+		if bot.db == nil {
+			bot.db = service.DB.Bot
+		}
+
+		log.Debugf("server: %s, found", wid)
+		server, err = service.AppendNewServer(&bot)
 	}
+
 	return
 }
 
@@ -103,8 +106,6 @@ func (service *QPWhatsappService) Delete(server *QPWhatsappServer) (err error) {
 
 // Função que irá iniciar todos os servidores apartir do banco de dados
 func (service *QPWhatsappService) Initialize() (err error) {
-	// Trava simultaneos
-	service.initlock.Lock()
 
 	if !service.Initialized {
 
@@ -114,14 +115,13 @@ func (service *QPWhatsappService) Initialize() (err error) {
 		}
 
 		for _, bot := range bots {
-			service.AppendNewServer(bot, nil)
+
+			// appending server to cache
+			service.AppendNewServer(bot)
 		}
 
 		service.Initialized = true
 	}
-
-	// Destrava simultaneos
-	service.initlock.Unlock()
 
 	return
 }
