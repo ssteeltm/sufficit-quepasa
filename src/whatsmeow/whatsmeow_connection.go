@@ -17,11 +17,12 @@ import (
 
 // Must Implement IWhatsappConnection
 type WhatsmeowConnection struct {
-	Client   *Client
-	Handlers *WhatsmeowHandlers
-	waLogger waLog.Logger
-	logger   *log.Logger
-	log      *log.Entry
+	Client      *Client
+	Handlers    *WhatsmeowHandlers
+	waLogger    waLog.Logger
+	logger      *log.Logger
+	log         *log.Entry
+	failedToken bool
 }
 
 //region IMPLEMENT INTERFACE WHATSAPP CONNECTION
@@ -56,9 +57,8 @@ func (conn *WhatsmeowConnection) GetStatus() (state whatsapp.WhatsappConnectionS
 					state = whatsapp.Ready
 				}
 			} else {
-				if conn.Client.IsLoggedIn() {
-					state = whatsapp.Disconnected
-				} else {
+				state = whatsapp.Disconnected
+				if conn.failedToken {
 					state = whatsapp.Failed
 				}
 			}
@@ -84,12 +84,14 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 
 	err = conn.Client.Connect()
 	if err != nil {
+		conn.failedToken = true
 		if strings.Contains(err.Error(), "401") {
 			return &whatsapp.UnauthorizedError{Inner: err}
 		}
 		return
 	}
 
+	conn.failedToken = false
 	return
 }
 
