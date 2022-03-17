@@ -2,6 +2,7 @@ package whatsrhymen
 
 import (
 	"fmt"
+	"strings"
 
 	whatsrhymen "github.com/Rhymen/go-whatsapp"
 	log "github.com/sirupsen/logrus"
@@ -86,8 +87,11 @@ func (conn *WhatsrhymenConnection) Connect() (err error) {
 		// Agora sim, restaura a conexão com o whatsapp apartir de uma seção salva
 		_, err = conn.Client.RestoreWithSession(*conn.Session)
 		if err != nil {
+			conn.log.Errorf("error on restore whatsrhymen: %s", err.Error())
 			conn.failedToken = true
-			conn.log.Errorf("error on restore session :: %s", err)
+			if strings.Contains(err.Error(), "401") {
+				return &whatsapp.UnauthorizedError{Inner: err}
+			}
 			return
 		}
 

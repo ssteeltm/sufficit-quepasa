@@ -3,7 +3,6 @@ package whatsmeow
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -84,11 +83,7 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 
 	err = conn.Client.Connect()
 	if err != nil {
-		conn.log.Errorf("error on connecting whatsmeow: %s", err.Error())
 		conn.failedToken = true
-		if strings.Contains(err.Error(), "401") {
-			return &whatsapp.UnauthorizedError{Inner: err}
-		}
 		return
 	}
 
