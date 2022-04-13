@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS bots (
   `devel` BOOLEAN NOT NULL DEFAULT false,
   `version` VARCHAR (10) NOT NULL DEFAULT '',
   `handlegroups` BOOLEAN DEFAULT TRUE NOT NULL,
-  `handlebroadcast` BOOLEAN DEFAULT FALSE NOT NULL,
+  `handlebroadcast` BOOLEAN DEFAULT FALSE NOT NULL
 );
