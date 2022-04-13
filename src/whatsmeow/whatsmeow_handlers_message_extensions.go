@@ -144,10 +144,15 @@ func HandleAudioMessage(log *log.Entry, out *WhatsappMessage, in *AudioMessage) 
 	out.Content = in
 	out.Type = AudioMessageType
 
+	var seconds uint32
+	if in.Seconds != nil {
+		seconds = *in.Seconds
+	}
+
 	out.Attachment = &WhatsappAttachment{
 		Mimetype:   *in.Mimetype,
 		FileLength: *in.FileLength,
 
-		Seconds: *in.Seconds,
+		Seconds: seconds,
 	}
 }
