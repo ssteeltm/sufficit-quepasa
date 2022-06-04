@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo UPDATING LOGGING
-ln -sf /opt/quepasa-source/helpers/quepasa-syslog.conf /etc/rsyslog.d/10-quepasa.conf
+ln -sf /opt/quepasa-source/helpers/syslog.conf /etc/rsyslog.d/10-quepasa.conf
 
 echo UPDATING LOGROTATE
 ln -sf /opt/quepasa-source/helpers/quepasa.logrotate.d /etc/logrotate.d/quepasa
