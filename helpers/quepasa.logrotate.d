@@ -1,4 +1,4 @@
-/var/log/quepasa.log
+/var/log/quepasa/service.log
 {
     missingok
     daily
