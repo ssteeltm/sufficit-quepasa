@@ -185,14 +185,9 @@ func (server *QPWhatsappServer) EnsureUnderlying() (err error) {
 		server.Log.Infof("trying to create new whatsapp connection ...")
 		wid := server.GetWid()
 		log := server.logger
-		multi := server.Version() == "multi"
 
 		var connection whatsapp.IWhatsappConnection
-		if multi {
-			connection, err = NewWhatsmeowConnection(wid, log)
-		} else {
-			connection, err = NewWhatsrhymenConnection(wid, log)
-		}
+		connection, err = NewWhatsmeowConnection(wid, log)
 
 		server.connection = connection
 	}

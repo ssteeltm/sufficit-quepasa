@@ -11,7 +11,6 @@ import (
 	"github.com/sufficit/sufficit-quepasa-fork/controllers"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
-	whatsrhymen "github.com/sufficit/sufficit-quepasa-fork/whatsrhymen"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -34,7 +33,6 @@ func main() {
 	}
 
 	whatsmeow.WhatsmeowService.Start()
-	whatsrhymen.WhatsrhymenService.Start()
 
 	// Inicializando serviço de controle do whatsapp
 	// De forma assíncrona

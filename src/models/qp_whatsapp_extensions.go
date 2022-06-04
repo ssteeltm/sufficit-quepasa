@@ -13,19 +13,11 @@ import (
 )
 
 func NewEmptyConnection(multidevice bool) (whatsapp.IWhatsappConnection, error) {
-	if multidevice {
-		return NewWhatsmeowEmptyConnection()
-	} else {
-		return NewWhatsrhymenEmptyConnection()
-	}
+	return NewWhatsmeowEmptyConnection()
 }
 
 func NewConnection(wid string, multidevice bool, serverLogger *log.Logger) (whatsapp.IWhatsappConnection, error) {
-	if multidevice {
-		return NewWhatsmeowConnection(wid, serverLogger)
-	} else {
-		return NewWhatsrhymenConnection(wid, serverLogger)
-	}
+	return NewWhatsmeowConnection(wid, serverLogger)
 }
 
 func TryUpdateHttpChannel(ch chan<- []byte, value []byte) (closed bool) {
