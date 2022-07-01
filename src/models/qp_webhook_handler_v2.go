@@ -4,26 +4,29 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 type QPWebhookHandlerV2 struct {
 	Server *QPWhatsappServer
 }
 
-func (w *QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
+func (w *QPWebhookHandlerV2) Handle(payload whatsapp.WhatsappMessage) {
 	if !w.HasWebhook() {
 		return
 	}
 
-	if payload.Type == UnknownMessageType {
+	if payload.Type == whatsapp.UnknownMessageType {
 		log.Debug("ignoring unknown message type on webhook request")
 		return
 	}
 
-	if payload.Type == TextMessageType && len(strings.TrimSpace(payload.Text)) == 0 {
-		log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
-		return
+	if payload.Type == whatsapp.TextMessageType {
+		cleaned := Clean(payload.Text)
+		if len(strings.TrimSpace(cleaned)) <= 0 {
+			log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
+			return
+		}
 	}
 
 	if payload.Chat.ID == "status@broadcast" && !w.Server.HandleBroadcast() {
