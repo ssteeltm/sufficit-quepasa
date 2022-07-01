@@ -26,6 +26,11 @@ func (w *QPWebhookHandlerV2) Handle(payload WhatsappMessage) {
 		return
 	}
 
+	if payload.Chat.ID == "status@broadcast" && !w.Server.HandleBroadcast() {
+		log.Warnf("ignoring broadcast message on webhook request: %v", payload.ID)
+		return
+	}
+
 	msg := ToQPMessageV2(payload, w.Server.GetWid())
 	PostToWebHookFromServer(w.Server, msg)
 }
