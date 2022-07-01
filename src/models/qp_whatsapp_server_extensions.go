@@ -40,13 +40,12 @@ func PostToWebHook(wid string, url string, message interface{}) (err error) {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	client.Timeout = time.Second * 15
+	client.Timeout = time.Second * 10
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Error("(%s) erro ao postar no webhook: %s", wid, err.Error())
 	}
 	defer resp.Body.Close()
-
 	return
 }
 
