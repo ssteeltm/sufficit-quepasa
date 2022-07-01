@@ -16,21 +16,16 @@ func (w *QPWebhookHandlerV2) Handle(payload whatsapp.WhatsappMessage) {
 		return
 	}
 
-	if payload.Type == whatsapp.UnknownMessageType {
+	if payload.Type == 0 {
 		log.Debug("ignoring unknown message type on webhook request")
 		return
 	}
 
-	if payload.Type == whatsapp.TextMessageType {
-		cleaned := Clean(payload.Text)
-		if len(strings.TrimSpace(cleaned)) <= 0 {
-			log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
-			return
-		} else {
-			log.Infof("text message on webhook request: %v, text: %v", payload.ID, payload.Text)
-		}
+	if payload.Type == whatsapp.TextMessageType && len(strings.TrimSpace(payload.Text)) <= 0 {
+		log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
+		return
 	} else {
-		log.Infof("text message on webhook request: %v, type: %v", payload.ID, payload.Type)
+		log.Infof("message on webhook request: %v, type: %v", payload.ID, payload.Type)
 	}
 
 	if payload.Chat.ID == "status@broadcast" && !w.Server.HandleBroadcast() {
