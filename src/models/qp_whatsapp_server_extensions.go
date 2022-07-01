@@ -36,6 +36,7 @@ func PostToWebHook(wid string, url string, message interface{}) (err error) {
 	log.Debug()
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadJson))
+	req.Header.Set("User-Agent", "Quepasa")
 	req.Header.Set("X-QUEPASA-BOT", wid)
 	req.Header.Set("Content-Type", "application/json")
 
