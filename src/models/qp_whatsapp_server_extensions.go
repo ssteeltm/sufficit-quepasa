@@ -5,10 +5,9 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"reflect"
-	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -17,6 +16,10 @@ import (
 func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err error) {
 	wid := server.GetWid()
 	url := server.Webhook()
+
+	// Ignorando certificado ao realizar o post
+	// Não cabe a nós a segurança do cliente
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if len(url) > 0 {
 		return PostToWebHook(wid, url, message)
@@ -30,33 +33,19 @@ func PostToWebHook(wid string, url string, message interface{}) (err error) {
 	log.Infof("dispatching webhook from: (%s): %s", typeOfMessage, wid)
 
 	payloadJson, _ := json.Marshal(&message)
-	log.Debug(string(payloadJson))
+	log.Debug()
 
-	requestBody := bytes.NewBuffer(payloadJson)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadJson))
+	req.Header.Set("X-QUEPASA-BOT", wid)
+	req.Header.Set("Content-Type", "application/json")
 
-	// Ignorando certificado ao realizar o post
-	// Não cabe a nós a segurança do cliente
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	resp, err := http.Post(url, "application/json", requestBody)
+	client := &http.Client{}
+	client.Timeout = time.Second * 15
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Error("(%s) erro ao postar no webhook: %s", wid, err.Error())
-	} else {
-		if resp != nil {
-			defer resp.Body.Close()
-			if resp.StatusCode == 422 {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					log.Printf("(%s) erro ao ler resposta do webhook: %s", wid, err.Error())
-				} else {
-					if body != nil && strings.Contains(string(body), "invalid callback token") {
-						// Preenche o body novamente pois foi esvaziado na requisição anterior
-						requestBody = bytes.NewBuffer(payloadJson)
-						http.Post(url, "application/json", requestBody)
-					}
-				}
-			}
-		}
 	}
+	defer resp.Body.Close()
 
 	return
 }
