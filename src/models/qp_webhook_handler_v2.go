@@ -26,6 +26,8 @@ func (w *QPWebhookHandlerV2) Handle(payload whatsapp.WhatsappMessage) {
 		if len(strings.TrimSpace(cleaned)) <= 0 {
 			log.Warnf("ignoring empty text message on webhook request: %v", payload.ID)
 			return
+		} else {
+			log.Infof("text message on webhook request: %v, %v", payload.ID, payload.Text)
 		}
 	}
 
