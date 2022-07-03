@@ -63,7 +63,6 @@ func newRouter() chi.Router {
 
 func addAPIRoutes(r chi.Router) {
 	r.Group(RegisterAPIControllers)
-	r.Group(RegisterAPIV1Controllers)
 	r.Group(RegisterAPIV2Controllers)
 }
 

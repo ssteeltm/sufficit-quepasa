@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,8 +24,11 @@ func RegisterAPIControllers(r chi.Router) {
 		r.Post(endpoint+CurrentControllerPrefix+"/senddocument", SendDocumentAPIHandlerV2)
 		r.Get(endpoint+CurrentControllerPrefix+"/receive", ReceiveAPIHandler)
 		r.Post(endpoint+CurrentControllerPrefix+"/attachment", AttachmentAPIHandlerV2)
-		r.Post(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
 		r.Get(endpoint+DownloadControllerEnpoint, DownloadController)
+
+		r.Post(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
+		r.Get(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
+		r.Delete(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
 	}
 }
 
@@ -91,44 +93,6 @@ func DownloadController(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(*att.GetContent())
-}
-
-//endregion
-//region CONTROLLER - WEBHOOK
-
-func WebhookController(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
-	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
-	if err != nil {
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found on WebHookHandler", token))
-		return
-	}
-
-	// Declare a new Person struct.
-	var p QPWebhookRequest
-
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
-	err = json.NewDecoder(r.Body).Decode(&p)
-	if err != nil {
-		RespondServerError(server, w, err)
-	}
-
-	// Já tratei os parametros
-	if ENV.IsDevelopment() {
-		log.Printf("(%s) Updating Webhook: %s", server.Bot.GetNumber(), p.Url)
-	}
-
-	// Atualizando banco de dados
-	if err := server.SetWebhook(p.Url); err != nil {
-		return
-	}
-
-	RespondSuccess(w, server)
 }
 
 //endregion

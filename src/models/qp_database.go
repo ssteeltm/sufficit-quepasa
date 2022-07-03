@@ -25,6 +25,7 @@ type QPDatabase struct {
 	Store      IQPStore
 	User       IQPUser
 	Bot        IQPBot
+	Webhook    QpDataWebhookInterface
 }
 
 var (
@@ -64,6 +65,7 @@ func GetDatabase() *QPDatabase {
 	var istore IQPStore
 	var iuser IQPUser
 	var ibot IQPBot
+	var iwebhook = QpBotWebhookSql{db}
 
 	if config.Driver == "postgres" {
 		istore = QPStorePostgres{db}
@@ -77,7 +79,7 @@ func GetDatabase() *QPDatabase {
 		log.Fatal("database driver not supported")
 	}
 
-	return &QPDatabase{config, db, istore, iuser, ibot}
+	return &QPDatabase{config, db, istore, iuser, ibot, iwebhook}
 }
 
 func GetDBConfig() QPDatabaseConfig {

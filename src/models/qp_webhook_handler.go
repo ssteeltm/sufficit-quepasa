@@ -7,11 +7,11 @@ import (
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
-type QPWebhookHandlerV2 struct {
+type QPWebhookHandler struct {
 	Server *QPWhatsappServer
 }
 
-func (w *QPWebhookHandlerV2) Handle(payload whatsapp.WhatsappMessage) {
+func (w *QPWebhookHandler) Handle(payload whatsapp.WhatsappMessage) {
 	if !w.HasWebhook() {
 		return
 	}
@@ -31,16 +31,12 @@ func (w *QPWebhookHandlerV2) Handle(payload whatsapp.WhatsappMessage) {
 		return
 	}
 
-	msg := ToQPMessageV2(payload, w.Server.GetWid())
-	PostToWebHookFromServer(w.Server, msg)
+	PostToWebHookFromServer(w.Server, payload)
 }
 
-func (w *QPWebhookHandlerV2) HasWebhook() bool {
+func (w *QPWebhookHandler) HasWebhook() bool {
 	if w.Server != nil {
-		url := w.Server.Webhook()
-		if len(url) > 0 {
-			return true
-		}
+		return len(w.Server.Webhooks) > 0
 	}
 	return false
 }

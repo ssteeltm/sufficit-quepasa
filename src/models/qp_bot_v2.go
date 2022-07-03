@@ -1,10 +1,11 @@
 package models
 
 import (
+	"errors"
 	"time"
 )
 
-type QPBot struct {
+type QPBotV2 struct {
 	ID              string `db:"id" json:"id"`
 	Verified        bool   `db:"is_verified" json:"is_verified"`
 	Token           string `db:"token" json:"token"`
@@ -22,7 +23,7 @@ type QPBot struct {
 //region DATABASE METHODS
 
 // Traduz o Wid para um número de telefone em formato E164
-func (bot *QPBot) GetNumber() string {
+func (bot *QPBotV2) GetNumber() string {
 	phoneNumber, err := GetPhoneByID(bot.ID)
 	if err != nil {
 		return ""
@@ -30,8 +31,8 @@ func (bot *QPBot) GetNumber() string {
 	return "+" + phoneNumber
 }
 
-func (bot *QPBot) GetTimestamp() (timestamp uint64) {
-	server, err := GetServerFromBot(*bot)
+func (bot *QPBotV2) GetTimestamp() (timestamp uint64) {
+	server, err := GetServerFromID(*&bot.ID)
 	if err != nil {
 		return
 	}
@@ -40,8 +41,8 @@ func (bot *QPBot) GetTimestamp() (timestamp uint64) {
 	return
 }
 
-func (bot *QPBot) GetStartedTime() (timestamp time.Time) {
-	server, err := GetServerFromBot(*bot)
+func (bot *QPBotV2) GetStartedTime() (timestamp time.Time) {
+	server, err := GetServerFromID(*&bot.ID)
 	if err != nil {
 		return
 	}
@@ -50,8 +51,8 @@ func (bot *QPBot) GetStartedTime() (timestamp time.Time) {
 	return
 }
 
-func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
-	server, err := GetServerFromBot(*bot)
+func (bot *QPBotV2) GetBatteryInfo() (status WhatsAppBateryStatus) {
+	server, err := GetServerFromID(*&bot.ID)
 	if err != nil {
 		return
 	}
@@ -62,7 +63,7 @@ func (bot *QPBot) GetBatteryInfo() (status WhatsAppBateryStatus) {
 
 //region SINGLE UPDATES
 
-func (bot *QPBot) UpdateVersion(value string) (err error) {
+func (bot *QPBotV2) UpdateVersion(value string) (err error) {
 	err = bot.db.UpdateVersion(bot.ID, value)
 	if err != nil {
 		return
@@ -72,7 +73,7 @@ func (bot *QPBot) UpdateVersion(value string) (err error) {
 	return
 }
 
-func (bot *QPBot) UpdateGroups(value bool) (err error) {
+func (bot *QPBotV2) UpdateGroups(value bool) (err error) {
 	err = bot.db.UpdateGroups(bot.ID, value)
 	if err != nil {
 		return
@@ -82,7 +83,7 @@ func (bot *QPBot) UpdateGroups(value bool) (err error) {
 	return
 }
 
-func (bot *QPBot) UpdateBroadcast(value bool) (err error) {
+func (bot *QPBotV2) UpdateBroadcast(value bool) (err error) {
 	err = bot.db.UpdateBroadcast(bot.ID, value)
 	if err != nil {
 		return
@@ -92,7 +93,7 @@ func (bot *QPBot) UpdateBroadcast(value bool) (err error) {
 	return
 }
 
-func (bot *QPBot) UpdateVerified(value bool) (err error) {
+func (bot *QPBotV2) UpdateVerified(value bool) (err error) {
 	err = bot.db.UpdateVerified(bot.ID, value)
 	if err != nil {
 		return
@@ -102,7 +103,7 @@ func (bot *QPBot) UpdateVerified(value bool) (err error) {
 	return
 }
 
-func (bot *QPBot) UpdateDevel(value bool) (err error) {
+func (bot *QPBotV2) UpdateDevel(value bool) (err error) {
 	err = bot.db.UpdateDevel(bot.ID, value)
 	if err != nil {
 		return
@@ -112,7 +113,7 @@ func (bot *QPBot) UpdateDevel(value bool) (err error) {
 	return
 }
 
-func (bot *QPBot) UpdateToken(value string) (err error) {
+func (bot *QPBotV2) UpdateToken(value string) (err error) {
 	err = bot.db.UpdateToken(bot.ID, value)
 	if err != nil {
 		return
@@ -122,14 +123,22 @@ func (bot *QPBot) UpdateToken(value string) (err error) {
 	return
 }
 
+func (bot *QPBotV2) UpdateWebhook(value string) (err error) {
+	return errors.New("not supported anymore")
+}
+
 //endregion
 
-func (bot *QPBot) IsDevelopmentGlobal() bool {
+func (bot *QPBotV2) IsDevelopmentGlobal() bool {
 	return ENV.IsDevelopment()
 }
 
-func (bot *QPBot) Delete() error {
+func (bot *QPBotV2) Delete() error {
 	return bot.db.Delete(bot.ID)
+}
+
+func (bot *QPBotV2) WebHookSincronize() error {
+	return errors.New("not supported anymore")
 }
 
 //endregion

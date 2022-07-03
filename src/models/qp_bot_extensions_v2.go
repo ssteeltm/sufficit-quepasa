@@ -2,7 +2,11 @@ package models
 
 import (
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/jinzhu/copier"
+	log "github.com/sirupsen/logrus"
 )
 
 // returning []QPMessageV1
@@ -25,4 +29,17 @@ func GetMessagesFromBotV2(source QPBot, timestamp string) (messages []QPMessageV
 
 	searchTime := time.Unix(searchTimestamp, 0)
 	return GetMessagesFromServerV2(server, searchTime)
+}
+
+func ToQPBotV2(source *QPBot) (destination *QPBotV2) {
+	destination = &QPBotV2{}
+	err := copier.Copy(destination, source)
+	if err != nil {
+		log.Errorf("error on convert bot to version 1: %s", err.Error())
+	}
+
+	if !strings.Contains(destination.ID, "@") {
+		destination.ID = destination.ID + "@c.us"
+	}
+	return
 }

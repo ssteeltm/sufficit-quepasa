@@ -14,10 +14,8 @@ type IQPBot interface {
 	UpdateGroups(id string, value bool) error
 	UpdateBroadcast(id string, value bool) error
 	UpdateVerified(id string, value bool) error
-	UpdateWebhook(id string, value string) error
 	UpdateDevel(id string, value bool) error
 	UpdateVersion(id string, value string) error
 
 	Delete(id string) error
-	WebHookSincronize(id string) (result string, err error)
 }

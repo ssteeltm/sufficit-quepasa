@@ -17,7 +17,7 @@
           <th>Token</th>
           <th style="text-align: center;">Actions</th>
           <th style="text-align: center;">Extra</th>
-          <th style="text-align: center;">WebHook</th>
+          <th style="text-align: center;">WebHooks</th>
           <th style="text-align: center;" colspan="2">Battery</th>
           <th>State</th>
         </tr>
@@ -120,8 +120,8 @@
             </td>
             <td style="text-align: center;">
               <span class="button" disabled>
-                {{ if .Webhook }}
-                  <span class="icon has-text-success" title="{{ .Webhook }}"><i class="fas fa-check-square"></i> </span>
+                {{ if .Webhooks }}
+                  <span class="icon has-text-success" title="{{ .Webhooks }}"><i class="fas fa-check-square"></i> </span>
                   {{ else }}
                   <span class="icon has-text-warning"><i class="fas fa-exclamation-triangle"></i> </span>
                 {{ end }}

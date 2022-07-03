@@ -52,7 +52,7 @@ func (service *QPWhatsappService) AppendNewServer(bot *QPBot) (server *QPWhatsap
 	}
 
 	// Creating a new instance
-	server, err = NewQPWhatsappServer(bot)
+	server, err = NewQPWhatsappServer(bot, &service.DB.Webhook)
 	if err != nil {
 		log.Errorf("error on append new server: %s, :: %s", wid, err.Error())
 		return

@@ -11,6 +11,7 @@ import (
 )
 
 type QPWhatsappServer struct {
+	QpServerWebhookCollection
 	Bot            *QPBot                       `json:"bot"`
 	connection     whatsapp.IWhatsappConnection `json:"-"`
 	syncConnection *sync.Mutex                  `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
@@ -27,7 +28,7 @@ type QPWhatsappServer struct {
 //region CONSTRUCTORS
 
 // Instanciando um novo servidor para controle de whatsapp
-func NewQPWhatsappServer(bot *QPBot) (server *QPWhatsappServer, err error) {
+func NewQPWhatsappServer(bot *QPBot, dbWHooks *QpDataWebhookInterface) (server *QPWhatsappServer, err error) {
 	wid := bot.ID
 	var serverLogLevel log.Level
 	if bot.Devel {
@@ -53,6 +54,8 @@ func NewQPWhatsappServer(bot *QPBot) (server *QPWhatsappServer, err error) {
 		logger:        serverLogger,
 		Log:           serverLogEntry,
 	}
+
+	server.WebhookFill(wid, *dbWHooks)
 	return
 }
 
@@ -167,7 +170,7 @@ func (server *QPWhatsappServer) UpdateConnection(connection whatsapp.IWhatsappCo
 	server.connection.UpdateHandler(server.Handler)
 
 	// Registrando webhook
-	webhookDispatcher := &QPWebhookHandlerV2{Server: server}
+	webhookDispatcher := &QPWebhookHandler{Server: server}
 	server.Handler.Register(webhookDispatcher)
 
 	go server.EnsureHandlers()
@@ -211,7 +214,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 	}
 
 	// Registrando webhook
-	webhookDispatcher := &QPWebhookHandlerV2{Server: server}
+	webhookDispatcher := &QPWebhookHandler{Server: server}
 	server.Handler.Register(webhookDispatcher)
 
 	// Atualizando manipuladores de eventos
@@ -411,14 +414,6 @@ func (server *QPWhatsappServer) Devel() bool {
 	return server.Bot.Devel
 }
 
-func (server *QPWhatsappServer) SetWebhook(value string) error {
-	return server.Bot.UpdateWebhook(value)
-}
-
-func (server *QPWhatsappServer) Webhook() string {
-	return server.Bot.Webhook
-}
-
 func (server *QPWhatsappServer) SetVersion(value string) error {
 	return server.Bot.UpdateVersion(value)
 }
@@ -438,10 +433,6 @@ func (server *QPWhatsappServer) Delete() (err error) {
 	}
 
 	return server.Bot.Delete()
-}
-
-func (server *QPWhatsappServer) WebHookSincronize() error {
-	return server.Bot.WebHookSincronize()
 }
 
 //endregion

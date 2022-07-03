@@ -59,9 +59,9 @@ func (source QPBotPostgres) Create(botID string, userID string) (QPBot, error) {
 	token := uuid.New().String()
 	now := time.Now()
 	query := `INSERT INTO bots
-    (id, is_verified, token, user_id, created_at, updated_at, webhook, devel)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	if _, err := source.db.Exec(query, botID, false, token, userID, now, now, "", false); err != nil {
+    (id, is_verified, token, user_id, created_at, updated_at, devel)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	if _, err := source.db.Exec(query, botID, false, token, userID, now, now, false); err != nil {
 		return bot, err
 	}
 
@@ -75,7 +75,6 @@ UpdateToken(id string, value string) error
 UpdateGroups(id string, value bool) error
 UpdateBroadcast(id string, value bool) error
 UpdateVerified(id string, value bool) error
-UpdateWebhook(id string, value string) error
 UpdateDevel(id string, value bool) error
 UpdateVersion(id string, value string) error
 */
@@ -108,13 +107,6 @@ func (source QPBotPostgres) UpdateVerified(id string, value bool) error {
 	return err
 }
 
-func (source QPBotPostgres) UpdateWebhook(id string, value string) error {
-	now := time.Now()
-	query := "UPDATE bots SET webhook = $1, updated_at = $2 WHERE id = $3"
-	_, err := source.db.Exec(query, value, now, id)
-	return err
-}
-
 func (source QPBotPostgres) UpdateDevel(id string, value bool) error {
 	now := time.Now()
 	query := "UPDATE bots SET devel = $1, updated_at = $2 WHERE id = $3"
@@ -135,9 +127,4 @@ func (source QPBotPostgres) Delete(id string) error {
 	query := "DELETE FROM bots WHERE id = $1"
 	_, err := source.db.Exec(query, id)
 	return err
-}
-
-func (source QPBotPostgres) WebHookSincronize(id string) (result string, err error) {
-	err = source.db.Get(&result, "SELECT webhook FROM bots WHERE id = $1", id)
-	return result, err
 }

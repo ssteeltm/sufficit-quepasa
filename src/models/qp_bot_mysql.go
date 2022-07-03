@@ -65,10 +65,8 @@ func (source QPBotMysql) Create(botID string, userID string) (QPBot, error) {
 	var bot QPBot
 	token := uuid.New().String()
 	now := time.Now()
-	query := `INSERT INTO bots
-    (id, is_verified, token, user_id, created_at, updated_at, webhook, devel)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-	if _, err := source.db.Exec(query, botID, false, token, userID, now, now, "", false); err != nil {
+	query := `INSERT INTO bots (id, is_verified, token, user_id, created_at, updated_at, devel) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	if _, err := source.db.Exec(query, botID, false, token, userID, now, now, false); err != nil {
 		return bot, err
 	}
 
@@ -82,7 +80,6 @@ UpdateToken(id string, value string) error
 UpdateGroups(id string, value bool) error
 UpdateBroadcast(id string, value bool) error
 UpdateVerified(id string, value bool) error
-UpdateWebhook(id string, value string) error
 UpdateDevel(id string, value bool) error
 UpdateVersion(id string, value string) error
 */
@@ -115,13 +112,6 @@ func (source QPBotMysql) UpdateVerified(id string, value bool) error {
 	return err
 }
 
-func (source QPBotMysql) UpdateWebhook(id string, value string) error {
-	now := time.Now()
-	query := "UPDATE bots SET webhook = ?, updated_at = ? WHERE id = ?"
-	_, err := source.db.Exec(query, value, now, id)
-	return err
-}
-
 func (source QPBotMysql) UpdateDevel(id string, value bool) (err error) {
 	now := time.Now()
 	query := "UPDATE bots SET devel = ?, updated_at = ? WHERE id = ?"
@@ -150,9 +140,4 @@ func (source QPBotMysql) Delete(id string) error {
 	query := "DELETE FROM bots WHERE id = ?"
 	_, err := source.db.Exec(query, id)
 	return err
-}
-
-func (source QPBotMysql) WebHookSincronize(id string) (result string, err error) {
-	err = source.db.Get(&result, "SELECT webhook FROM bots WHERE id = ?", id)
-	return result, err
 }
