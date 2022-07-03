@@ -17,7 +17,7 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err
 	for _, element := range server.Webhooks {
 		// index is the index where we are
 		// element is the element from someSlice for where we are
-		element.Post(wid, element.Url, message)
+		element.Post(wid, message)
 	}
 
 	return

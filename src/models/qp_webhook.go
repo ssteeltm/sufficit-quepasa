@@ -18,12 +18,12 @@ type QpWebhook struct {
 
 var ErrInvalidResponse error = errors.New("the requested url do not return 200 status code")
 
-func (source *QpWebhook) Post(wid string, url string, message interface{}) (err error) {
+func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
 	typeOfMessage := reflect.TypeOf(message)
-	log.Infof("dispatching webhook from: (%s): %s, to: %s", typeOfMessage, wid, url)
+	log.Infof("dispatching webhook from: (%s): %s, to: %s", typeOfMessage, wid, source.Url)
 
 	payloadJson, _ := json.Marshal(&message)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadJson))
+	req, err := http.NewRequest("POST", source.Url, bytes.NewBuffer(payloadJson))
 	req.Header.Set("User-Agent", "Quepasa")
 	req.Header.Set("X-QUEPASA-BOT", wid)
 	req.Header.Set("Content-Type", "application/json")
