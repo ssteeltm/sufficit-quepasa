@@ -32,7 +32,7 @@ func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
 	client.Timeout = time.Second * 10
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error("(%s) erro ao postar no webhook: %s", wid, err.Error())
+		log.Warn("(%s) erro ao postar no webhook: %s", wid, err.Error())
 	}
 	defer resp.Body.Close()
 
