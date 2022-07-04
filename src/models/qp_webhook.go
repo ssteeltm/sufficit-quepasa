@@ -34,10 +34,12 @@ func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
 	if err != nil {
 		log.Warn("(%s) erro ao postar no webhook: %s", wid, err.Error())
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = ErrInvalidResponse
+	if resp != nil {
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			err = ErrInvalidResponse
+		}
 	}
 
 	if err != nil {
