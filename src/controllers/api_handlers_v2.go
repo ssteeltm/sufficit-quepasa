@@ -33,7 +33,7 @@ func InformationControllerV2(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
 	server, err := GetServerFromToken(token)
 	if err != nil {
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
+		RespondNotFound(w, fmt.Errorf("token '%s' not found", token))
 		return
 	}
 
