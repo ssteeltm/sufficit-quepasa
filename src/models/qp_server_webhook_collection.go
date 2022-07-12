@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,7 +32,7 @@ func (source *QpServerWebhookCollection) WebhookFill(context string, db QpDataWe
 	return
 }
 
-func (source *QpServerWebhookCollection) WebhookAdd(url string) (err error) {
+func (source *QpServerWebhookCollection) WebhookAdd(url string) (affected uint, err error) {
 	err = source.db.Add(source.context, url)
 	if err == nil {
 		newElement := &QpWebhook{
@@ -42,25 +44,40 @@ func (source *QpServerWebhookCollection) WebhookAdd(url string) (err error) {
 				source.Webhooks = append(source.Webhooks[:index], source.Webhooks[index+1:]...) // remove
 				source.Webhooks = append(source.Webhooks, newElement)                           // append a clean one
 				exists = true
+				affected++
 			}
 		}
 
 		if !exists {
 			source.Webhooks = append(source.Webhooks, newElement)
+			affected++
 		}
 	}
 	return
 }
 
-func (source *QpServerWebhookCollection) WebhookRemove(url string) (err error) {
-	err = source.db.Remove(source.context, url)
-	if err == nil {
-		for index, element := range source.Webhooks {
-			if element.Url == url {
-				source.Webhooks = append(source.Webhooks[:index], source.Webhooks[index+1:]...)
+func (source *QpServerWebhookCollection) WebhookRemove(url string) (affected uint, err error) {
+	i := 0 // output index
+	for _, element := range source.Webhooks {
+		if strings.Contains(element.Url, url) {
+			err = source.db.Remove(source.context, element.Url)
+			if err == nil {
+				affected++
+			} else {
+				source.Webhooks[i] = element
+				i++
+				break
 			}
+		} else {
+			source.Webhooks[i] = element
+			i++
 		}
 	}
+
+	for j := i; j < len(source.Webhooks); j++ {
+		source.Webhooks[j] = nil
+	}
+	source.Webhooks = source.Webhooks[:i]
 	return
 }
 

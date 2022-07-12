@@ -140,7 +140,7 @@ func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IW
 	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatID())
 	jid, err := ParseJID(formatedDestiantion)
 	if err != nil {
-		conn.log.Infof("Send error on get jid: %s", err)
+		conn.log.Infof("send error on get jid: %s", err)
 		return response, err
 	}
 
@@ -149,13 +149,13 @@ func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IW
 
 	timestamp, err := conn.Client.SendMessage(jid, response.ID, newMessage)
 	if err != nil {
-		conn.log.Infof("Send error: %s", err)
+		conn.log.Infof("send error: %s", err)
 		return response, err
 	}
 
 	response.Timestamp = timestamp
 
-	conn.log.Infof("Send: %s, on: %s", response.ID, response.Timestamp)
+	conn.log.Infof("send: %s, on: %s", response.ID, response.Timestamp)
 	return response, err
 }
 
@@ -163,8 +163,8 @@ func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IW
 func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) (result *waProto.Message, err error) {
 
 	content := *msg.Attachment.GetContent()
-	if content == nil {
-		err = fmt.Errorf("null content")
+	if len(content) == 0 {
+		err = fmt.Errorf("null or empty content")
 		return
 	}
 

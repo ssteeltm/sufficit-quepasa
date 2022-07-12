@@ -5,29 +5,33 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	models "github.com/sufficit/sufficit-quepasa-fork/models"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
+
+func GetTimestamp(timestamp string) (result int64, err error) {
+	if len(timestamp) > 0 {
+		result, err = strconv.ParseInt(timestamp, 10, 64)
+		if err != nil {
+			if len(timestamp) > 0 {
+				return
+			} else {
+				result = 0
+			}
+		}
+	}
+	return
+}
 
 // Retrieve messages with timestamp parameter
 // Sorting then
-func GetMessages(server *QPWhatsappServer, timestamp string) (messages []WhatsappMessage, err error) {
-
-	searchTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
-	if err != nil {
-		if len(timestamp) > 0 {
-			return
-		} else {
-			searchTimestamp = 0
-		}
-	}
-
-	searchTime := time.Unix(searchTimestamp, 0)
+func GetMessages(server *models.QPWhatsappServer, timestamp int64) (messages []whatsapp.WhatsappMessage, err error) {
+	searchTime := time.Unix(timestamp, 0)
 	messages, err = server.GetMessages(searchTime)
 	if err != nil {
 		return
 	}
 
-	sort.Sort(ByTimestamp(messages))
+	sort.Sort(whatsapp.ByTimestamp(messages))
 	return
 }

@@ -30,7 +30,13 @@ func FormReceiveController(w http.ResponseWriter, r *http.Request) {
 	}
 
 	queryValues := r.URL.Query()
-	timestamp := queryValues.Get("timestamp")
+	paramTimestamp := queryValues.Get("timestamp")
+	timestamp, err := GetTimestamp(paramTimestamp)
+	if err != nil {
+		MessageReceiveErrors.Inc()
+		RespondServerError(server, w, err)
+		return
+	}
 
 	messages, err := GetMessages(server, timestamp)
 	if err != nil {

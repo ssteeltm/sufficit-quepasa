@@ -116,11 +116,9 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
+	server, err := GetServer(w, r)
 	if err != nil {
 		MessageSendErrors.Inc()
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
 		return
 	}
 
@@ -149,7 +147,13 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attach, err := ToWhatsappAttachment(&request.Attachment)
-	sendResponse, err := server.SendAttachment(recipient, request.Message, *attach)
+	if err != nil {
+		MessageSendErrors.Inc()
+		RespondServerError(server, w, err)
+		return
+	}
+
+	sendResponse, err := server.SendAttachment(recipient, request.Message, attach)
 	if err != nil {
 		MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -162,13 +166,13 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	response.Chat.Title = server.GetTitle(recipient)
 	response.From.ID = server.Bot.ID
 	response.From.UserName = server.Bot.GetNumber()
-	response.ID = sendResponse.GetID()
+	response.ID = sendResponse.Id
 
 	// Para manter a compatibilidade
 	response.PreviusV1 = QPSendResult{
 		Source:    server.GetWid(),
 		Recipient: recipient,
-		MessageId: sendResponse.GetID(),
+		MessageId: sendResponse.Id,
 	}
 
 	MessagesSent.Inc()

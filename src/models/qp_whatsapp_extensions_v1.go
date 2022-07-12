@@ -3,11 +3,11 @@ package models
 import (
 	"encoding/base64"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
-func ToWhatsappAttachment(source *QPAttachmentV1) (attach *WhatsappAttachment, err error) {
-	attach = &WhatsappAttachment{}
+func ToWhatsappAttachment(source *QPAttachmentV1) (attach *whatsapp.WhatsappAttachment, err error) {
+	attach = &whatsapp.WhatsappAttachment{}
 	content, err := base64.StdEncoding.DecodeString(source.Base64)
 	if err != nil {
 		return
@@ -16,12 +16,12 @@ func ToWhatsappAttachment(source *QPAttachmentV1) (attach *WhatsappAttachment, e
 	attach.SetContent(&content)
 	attach.FileName = source.FileName
 	attach.Mimetype = source.MIME
-	attach.FileLength = uint64(source.Length)
+	attach.FileLength = uint64(len(content))
 	return
 }
 
-func ToWhatsappMessageV1(source *QPSendRequestV1) (msg *WhatsappMessage, err error) {
-	recipient, err := FormatEndpoint(source.Recipient)
+func ToWhatsappMessageV1(source *QPSendRequestV1) (msg *whatsapp.WhatsappMessage, err error) {
+	recipient, err := whatsapp.FormatEndpoint(source.Recipient)
 	if err != nil {
 		return
 	}
@@ -31,8 +31,8 @@ func ToWhatsappMessageV1(source *QPSendRequestV1) (msg *WhatsappMessage, err err
 		return
 	}
 
-	chat := WhatsappChat{ID: recipient}
-	msg = &WhatsappMessage{}
+	chat := whatsapp.WhatsappChat{ID: recipient}
+	msg = &whatsapp.WhatsappMessage{}
 	msg.Text = source.Message
 	msg.Chat = chat
 	if attach != nil {

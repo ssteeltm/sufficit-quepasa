@@ -38,10 +38,7 @@ func FormatEndpoint(source string) (destination string, err error) {
 		splited := strings.Split(destination, "@")
 		if !AllowedSuffix[splited[1]] {
 			err = fmt.Errorf("invalid recipient %s", destination)
-			return
 		}
-
-		return
 	} else {
 		if strings.Contains(destination, "-") {
 			splited := strings.Split(destination, "-")
@@ -49,13 +46,13 @@ func FormatEndpoint(source string) (destination string, err error) {
 				err = fmt.Errorf("contains - but its not a valid group: %s", source)
 				return
 			}
+
+			destination = destination + "@g.us"
 		} else {
 			if IsValidE164(destination) {
 				destination = PhoneToWid(destination)
-				return
 			} else {
 				destination = destination + "@g.us"
-				return
 			}
 		}
 	}

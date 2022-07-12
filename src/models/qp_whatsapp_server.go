@@ -112,15 +112,29 @@ func (server *QPWhatsappServer) Send(recipient string, text string) (msg whatsap
 	return
 }
 
-func (server *QPWhatsappServer) SendAttachment(recipient string, text string, attach whatsapp.WhatsappAttachment) (msg whatsapp.IWhatsappSendResponse, err error) {
-	chat := whatsapp.WhatsappChat{ID: recipient}
-	msg = &whatsapp.WhatsappMessage{
-		Text:       text,
-		Chat:       chat,
-		Attachment: &attach,
+func (server *QPWhatsappServer) SendAttachment(destination string, text string, attach *whatsapp.WhatsappAttachment) (response QpSendResponseMessage, err error) {
+	recipient, err := whatsapp.FormatEndpoint(destination)
+	if err != nil {
+		return
 	}
 
-	err = server.SendMessage(msg.(*whatsapp.WhatsappMessage))
+	chat := whatsapp.WhatsappChat{ID: recipient}
+	msg := &whatsapp.WhatsappMessage{
+		Text:       text,
+		Chat:       chat,
+		Attachment: attach,
+		FromMe:     true,
+	}
+
+	err = server.SendMessage(msg)
+	if err != nil {
+		return
+	}
+
+	response.Id = msg.GetID()
+	response.Source = server.GetWid()
+	response.Recipient = msg.GetChatID()
+
 	return
 }
 
