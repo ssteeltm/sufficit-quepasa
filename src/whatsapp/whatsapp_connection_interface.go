@@ -29,7 +29,7 @@ type IWhatsappConnection interface {
 	Download(IWhatsappMessage) (WhatsappAttachment, error)
 
 	// Default send message method
-	Send(WhatsappMessage) (IWhatsappSendResponse, error)
+	Send(*WhatsappMessage) (IWhatsappSendResponse, error)
 
 	// Define the log level for this connection
 	UpdateLog(*log.Entry)

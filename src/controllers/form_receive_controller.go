@@ -38,12 +38,7 @@ func FormReceiveController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages, err := GetMessages(server, timestamp)
-	if err != nil {
-		MessageReceiveErrors.Inc()
-		data.ErrorMessage = err.Error()
-	}
-
+	messages := GetMessages(server, timestamp)
 	data.Messages = messages
 
 	MessagesReceived.Add(float64(len(messages)))

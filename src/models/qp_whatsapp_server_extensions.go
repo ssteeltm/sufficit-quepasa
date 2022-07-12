@@ -4,10 +4,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"net/http"
+
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Encaminha msg ao WebHook específicado
-func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err error) {
+func PostToWebHookFromServer(server *QPWhatsappServer, message *whatsapp.WhatsappMessage) (err error) {
 	wid := server.GetWid()
 
 	// Ignorando certificado ao realizar o post
@@ -15,9 +17,9 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message interface{}) (err
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	for _, element := range server.Webhooks {
-		// index is the index where we are
-		// element is the element from someSlice for where we are
-		element.Post(wid, message)
+		if !message.FromInternal || element.ForwardInternal {
+			element.Post(wid, message)
+		}
 	}
 
 	return

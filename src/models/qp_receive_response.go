@@ -6,6 +6,7 @@ import (
 
 type QpReceiveResponse struct {
 	QpResponse
+	Total    uint64                     `json:"total"`
 	Messages []whatsapp.WhatsappMessage `json:"messages,omitempty"`
 	Bot      QPBot                      `json:"bot"`
 }

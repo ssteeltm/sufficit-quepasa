@@ -30,6 +30,9 @@ type WhatsappMessage struct {
 	// Fui eu quem enviou a msg ?
 	FromMe bool `json:"fromme"`
 
+	// Sended via api
+	FromInternal bool `json:"frominternal"`
+
 	// Quantas vezes essa msg foi encaminhada
 	ForwardingScore uint32 `json:"forwardingscore,omitempty"`
 
@@ -49,13 +52,13 @@ func (m ByTimestamp) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 
 //region IMPLEMENT WHATSAPP SEND RESPONSE INTERFACE
 
-func (source *WhatsappMessage) GetID() string { return source.ID }
+func (source WhatsappMessage) GetID() string { return source.ID }
 
 // Get the time of server processed message
-func (source *WhatsappMessage) GetTime() time.Time { return source.Timestamp }
+func (source WhatsappMessage) GetTime() time.Time { return source.Timestamp }
 
 // Get the time on unix timestamp format
-func (source *WhatsappMessage) GetTimestamp() uint64 { return uint64(source.Timestamp.Unix()) }
+func (source WhatsappMessage) GetTimestamp() uint64 { return uint64(source.Timestamp.Unix()) }
 
 //endregion
 
@@ -83,4 +86,8 @@ func (source *WhatsappMessage) FromGroup() bool {
 
 func (source *WhatsappMessage) FromBroadcast() bool {
 	return source.Chat.ID == "status"
+}
+
+func (source *WhatsappMessage) GetAttachment() *WhatsappAttachment {
+	return source.Attachment
 }

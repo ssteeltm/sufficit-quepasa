@@ -140,18 +140,18 @@ func (server *QPWhatsappServer) SendAttachment(destination string, text string, 
 
 func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (err error) {
 	server.Log.Debugf("sending msg to: %v", msg.Chat.ID)
-	response, err := server.connection.Send(*msg)
-	msg.ID = response.GetID()
-	msg.Timestamp = response.GetTime()
+	_, err = server.connection.Send(msg)
+	if err == nil {
+		msg.FromInternal = true
+		server.Handler.Message(msg)
+	}
 	return
 }
 
 //endregion
 
-func (server *QPWhatsappServer) GetMessages(timestamp time.Time) (messages []whatsapp.WhatsappMessage, err error) {
-	for _, item := range server.Handler.GetMessages(timestamp) {
-		messages = append(messages, item)
-	}
+func (server *QPWhatsappServer) GetMessages(timestamp time.Time) (messages []whatsapp.WhatsappMessage) {
+	messages = append(messages, server.Handler.GetMessages(timestamp)...)
 	return
 }
 

@@ -45,14 +45,9 @@ func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages, err := GetMessages(server, timestamp)
-	if err != nil {
-		metrics.MessageReceiveErrors.Inc()
-		response.ParseError(err)
-		RespondServerError(server, w, response)
-		return
-	}
+	response.Total = uint64(server.Handler.GetTotal())
 
+	messages := GetMessages(server, timestamp)
 	metrics.MessagesReceived.Add(float64(len(messages)))
 
 	response.Bot = *server.Bot

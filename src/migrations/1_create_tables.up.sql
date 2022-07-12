@@ -23,6 +23,6 @@ CREATE TABLE IF NOT EXISTS bots (
 CREATE TABLE IF NOT EXISTS webhooks (
   `context` VARCHAR (255) NOT NULL REFERENCES bots(id),
   `url` VARCHAR (255) NOT NULL,
-  `failure` TIMESTAMP DEFAULT NULL,
+  `forwardinternal` BIT DEFAULT 0,
   CONSTRAINT webhooks_pkey PRIMARY KEY (`context`, `url`)
 );

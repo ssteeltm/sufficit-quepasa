@@ -32,27 +32,47 @@ func (source *QpServerWebhookCollection) WebhookFill(context string, db QpDataWe
 	return
 }
 
-func (source *QpServerWebhookCollection) WebhookAdd(url string) (affected uint, err error) {
-	err = source.db.Add(source.context, url)
-	if err == nil {
-		newElement := &QpWebhook{
-			Url: url,
+func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal bool) (affected uint, err error) {
+	botWHook, err := source.db.Find(source.context, url)
+	if err != nil {
+		return
+	}
+
+	var wHook *QpWebhook
+	if botWHook != nil {
+		botWHook.ForwardInternal = forwardinternal
+		err = source.db.Update(*botWHook)
+		if err != nil {
+			return
 		}
+		wHook = botWHook.QpWebhook
+	} else {
+		err = source.db.Add(source.context, url, forwardinternal)
+		if err == nil {
+			wHook = &QpWebhook{
+				Url:             url,
+				ForwardInternal: forwardinternal,
+			}
+		}
+	}
+
+	if wHook != nil {
 		exists := false
 		for index, element := range source.Webhooks {
 			if element.Url == url {
 				source.Webhooks = append(source.Webhooks[:index], source.Webhooks[index+1:]...) // remove
-				source.Webhooks = append(source.Webhooks, newElement)                           // append a clean one
+				source.Webhooks = append(source.Webhooks, wHook)                                // append a clean one
 				exists = true
 				affected++
 			}
 		}
 
 		if !exists {
-			source.Webhooks = append(source.Webhooks, newElement)
+			source.Webhooks = append(source.Webhooks, wHook)
 			affected++
 		}
 	}
+
 	return
 }
 

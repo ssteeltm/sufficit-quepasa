@@ -11,7 +11,7 @@ type QPWebhookHandler struct {
 	Server *QPWhatsappServer
 }
 
-func (w *QPWebhookHandler) Handle(payload whatsapp.WhatsappMessage) {
+func (w *QPWebhookHandler) Handle(payload *whatsapp.WhatsappMessage) {
 	if !w.HasWebhook() {
 		return
 	}

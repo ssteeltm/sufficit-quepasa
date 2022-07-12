@@ -12,8 +12,10 @@ import (
 )
 
 type QpWebhook struct {
-	Url     string     `db:"url" json:"url"`                   // destination
-	Failure *time.Time `db:"failure" json:"failure,omitempty"` // first failure time
+	Url             string     `db:"url" json:"url"`                         // destination
+	ForwardInternal bool       `db:"forwardinternal" json:"forwardinternal"` // forward internal msg from api
+	Failure         *time.Time `json:"failure,omitempty"`                    // first failure time
+	Success         *time.Time `json:"success,omitempty"`                    // first failure time
 }
 
 var ErrInvalidResponse error = errors.New("the requested url do not return 200 status code")
@@ -42,13 +44,14 @@ func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
 		}
 	}
 
+	time := time.Now().UTC()
 	if err != nil {
 		if source.Failure == nil {
-			time := time.Now().UTC()
 			source.Failure = &time
 		}
 	} else {
 		source.Failure = nil
+		source.Success = &time
 	}
 
 	return

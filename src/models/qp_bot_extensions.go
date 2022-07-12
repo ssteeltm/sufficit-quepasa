@@ -1,10 +1,10 @@
 package models
 
 import (
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
-func SendMessageFromBot(source *QPBot, msg *WhatsappMessage) (err error) {
+func SendMessageFromBot(source *QPBot, msg *whatsapp.WhatsappMessage) (err error) {
 	server, err := GetServerFromBot(*source)
 	if err != nil {
 		return

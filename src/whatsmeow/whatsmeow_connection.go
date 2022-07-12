@@ -99,6 +99,14 @@ func (conn *WhatsmeowConnection) DownloadData(imsg whatsapp.IWhatsappMessage) (d
 		conn.log.Debug("not downloadable, trying default message")
 		waMsg, ok := msg.(*waProto.Message)
 		if !ok {
+			attach := imsg.GetAttachment()
+			if attach != nil {
+				data := attach.GetContent()
+				if data != nil {
+					return *data, err
+				}
+			}
+
 			err = fmt.Errorf("parameter msg cannot be converted to an original message")
 			return
 		}
@@ -118,9 +126,8 @@ func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att w
 }
 
 // Default SEND method using WhatsappMessage Interface
-func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
+func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 
-	response := &whatsapp.WhatsappSendResponse{}
 	var err error
 
 	messageText := msg.GetText()
@@ -130,9 +137,9 @@ func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IW
 		internal := &waProto.ExtendedTextMessage{Text: &messageText}
 		newMessage = &waProto.Message{ExtendedTextMessage: internal}
 	} else {
-		newMessage, err = conn.UploadAttachment(msg)
+		newMessage, err = conn.UploadAttachment(*msg)
 		if err != nil {
-			return response, err
+			return msg, err
 		}
 	}
 
@@ -141,22 +148,23 @@ func (conn *WhatsmeowConnection) Send(msg whatsapp.WhatsappMessage) (whatsapp.IW
 	jid, err := ParseJID(formatedDestiantion)
 	if err != nil {
 		conn.log.Infof("send error on get jid: %s", err)
-		return response, err
+		return msg, err
 	}
 
 	// Generating a new unique MessageID
-	response.ID = GenerateMessageID()
-
-	timestamp, err := conn.Client.SendMessage(jid, response.ID, newMessage)
-	if err != nil {
-		conn.log.Infof("send error: %s", err)
-		return response, err
+	if len(msg.ID) == 0 {
+		msg.ID = GenerateMessageID()
 	}
 
-	response.Timestamp = timestamp
+	timestamp, err := conn.Client.SendMessage(jid, msg.ID, newMessage)
+	if err != nil {
+		conn.log.Infof("send error: %s", err)
+		return msg, err
+	}
+	msg.Timestamp = timestamp
 
-	conn.log.Infof("send: %s, on: %s", response.ID, response.Timestamp)
-	return response, err
+	conn.log.Infof("send: %s, on: %s", msg.ID, msg.Timestamp)
+	return msg, err
 }
 
 // func (cli *Client) Upload(ctx context.Context, plaintext []byte, appInfo MediaType) (resp UploadResponse, err error)

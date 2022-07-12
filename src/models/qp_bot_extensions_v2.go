@@ -28,7 +28,8 @@ func GetMessagesFromBotV2(source QPBot, timestamp string) (messages []QPMessageV
 	}
 
 	searchTime := time.Unix(searchTimestamp, 0)
-	return GetMessagesFromServerV2(server, searchTime)
+	messages = GetMessagesFromServerV2(server, searchTime)
+	return
 }
 
 func ToQPBotV2(source *QPBot) (destination *QPBotV2) {

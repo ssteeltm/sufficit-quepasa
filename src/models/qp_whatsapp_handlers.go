@@ -17,7 +17,7 @@ type QPWhatsappHandlers struct {
 	log          *log.Entry
 
 	// Appended events handler
-	aeh []interface{ Handle(WhatsappMessage) }
+	aeh []interface{ Handle(*WhatsappMessage) }
 
 	//filters
 	HandleGroups    bool
@@ -79,7 +79,7 @@ func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
 	handler.sync.Unlock() // Sinal verde !
 
 	// Executando WebHook de forma assincrona
-	handler.Trigger(*msg)
+	handler.Trigger(msg)
 }
 
 func (handler *QPWhatsappHandlers) GetMessages(timestamp time.Time) (messages []WhatsappMessage) {
@@ -103,7 +103,7 @@ func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, e
 
 	msg, ok := handler.messages[id]
 	if !ok {
-		err = fmt.Errorf("message not present on handlers (cache)")
+		err = fmt.Errorf("message not present on handlers (cache) id: %s", id)
 	}
 
 	handler.sync.Unlock() // Sinal verde !
@@ -113,14 +113,14 @@ func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, e
 //endregion
 //region EVENT HANDLER TO INTERNAL USE, GENERALY TO WEBHOOK
 
-func (handler *QPWhatsappHandlers) Trigger(payload WhatsappMessage) {
+func (handler *QPWhatsappHandlers) Trigger(payload *WhatsappMessage) {
 	for _, handler := range handler.aeh {
 		go handler.Handle(payload)
 	}
 }
 
 // Register an event handler that triggers on a new message received on cache
-func (handler *QPWhatsappHandlers) Register(evt interface{ Handle(WhatsappMessage) }) {
+func (handler *QPWhatsappHandlers) Register(evt interface{ Handle(*WhatsappMessage) }) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 
 	if !handler.IsRegistered(evt) {
@@ -141,3 +141,7 @@ func (handler *QPWhatsappHandlers) IsRegistered(evt interface{}) bool {
 }
 
 //endregion
+
+func (handler *QPWhatsappHandlers) GetTotal() int {
+	return len(handler.messages)
+}

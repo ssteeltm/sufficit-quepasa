@@ -10,15 +10,25 @@ type QpBotWebhookSql struct {
 	db *sqlx.DB
 }
 
-func (source QpBotWebhookSql) Find(context string, url string) (*QpBotWebhook, error) {
-	var result *QpBotWebhook
-	err := source.db.Get(&result, "SELECT url, failure FROM webhooks WHERE context = ? AND url = ?", context, url)
-	return result, err
+func (source QpBotWebhookSql) Find(context string, url string) (response *QpBotWebhook, err error) {
+	var result []QpWebhook
+	err = source.db.Select(&result, "SELECT url, forwardinternal FROM webhooks WHERE context = ? AND url = ?", context, url)
+	if err != nil {
+		return
+	}
+
+	if len(result) > 0 {
+		response = &QpBotWebhook{
+			Context:   context,
+			QpWebhook: &result[0],
+		}
+	}
+	return
 }
 
 func (source QpBotWebhookSql) FindAll(context string) ([]*QpBotWebhook, error) {
 	result := []*QpBotWebhook{}
-	err := source.db.Select(&result, "SELECT url, failure FROM webhooks WHERE context = ?", context)
+	err := source.db.Select(&result, "SELECT url, forwardinternal FROM webhooks WHERE context = ?", context)
 	return result, err
 }
 
@@ -28,9 +38,15 @@ func (source QpBotWebhookSql) All() ([]QpBotWebhook, error) {
 	return result, err
 }
 
-func (source QpBotWebhookSql) Add(context string, url string) error {
-	query := `INSERT OR IGNORE INTO webhooks (context, url, failure) VALUES (?, ?, NULL)`
-	_, err := source.db.Exec(query, context, url)
+func (source QpBotWebhookSql) Add(context string, url string, forwardinternal bool) error {
+	query := `INSERT OR IGNORE INTO webhooks (context, url, forwardinternal) VALUES (?, ?, ?)`
+	_, err := source.db.Exec(query, context, url, forwardinternal)
+	return err
+}
+
+func (source QpBotWebhookSql) Update(element QpBotWebhook) error {
+	query := `UPDATE webhooks SET forwardinternal = ? WHERE context = ? AND url = ?`
+	_, err := source.db.Exec(query, element.ForwardInternal, element.Context, element.Url)
 	return err
 }
 

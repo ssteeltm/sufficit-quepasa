@@ -33,7 +33,9 @@ func RegisterAPIControllers(r chi.Router) {
 
 		r.Get(endpoint+CurrentControllerPrefix+"/receive", ReceiveAPIHandler)
 		r.Post(endpoint+CurrentControllerPrefix+"/attachment", AttachmentAPIHandlerV2)
-		r.Get(endpoint+DownloadControllerEnpoint, DownloadController)
+
+		r.Get(endpoint+CurrentControllerPrefix+"/download/{messageId}", DownloadController)
+		r.Get(endpoint+CurrentControllerPrefix+"/download", DownloadController)
 
 		r.Post(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
 		r.Get(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
@@ -65,10 +67,8 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 //endregion
 //region CONTROLLER - DOWNLOAD MESSAGE ATTACHMENT
 
-var DownloadControllerEnpoint string = CurrentControllerPrefix + "/download/{messageId}"
-
 func GetDownloadPrefix(token string) (path string) {
-	path = DownloadControllerEnpoint
+	path = CurrentControllerPrefix + "/download/{messageId}"
 	path = strings.Replace(path, "{token}", token, -1)
 	path = strings.Replace(path, "{messageId}", "", -1)
 	return
@@ -99,13 +99,19 @@ func DownloadController(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Default parameters
-	messageId := chi.URLParam(r, "id")
-	if strings.HasPrefix(messageId, "message") {
+	messageId := chi.URLParam(r, "messageId")
+	if strings.Contains(messageId, "message") || (len(messageId) == 0 && r.URL.Query().Has("id")) {
 		messageId = r.URL.Query().Get("id")
-	} else if strings.HasPrefix(messageId, "messageId") {
+	} else if len(messageId) == 0 && r.URL.Query().Has("messageId") {
 		messageId = r.URL.Query().Get("messageId")
 	} else if len(messageId) == 0 {
 		messageId = r.Header.Get("X-QUEPASA-MESSAGEID")
+	}
+
+	if len(messageId) == 0 {
+		metrics.MessageSendErrors.Inc()
+		RespondServerError(server, w, fmt.Errorf("empty message id"))
+		return
 	}
 
 	att, err := server.Download(messageId)

@@ -22,11 +22,7 @@ func GetMessagesToAPIV2(server *QPWhatsappServer, timestamp string) (messages []
 	}
 
 	searchTime := time.Unix(searchTimestamp, 0)
-	messages, err = GetMessagesFromServerV2(server, searchTime)
-	if err != nil {
-		return
-	}
-
+	messages = GetMessagesFromServerV2(server, searchTime)
 	sort.Sort(ByTimestampV2(messages))
 	return
 }
