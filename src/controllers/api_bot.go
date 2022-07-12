@@ -243,6 +243,13 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(request.ChatId) == 0 {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(fmt.Errorf("chat id missing"))
+		RespondServerError(server, w, response)
+		return
+	}
+
 	chatId, err := whatsapp.FormatEndpoint(request.ChatId)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
