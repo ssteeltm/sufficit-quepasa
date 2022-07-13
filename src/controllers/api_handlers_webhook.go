@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi"
-
 	models "github.com/sufficit/sufficit-quepasa-fork/models"
 )
 
@@ -20,11 +18,10 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 
 	response := &models.QpWebhookResponse{}
 
-	token := chi.URLParam(r, "token")
-	server, err := models.GetServerFromToken(token)
+	server, err := GetServer(w, r)
 	if err != nil {
 		response.ParseError(err)
-		RespondNotFound(w, response)
+		RespondServerError(server, w, response)
 		return
 	}
 
@@ -65,9 +62,10 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	default:
-		response.Webhooks = filterByUrl(server.Webhooks, p.Url)
-		if len(p.Url) > 0 {
-			response.ParseSuccess(fmt.Sprintf("getting with filter: %s", p.Url))
+		url := r.Header.Get("X-QUEPASA-WHURL")
+		response.Webhooks = filterByUrl(server.Webhooks, url)
+		if len(url) > 0 {
+			response.ParseSuccess(fmt.Sprintf("getting with filter: %s", url))
 		} else {
 			response.ParseSuccess("getting without filter")
 		}
