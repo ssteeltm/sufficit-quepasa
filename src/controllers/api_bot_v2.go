@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
+	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
@@ -19,10 +19,10 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
+	server, err := GetServer(w, r)
 	if err != nil {
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
+		metrics.MessageSendErrors.Inc()
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -38,12 +38,12 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	messages, err := GetMessagesToAPIV2(server, timestamp)
 	if err != nil {
-		MessageReceiveErrors.Inc()
+		metrics.MessageReceiveErrors.Inc()
 		RespondServerError(server, w, err)
 		return
 	}
 
-	MessagesReceived.Add(float64(len(messages)))
+	metrics.MessagesReceived.Add(float64(len(messages)))
 
 	out := QPFormReceiveResponseV2{
 		Bot:      *ToQPBotV2(server.Bot),
@@ -59,10 +59,10 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
+	server, err := GetServer(w, r)
 	if err != nil {
-		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
+		metrics.MessageSendErrors.Inc()
+		RespondServerError(server, w, err)
 		return
 	}
 
@@ -80,13 +80,13 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	log.Tracef("sending requested: %v", request)
 	recipient, err := FormatEndpoint(request.Recipient)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		return
 	}
 
 	sendResponse, err := server.Send(recipient, request.Message)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
 		return
 	}
@@ -106,7 +106,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		MessageId: sendResponse.GetID(),
 	}
 
-	MessagesSent.Inc()
+	metrics.MessagesSent.Inc()
 	RespondSuccess(w, response)
 }
 
@@ -118,7 +118,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	server, err := GetServer(w, r)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		return
 	}
 
@@ -129,33 +129,33 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// respond to the client with the error message and a 400 status code.
 	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
 		return
 	}
 
 	if request.Attachment == (QPAttachmentV1{}) {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, fmt.Errorf("attachment not found"))
 		return
 	}
 
 	recipient, err := FormatEndpoint(request.Recipient)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		return
 	}
 
 	attach, err := ToWhatsappAttachment(&request.Attachment)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
 		return
 	}
 
 	sendResponse, err := server.SendAttachment(recipient, request.Message, attach)
 	if err != nil {
-		MessageSendErrors.Inc()
+		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
 		return
 	}
@@ -175,7 +175,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		MessageId: sendResponse.Id,
 	}
 
-	MessagesSent.Inc()
+	metrics.MessagesSent.Inc()
 	RespondSuccess(w, response)
 }
 

@@ -142,6 +142,7 @@ func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (err 
 	server.Log.Debugf("sending msg to: %v", msg.Chat.ID)
 	_, err = server.connection.Send(msg)
 	if err == nil {
+		msg.FromMe = true
 		msg.FromInternal = true
 		server.Handler.Message(msg)
 	}

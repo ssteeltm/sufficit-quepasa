@@ -27,7 +27,8 @@ type WhatsappMessage struct {
 
 	Attachment *WhatsappAttachment `json:"attachment,omitempty"`
 
-	// Fui eu quem enviou a msg ?
+	// Do i send that ?
+	// From any connected device and api
 	FromMe bool `json:"fromme"`
 
 	// Sended via api
