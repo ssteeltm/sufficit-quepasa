@@ -41,6 +41,7 @@ func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal 
 	var wHook *QpWebhook
 	if botWHook != nil {
 		botWHook.ForwardInternal = forwardinternal
+		botWHook.TrackId = trackid
 		err = source.db.Update(*botWHook)
 		if err != nil {
 			return
