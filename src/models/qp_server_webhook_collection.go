@@ -53,6 +53,7 @@ func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal 
 			wHook = &QpWebhook{
 				Url:             url,
 				ForwardInternal: forwardinternal,
+				TrackId:         trackid,
 			}
 		}
 	}
