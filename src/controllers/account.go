@@ -62,12 +62,13 @@ func SetupFormHandler(w http.ResponseWriter, r *http.Request) {
 
 // SetupHandler renders route POST "/setup"
 func SetupHandler(w http.ResponseWriter, r *http.Request) {
+	/* temporarly removed to permit multiple users
 	count, err := WhatsappService.DB.User.Count()
 	if count > 0 || err != nil {
 		RedirectToLogin(w, r)
 		return
 	}
-
+	*/
 	data := setupFormData{
 		PageTitle: "Setup",
 	}
