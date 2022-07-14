@@ -32,7 +32,7 @@ func (source *QpServerWebhookCollection) WebhookFill(context string, db QpDataWe
 	return
 }
 
-func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal bool) (affected uint, err error) {
+func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal bool, trackid string) (affected uint, err error) {
 	botWHook, err := source.db.Find(source.context, url)
 	if err != nil {
 		return
@@ -47,7 +47,7 @@ func (source *QpServerWebhookCollection) WebhookAdd(url string, forwardinternal 
 		}
 		wHook = botWHook.QpWebhook
 	} else {
-		err = source.db.Add(source.context, url, forwardinternal)
+		err = source.db.Add(source.context, url, forwardinternal, trackid)
 		if err == nil {
 			wHook = &QpWebhook{
 				Url:             url,

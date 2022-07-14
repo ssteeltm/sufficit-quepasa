@@ -69,7 +69,7 @@ func controllerHttpPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = server.SendMessage(msg)
+	_, err = server.SendMessage(msg)
 	if err != nil {
 		RespondServerError(server, w, err)
 		return

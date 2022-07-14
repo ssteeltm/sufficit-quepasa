@@ -17,3 +17,8 @@ func GetServer(w http.ResponseWriter, r *http.Request) (server *models.QPWhatsap
 	}
 	return
 }
+
+//<summary>Find a system track identifier to follow the message</summary>
+func GetTrackId(r *http.Request) string {
+	return r.Header.Get("X-QUEPASA-TRACKID")
+}

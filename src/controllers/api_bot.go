@@ -10,6 +10,7 @@ import (
 	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	models "github.com/sufficit/sufficit-quepasa-fork/models"
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatstapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // ReceiveAPIHandler renders route GET "/{version}/bot/{token}/receive"
@@ -141,7 +142,8 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.TextLabel = textLabel
-	SendDocument(server, response, request, w)
+	trackid := GetTrackId(r)
+	SendDocument(server, response, request, w, trackid)
 }
 
 /*
@@ -202,7 +204,8 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SendDocument(server, response, request.QpSendRequest, w)
+	trackid := GetTrackId(r)
+	SendDocument(server, response, request.QpSendRequest, w, trackid)
 }
 
 /*
@@ -270,10 +273,11 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SendDocument(server, response, request.QpSendRequest, w)
+	trackid := GetTrackId(r)
+	SendDocument(server, response, request.QpSendRequest, w, trackid)
 }
 
-func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request models.QpSendRequest, w http.ResponseWriter) {
+func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request models.QpSendRequest, w http.ResponseWriter, trackid string) {
 	attach, err := request.ToWhatsappAttachment()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
@@ -282,7 +286,14 @@ func SendDocument(server *models.QPWhatsappServer, response *models.QpSendRespon
 		return
 	}
 
-	sendResponse, err := server.SendAttachment(request.ChatId, request.TextLabel, attach)
+	waMsg, err := whatstapp.ToMessage(request.ChatId, "", trackid)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		return
+	}
+
+	waMsg.Attachment = attach
+	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -290,7 +301,11 @@ func SendDocument(server *models.QPWhatsappServer, response *models.QpSendRespon
 		return
 	}
 
+	response.Message.Source = server.GetWid()
+	response.Message.Id = sendResponse.GetID()
+	response.Message.Recipient = waMsg.Chat.ID
+
 	metrics.MessagesSent.Inc()
-	response.ParseSuccess(sendResponse)
+	response.ParseSuccess(response.Message)
 	RespondSuccess(w, response)
 }

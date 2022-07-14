@@ -17,7 +17,7 @@ func PostToWebHookFromServer(server *QPWhatsappServer, message *whatsapp.Whatsap
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	for _, element := range server.Webhooks {
-		if !message.FromInternal || element.ForwardInternal {
+		if !message.FromInternal || (element.ForwardInternal && (len(element.TrackId) == 0 || element.TrackId != message.TrackId)) {
 			element.Post(wid, message)
 		}
 	}

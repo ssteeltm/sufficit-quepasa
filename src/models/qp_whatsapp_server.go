@@ -101,54 +101,6 @@ func (server *QPWhatsappServer) Download(id string) (att whatsapp.WhatsappAttach
 	return server.connection.Download(&msg)
 }
 
-func (server *QPWhatsappServer) Send(recipient string, text string) (msg whatsapp.IWhatsappSendResponse, err error) {
-	chat := whatsapp.WhatsappChat{ID: recipient}
-	msg = &whatsapp.WhatsappMessage{
-		Text: text,
-		Chat: chat,
-	}
-
-	err = server.SendMessage(msg.(*whatsapp.WhatsappMessage))
-	return
-}
-
-func (server *QPWhatsappServer) SendAttachment(destination string, text string, attach *whatsapp.WhatsappAttachment) (response QpSendResponseMessage, err error) {
-	recipient, err := whatsapp.FormatEndpoint(destination)
-	if err != nil {
-		return
-	}
-
-	chat := whatsapp.WhatsappChat{ID: recipient}
-	msg := &whatsapp.WhatsappMessage{
-		Text:       text,
-		Chat:       chat,
-		Attachment: attach,
-		FromMe:     true,
-	}
-
-	err = server.SendMessage(msg)
-	if err != nil {
-		return
-	}
-
-	response.Id = msg.GetID()
-	response.Source = server.GetWid()
-	response.Recipient = msg.GetChatID()
-
-	return
-}
-
-func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (err error) {
-	server.Log.Debugf("sending msg to: %v", msg.Chat.ID)
-	_, err = server.connection.Send(msg)
-	if err == nil {
-		msg.FromMe = true
-		msg.FromInternal = true
-		server.Handler.Message(msg)
-	}
-	return
-}
-
 //endregion
 
 func (server *QPWhatsappServer) GetMessages(timestamp time.Time) (messages []whatsapp.WhatsappMessage) {
@@ -451,3 +403,17 @@ func (server *QPWhatsappServer) Delete() (err error) {
 }
 
 //endregion
+
+//#region SEND
+
+// Default send message method
+func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (response whatsapp.IWhatsappSendResponse, err error) {
+	server.Log.Debugf("sending msg to: %v", msg.Chat.ID)
+	response, err = server.connection.Send(msg)
+	if err == nil {
+		server.Handler.Message(msg)
+	}
+	return
+}
+
+//#endregion

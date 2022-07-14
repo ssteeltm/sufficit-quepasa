@@ -10,7 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	. "github.com/sufficit/sufficit-quepasa-fork/models"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatstapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Renders route GET "/{version}/bot/{token}/receive"
@@ -28,7 +29,7 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
-	if status != Ready {
+	if status != whatstapp.Ready {
 		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
@@ -78,13 +79,14 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Tracef("sending requested: %v", request)
-	recipient, err := FormatEndpoint(request.Recipient)
+	trackid := GetTrackId(r)
+	waMsg, err := whatstapp.ToMessage(request.Recipient, request.Message, trackid)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		return
 	}
 
-	sendResponse, err := server.Send(recipient, request.Message)
+	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -92,9 +94,9 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := QPSendResponseV2{}
-	response.Chat.ID = request.Recipient
-	response.Chat.UserName = recipient
-	response.Chat.Title = server.GetTitle(recipient)
+	response.Chat.ID = waMsg.Chat.ID
+	response.Chat.UserName = waMsg.Chat.ID
+	response.Chat.Title = server.GetTitle(waMsg.Chat.ID)
 	response.From.ID = server.Bot.ID
 	response.From.UserName = server.Bot.GetNumber()
 	response.ID = sendResponse.GetID()
@@ -102,7 +104,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// Para manter a compatibilidade
 	response.PreviusV1 = QPSendResult{
 		Source:    server.GetWid(),
-		Recipient: recipient,
+		Recipient: waMsg.Chat.ID,
 		MessageId: sendResponse.GetID(),
 	}
 
@@ -140,7 +142,8 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recipient, err := FormatEndpoint(request.Recipient)
+	trackid := GetTrackId(r)
+	waMsg, err := whatstapp.ToMessage(request.Recipient, request.Message, trackid)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		return
@@ -153,7 +156,8 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendResponse, err := server.SendAttachment(recipient, request.Message, attach)
+	waMsg.Attachment = attach
+	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -161,18 +165,18 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := QPSendResponseV2{}
-	response.Chat.ID = request.Recipient
-	response.Chat.UserName = recipient
-	response.Chat.Title = server.GetTitle(recipient)
+	response.Chat.ID = waMsg.Chat.ID
+	response.Chat.UserName = waMsg.Chat.ID
+	response.Chat.Title = server.GetTitle(waMsg.Chat.ID)
 	response.From.ID = server.Bot.ID
 	response.From.UserName = server.Bot.GetNumber()
-	response.ID = sendResponse.Id
+	response.ID = sendResponse.GetID()
 
 	// Para manter a compatibilidade
 	response.PreviusV1 = QPSendResult{
 		Source:    server.GetWid(),
-		Recipient: recipient,
-		MessageId: sendResponse.Id,
+		Recipient: waMsg.Chat.ID,
+		MessageId: sendResponse.GetID(),
 	}
 
 	metrics.MessagesSent.Inc()
@@ -190,7 +194,7 @@ func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
-	if status != Ready {
+	if status != whatsapp.Ready {
 		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}

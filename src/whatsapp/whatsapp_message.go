@@ -12,7 +12,9 @@ type WhatsappMessage struct {
 	// original message from source service
 	Content interface{} `json:"-"`
 
-	ID        string              `json:"id"`
+	ID      string `json:"id"`
+	TrackId string `json:"trackid,omitempty"` // Optional id of the system that send that message
+
 	Timestamp time.Time           `json:"timestamp"`
 	Type      WhatsappMessageType `json:"type"`
 

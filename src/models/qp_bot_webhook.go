@@ -22,8 +22,8 @@ func (source *QpBotWebhook) All() ([]QpBotWebhook, error) {
 	return source.db.All()
 }
 
-func (source *QpBotWebhook) Add(context string, url string, forwardinternal bool) error {
-	return source.db.Add(context, url, forwardinternal)
+func (source *QpBotWebhook) Add(context string, url string, forwardinternal bool, trackid string) error {
+	return source.db.Add(context, url, forwardinternal, trackid)
 }
 
 func (source *QpBotWebhook) Remove(context string, url string) error {

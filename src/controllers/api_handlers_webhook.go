@@ -34,7 +34,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 
 	switch os := r.Method; os {
 	case http.MethodPost:
-		affected, err := server.WebhookAdd(p.Url, p.ForwardInternal)
+		affected, err := server.WebhookAdd(p.Url, p.ForwardInternal, p.TrackId)
 		if err != nil {
 			response.ParseError(err)
 			RespondServerError(server, w, response)

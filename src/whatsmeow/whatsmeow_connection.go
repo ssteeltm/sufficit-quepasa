@@ -129,7 +129,6 @@ func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att w
 func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 
 	var err error
-
 	messageText := msg.GetText()
 
 	var newMessage *waProto.Message

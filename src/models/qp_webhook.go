@@ -14,6 +14,7 @@ import (
 type QpWebhook struct {
 	Url             string     `db:"url" json:"url"`                         // destination
 	ForwardInternal bool       `db:"forwardinternal" json:"forwardinternal"` // forward internal msg from api
+	TrackId         string     `db:"trackid" json:"trackid,omitempty"`       // identifier of remote system to avoid loop
 	Failure         *time.Time `json:"failure,omitempty"`                    // first failure time
 	Success         *time.Time `json:"success,omitempty"`                    // first failure time
 }
@@ -27,7 +28,7 @@ func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
 	payloadJson, _ := json.Marshal(&message)
 	req, err := http.NewRequest("POST", source.Url, bytes.NewBuffer(payloadJson))
 	req.Header.Set("User-Agent", "Quepasa")
-	req.Header.Set("X-QUEPASA-BOT", wid)
+	req.Header.Set("X-QUEPASA-WID", wid)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
