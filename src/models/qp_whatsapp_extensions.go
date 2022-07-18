@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
@@ -111,7 +110,7 @@ func GetDownloadPrefixFromWid(wid string) (path string, err error) {
 	return prefix, err
 }
 
-func ToQPAttachmentV1(source *WhatsappAttachment, id string, wid string) (attach *QPAttachmentV1) {
+func ToQPAttachmentV1(source *whatsapp.WhatsappAttachment, id string, wid string) (attach *QPAttachmentV1) {
 
 	// Anexo que devolverá ao utilizador da api, cliente final
 	// com Url pública válida sem criptografia
@@ -129,7 +128,7 @@ func ToQPAttachmentV1(source *WhatsappAttachment, id string, wid string) (attach
 	return
 }
 
-func ToQPEndPointV1(source WhatsappEndpoint) (destination QPEndpointV1) {
+func ToQPEndPointV1(source whatsapp.WhatsappEndpoint) (destination QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -150,7 +149,7 @@ func ToQPEndPointV1(source WhatsappEndpoint) (destination QPEndpointV1) {
 	return
 }
 
-func ToQPEndPointV2(source WhatsappEndpoint) (destination QPEndpointV2) {
+func ToQPEndPointV2(source whatsapp.WhatsappEndpoint) (destination QPEndpointV2) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -171,7 +170,7 @@ func ToQPEndPointV2(source WhatsappEndpoint) (destination QPEndpointV2) {
 	return
 }
 
-func ChatToQPEndPointV1(source WhatsappChat) (destination QPEndpointV1) {
+func ChatToQPEndPointV1(source whatsapp.WhatsappChat) (destination QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -188,7 +187,7 @@ func ChatToQPEndPointV1(source WhatsappChat) (destination QPEndpointV1) {
 	return
 }
 
-func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
+func ChatToQPChatV2(source whatsapp.WhatsappChat) (destination QPChatV2) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -205,7 +204,7 @@ func ChatToQPChatV2(source WhatsappChat) (destination QPChatV2) {
 	return
 }
 
-func ChatToQPEndPointV2(source WhatsappChat) (destination QPEndpointV2) {
+func ChatToQPEndPointV2(source whatsapp.WhatsappChat) (destination QPEndpointV2) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -223,18 +222,24 @@ func ChatToQPEndPointV2(source WhatsappChat) (destination QPEndpointV2) {
 	return
 }
 
-func ToWhatsappMessage(destination string, text string, attach *WhatsappAttachment) (msg *WhatsappMessage, err error) {
-	recipient, err := FormatEndpoint(destination)
+func ToWhatsappMessage(destination string, text string, attach *whatsapp.WhatsappAttachment) (msg *whatsapp.WhatsappMessage, err error) {
+	recipient, err := whatsapp.FormatEndpoint(destination)
 	if err != nil {
 		return
 	}
 
-	chat := WhatsappChat{ID: recipient}
-	msg = &WhatsappMessage{}
+	msg = &whatsapp.WhatsappMessage{}
+	msg.FromInternal = true
+	msg.FromMe = true
+	msg.Type = whatsapp.TextMessageType
 	msg.Text = text
+
+	chat := whatsapp.WhatsappChat{ID: recipient}
 	msg.Chat = chat
+
 	if attach != nil {
 		msg.Attachment = attach
+		msg.Type = whatsapp.GetMessageType(attach.Mimetype)
 	}
 	return
 

@@ -73,3 +73,26 @@ func IsValidE164(phone string) bool {
 	}
 	return false
 }
+
+// Returns message type by attachment mime information
+func GetMessageType(Mimetype string) WhatsappMessageType {
+
+	// usado pela API para garantir o envio como documento de qualquer anexo
+	if strings.Contains(Mimetype, "wa-document") {
+		return DocumentMessageType
+	}
+
+	// apaga informações após o ;
+	// fica somente o mime mesmo
+	mimeOnly := strings.Split(Mimetype, ";")
+	switch mimeOnly[0] {
+	case "image/png", "image/jpeg":
+		return ImageMessageType
+	case "audio/ogg", "audio/oga", "audio/ogx", "audio/mpeg", "audio/mp4", "audio/x-wav":
+		return AudioMessageType
+	case "video/mp4":
+		return VideoMessageType
+	default:
+		return DocumentMessageType
+	}
+}

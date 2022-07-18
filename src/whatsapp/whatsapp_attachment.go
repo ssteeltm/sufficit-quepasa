@@ -1,19 +1,19 @@
 package whatsapp
 
-type WhatsappAttachment struct {	
-	content				*[]byte `json:"-"`
+type WhatsappAttachment struct {
+	content *[]byte `json:"-"`
 
-	Mimetype			string `json:"mime"`
-	FileLength			uint64 `json:"filelength"`
+	Mimetype   string `json:"mime"`
+	FileLength uint64 `json:"filelength"`
 
 	// document
-	FileName			string `json:"filename,omitempty"`
+	FileName string `json:"filename,omitempty"`
 
 	// video | image
-	JpegThumbnail		string `json:"thumbnail,omitempty"`
+	JpegThumbnail string `json:"thumbnail,omitempty"`
 
 	// audio
-	Seconds				uint32 `json:"seconds,omitempty"`
+	Seconds uint32 `json:"seconds,omitempty"`
 }
 
 func (source *WhatsappAttachment) GetContent() *[]byte {

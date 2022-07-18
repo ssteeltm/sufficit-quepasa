@@ -2,12 +2,11 @@ package whatsmeow
 
 import (
 	"encoding/base64"
-	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	. "go.mau.fi/whatsmeow"
+	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsmeow "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 )
 
@@ -20,34 +19,28 @@ const (
 	ErrorLevel WhatsmeowLogLevel = "ERROR"
 )
 
-func GetMediaTypeFromAttachment(source *WhatsappAttachment) MediaType {
+func GetMediaTypeFromAttachment(source *whatsapp.WhatsappAttachment) whatsmeow.MediaType {
 	return GetMediaTypeFromString(source.Mimetype)
 }
 
 // Traz o MediaType para download do whatsapp
-func GetMediaTypeFromString(Mimetype string) MediaType {
+func GetMediaTypeFromString(Mimetype string) whatsmeow.MediaType {
 
-	// usado pela API para garantir o envio como documento de qualquer anexo
-	if strings.Contains(Mimetype, "wa-document") {
-		return MediaDocument
-	}
+	msgType := whatsapp.GetMessageType(Mimetype)
 
-	// apaga informações após o ;
-	// fica somente o mime mesmo
-	mimeOnly := strings.Split(Mimetype, ";")
-	switch mimeOnly[0] {
-	case "image/png", "image/jpeg":
-		return MediaImage
-	case "audio/ogg", "audio/mpeg", "audio/mp4", "audio/x-wav":
-		return MediaAudio
-	case "video/mp4":
-		return MediaVideo
+	switch msgType {
+	case whatsapp.ImageMessageType:
+		return whatsmeow.MediaImage
+	case whatsapp.AudioMessageType:
+		return whatsmeow.MediaAudio
+	case whatsapp.VideoMessageType:
+		return whatsmeow.MediaVideo
 	default:
-		return MediaDocument
+		return whatsmeow.MediaDocument
 	}
 }
 
-func ToWhatsmeowMessage(source IWhatsappMessage) (msg *waProto.Message, err error) {
+func ToWhatsmeowMessage(source whatsapp.IWhatsappMessage) (msg *waProto.Message, err error) {
 	messageText := source.GetText()
 
 	if !source.HasAttachment() {
@@ -58,10 +51,10 @@ func ToWhatsmeowMessage(source IWhatsappMessage) (msg *waProto.Message, err erro
 	return
 }
 
-func NewWhatsmeowMessageAttachment(response UploadResponse, attach *WhatsappAttachment) (msg *waProto.Message) {
+func NewWhatsmeowMessageAttachment(response whatsmeow.UploadResponse, attach *whatsapp.WhatsappAttachment) (msg *waProto.Message) {
 	media := GetMediaTypeFromString(attach.Mimetype)
 	switch media {
-	case MediaImage:
+	case whatsmeow.MediaImage:
 		msg = &waProto.Message{ImageMessage: &waProto.ImageMessage{
 			Url:           &response.URL,
 			DirectPath:    &response.DirectPath,
@@ -75,7 +68,7 @@ func NewWhatsmeowMessageAttachment(response UploadResponse, attach *WhatsappAtta
 		},
 		}
 		return
-	case MediaAudio:
+	case whatsmeow.MediaAudio:
 		internal := &waProto.AudioMessage{
 			Url:           &response.URL,
 			DirectPath:    &response.DirectPath,
@@ -89,7 +82,7 @@ func NewWhatsmeowMessageAttachment(response UploadResponse, attach *WhatsappAtta
 		}
 		msg = &waProto.Message{AudioMessage: internal}
 		return
-	case MediaVideo:
+	case whatsmeow.MediaVideo:
 		internal := &waProto.VideoMessage{
 			Url:           &response.URL,
 			DirectPath:    &response.DirectPath,

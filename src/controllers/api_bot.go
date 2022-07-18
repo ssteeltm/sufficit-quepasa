@@ -293,6 +293,8 @@ func SendDocument(server *models.QPWhatsappServer, response *models.QpSendRespon
 	}
 
 	waMsg.Attachment = attach
+	waMsg.Type = whatsapp.GetMessageType(attach.Mimetype)
+
 	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
