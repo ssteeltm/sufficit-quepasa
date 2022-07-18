@@ -86,6 +86,16 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// setting source msg participant
+	if waMsg.FromGroup() && len(waMsg.Participant.ID) == 0 {
+		waMsg.Participant.ID = whatsapp.PhoneToWid(server.GetWid())
+	}
+
+	// setting wa msg chat title
+	if len(waMsg.Chat.Title) == 0 {
+		waMsg.Chat.Title = server.GetTitle(waMsg.Chat.ID)
+	}
+
 	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
@@ -96,7 +106,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	response := QPSendResponseV2{}
 	response.Chat.ID = waMsg.Chat.ID
 	response.Chat.UserName = waMsg.Chat.ID
-	response.Chat.Title = server.GetTitle(waMsg.Chat.ID)
+	response.Chat.Title = waMsg.Chat.Title
 	response.From.ID = server.Bot.ID
 	response.From.UserName = server.Bot.GetNumber()
 	response.ID = sendResponse.GetID()

@@ -88,7 +88,7 @@ func (source *WhatsappMessage) FromGroup() bool {
 }
 
 func (source *WhatsappMessage) FromBroadcast() bool {
-	return source.Chat.ID == "status"
+	return source.Chat.ID == "status" || source.Chat.ID == "status@broadcast"
 }
 
 func (source *WhatsappMessage) GetAttachment() *WhatsappAttachment {
