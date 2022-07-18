@@ -87,7 +87,7 @@ func (server *QPWhatsappServer) DownloadData(id string) ([]byte, error) {
 		return nil, err
 	}
 
-	server.Log.Infof("downloading msg %s", id)
+	server.Log.Infof("downloading msg data %s", id)
 	return server.connection.DownloadData(&msg)
 }
 
@@ -103,6 +103,7 @@ func (server *QPWhatsappServer) Download(id string) (att whatsapp.WhatsappAttach
 	// setting, if empty, filename from cache
 	if len(att.FileName) == 0 && msg.Attachment != nil {
 		att.FileName = msg.Attachment.FileName
+		server.Log.Infof("updating not setted filename: %s", att.FileName)
 	}
 
 	return
