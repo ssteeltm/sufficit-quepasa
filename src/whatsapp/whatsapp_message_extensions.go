@@ -23,6 +23,12 @@ func ToMessage(
 		FromMe:       true,
 		FromInternal: true,
 	}
+
+	// setting default type
+	if len(text) > 0 {
+		msg.Type = TextMessageType
+	}
+
 	return
 }
 
