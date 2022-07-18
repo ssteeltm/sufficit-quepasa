@@ -11,7 +11,8 @@
 <pre>
   On: {{ .Timestamp }} => ID: {{ .ID }} => From Me: {{ .FromMe }}{{ if .HasAttachment }} => Attachment: <a download target="_blank" href="{{ $DOWNLOADPREFIX }}{{ .ID }}">Download</a>{{ end }}  
   Type: {{ .Type }} => Chat:  {{ .Chat }}{{ if .Participant.ID }}
-  Participant:  {{ .Participant }}{{ end }} 
+  Participant:  {{ .Participant }}{{ end }}{{ if .TrackId }}
+  TrackId:  {{ .TrackId }}{{ end }}  
   Text: {{ .Text}}
 </pre>
 <br/>
