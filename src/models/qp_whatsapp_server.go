@@ -98,7 +98,14 @@ func (server *QPWhatsappServer) Download(id string) (att whatsapp.WhatsappAttach
 	}
 
 	server.Log.Infof("downloading msg %s", id)
-	return server.connection.Download(&msg)
+	att, err = server.connection.Download(&msg)
+
+	// setting, if empty, filename from cache
+	if len(att.FileName) == 0 && msg.Attachment != nil {
+		att.FileName = msg.Attachment.FileName
+	}
+
+	return
 }
 
 //endregion
