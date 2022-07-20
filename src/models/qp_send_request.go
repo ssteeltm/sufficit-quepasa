@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
@@ -19,6 +20,7 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 	attach = &whatsapp.WhatsappAttachment{}
 
 	mimeType := http.DetectContentType(source.Content)
+	log.Infof("detected mime type: %s", mimeType)
 
 	fileName := source.FileName
 	// Defining a filename if not found before
