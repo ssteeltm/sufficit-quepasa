@@ -3,6 +3,7 @@ package models
 import (
 	"io/ioutil"
 	"net/http"
+	"path"
 )
 
 type QpSendRequestUrl struct {
@@ -23,5 +24,11 @@ func (source *QpSendRequestUrl) GenerateContent() (err error) {
 	}
 
 	source.QpSendRequest.Content = content
+
+	// setting filename if empty
+	if len(source.QpSendRequest.FileName) == 0 {
+		source.QpSendRequest.FileName = path.Base(source.Url)
+	}
+
 	return
 }
