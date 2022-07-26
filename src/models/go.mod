@@ -3,7 +3,6 @@ module github.com/sufficit/sufficit-quepasa-fork/models
 require (
 	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000
 	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsrhymen v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -39,8 +38,6 @@ require (
 replace github.com/sufficit/sufficit-quepasa-fork/library => ../library
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
-
-replace github.com/sufficit/sufficit-quepasa-fork/whatsrhymen => ../whatsrhymen
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
 
