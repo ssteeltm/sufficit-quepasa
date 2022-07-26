@@ -8,7 +8,6 @@ require (
 	github.com/sufficit/sufficit-quepasa-fork/controllers v0.0.0-00010101000000-000000000000
 	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000
 	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsrhymen v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -55,7 +54,5 @@ replace github.com/sufficit/sufficit-quepasa-fork/models => ./models
 replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ./whatsapp
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ./whatsmeow
-
-replace github.com/sufficit/sufficit-quepasa-fork/whatsrhymen => ./whatsrhymen
 
 go 1.17
