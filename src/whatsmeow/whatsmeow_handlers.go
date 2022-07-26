@@ -96,7 +96,7 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 			message.Chat.Title = gInfo.Name
 		}
 
-		message.Participant = WhatsappEndpoint{}
+		message.Participant = &WhatsappEndpoint{}
 
 		participantID := fmt.Sprint(evt.Info.Sender.User, "@", evt.Info.Sender.Server)
 		message.Participant.ID = participantID

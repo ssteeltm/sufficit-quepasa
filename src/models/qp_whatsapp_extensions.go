@@ -128,7 +128,7 @@ func ToQPAttachmentV1(source *whatsapp.WhatsappAttachment, id string, wid string
 	return
 }
 
-func ToQPEndPointV1(source whatsapp.WhatsappEndpoint) (destination QPEndpointV1) {
+func ToQPEndPointV1(source *whatsapp.WhatsappEndpoint) (destination QPEndpointV1) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"
@@ -149,7 +149,7 @@ func ToQPEndPointV1(source whatsapp.WhatsappEndpoint) (destination QPEndpointV1)
 	return
 }
 
-func ToQPEndPointV2(source whatsapp.WhatsappEndpoint) (destination QPEndpointV2) {
+func ToQPEndPointV2(source *whatsapp.WhatsappEndpoint) (destination QPEndpointV2) {
 	if !strings.Contains(source.ID, "@") {
 		if source.ID == "status" {
 			destination.ID = source.ID + "@broadcast"

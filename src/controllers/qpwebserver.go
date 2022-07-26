@@ -29,8 +29,20 @@ func QPWebServerStart() {
 	}
 }
 
+func NormalizePathsToLower(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "" {
+			r.URL.Path = strings.ToLower(r.URL.Path)
+		}
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
 func newRouter() chi.Router {
 	r := chi.NewRouter()
+
+	r.Use(NormalizePathsToLower)
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)

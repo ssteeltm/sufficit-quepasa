@@ -21,13 +21,19 @@ func RegisterAPIControllers(r chi.Router) {
 	aliases := []string{"/current", "", "/" + CurrentAPIVersion}
 	for _, endpoint := range aliases {
 		r.Get(endpoint+CurrentControllerPrefix, InformationController)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendtext", SendTextAPIHandlerV2)
+
+		r.Post(endpoint+CurrentControllerPrefix+"/send", SendAny)
+		r.Post(endpoint+CurrentControllerPrefix+"/send/{chatid}", SendAny)
+		r.Post(endpoint+CurrentControllerPrefix+"/sendtext", SendText)
+		r.Post(endpoint+CurrentControllerPrefix+"/sendtext/{chatid}", SendText)
+
+		// deprecated, discard/remove on next version
 		r.Post(endpoint+CurrentControllerPrefix+"/senddocument", SendDocumentAPIHandlerV2)
 
 		r.Post(endpoint+CurrentControllerPrefix+"/sendurl", SendDocumentFromUrl)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatId}/{fileName}/{textLabel}", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatId}/{fileName}", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatId}", SendDocumentFromBinary)
+		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}/{fileName}/{text}", SendDocumentFromBinary)
+		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}/{fileName}", SendDocumentFromBinary)
+		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}", SendDocumentFromBinary)
 		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary", SendDocumentFromBinary)
 		r.Post(endpoint+CurrentControllerPrefix+"/sendencoded", SendDocumentFromEncoded)
 

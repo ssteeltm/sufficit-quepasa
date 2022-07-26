@@ -10,10 +10,10 @@ import (
 )
 
 type QpSendRequest struct {
-	ChatId    string `json:"chatid"`
-	FileName  string `json:"filename,omitempty"`
-	TextLabel string `json:"textlabel,omitempty"`
-	Content   []byte
+	ChatId   string `json:"chatid"`
+	Text     string `json:"text,omitempty"`
+	FileName string `json:"filename,omitempty"`
+	Content  []byte
 }
 
 func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAttachment, err error) {

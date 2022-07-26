@@ -21,3 +21,7 @@ func (source *QpResponse) ParseSuccess(status string) {
 	source.Success = true
 	source.Status = status
 }
+
+func (source *QpResponse) IsSuccess() bool {
+	return source.Success
+}

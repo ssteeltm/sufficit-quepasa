@@ -58,7 +58,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwtauth.SetExpiryIn(claims, 24*time.Hour)
 	_, tokenString, err := tokenAuth.Encode(claims)
 	if err != nil {
-		RespondError(w, errors.New("Cannot encode token to save"), 500)
+		RespondErrorCode(w, errors.New("Cannot encode token to save"), 500)
 		return
 	}
 

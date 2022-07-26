@@ -22,7 +22,7 @@ type WhatsappMessage struct {
 	Chat WhatsappChat `json:"chat"`
 
 	// Se a msg foi postado em algum grupo ? quem postou !
-	Participant WhatsappEndpoint `json:"participant,omitempty"`
+	Participant *WhatsappEndpoint `json:"participant,omitempty"`
 
 	// Texto da msg
 	Text string `json:"text"`

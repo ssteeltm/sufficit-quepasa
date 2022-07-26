@@ -10,29 +10,27 @@ import (
 	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
 	models "github.com/sufficit/sufficit-quepasa-fork/models"
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	whatstapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // ReceiveAPIHandler renders route GET "/{version}/bot/{token}/receive"
 func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
 	response := &models.QpReceiveResponse{}
 
 	server, err := GetServer(w, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
 	if status != whatsapp.Ready {
-		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
+		metrics.MessageReceiveErrors.Inc()
+		err = &ApiServerNotReadyException{Wid: server.GetWid(), Status: status}
+		response.ParseError(err)
+		RespondInterfaceCode(w, response, http.StatusServiceUnavailable)
 		return
 	}
 
@@ -42,7 +40,7 @@ func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metrics.MessageReceiveErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
@@ -59,64 +57,160 @@ func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		response.ParseSuccess("getting without filter")
 	}
-	RespondSuccess(w, response)
+	RespondInterface(w, response)
 }
 
-/*
-<summary>
-	Renders route POST "/{version}/bot/{token}/sendbinary/{chatId}/{fileName}/{textLabel}"
-
-	Any of then, at this order of priority
-	Path parameters: {chatId}
-	Path parameters: {fileName}
-	Path parameters: {textLabel} only images
-	Url parameters: ?chatId={chatId}
-	Url parameters: ?fileName={fileName}
-	Url parameters: ?textLabel={textLabel} only images
-	Header parameters: X-QUEPASA-CHATID = {chatId}
-	Header parameters: X-QUEPASA-FILENAME = {fileName}
-	Header parameters: X-QUEPASA-TEXTLABEL = {textLabel} only images
-</summary>
-*/
-func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
+// SendAPIHandler renders route "/v3/bot/{token}/send"
+func SendAny(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
 	server, err := GetServer(w, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	// Declare a new request struct.
-	var request models.QpSendRequest
+	request := &models.QpSendAnyRequest{}
 
-	// Getting ChatId parameter
-	chatId := chi.URLParam(r, "chatId")
-	if len(chatId) == 0 && r.URL.Query().Has("chatId") {
-		chatId = r.URL.Query().Get("chatId")
-	} else if len(chatId) == 0 {
-		chatId = r.Header.Get("X-QUEPASA-CHATID")
-		if len(chatId) == 0 {
-			metrics.MessageSendErrors.Inc()
-			response.ParseError(fmt.Errorf("chat id missing"))
-			RespondServerError(server, w, response)
-			return
-		}
+	// Try to decode the request body into the struct. If there is an error,
+	// respond to the client with the error message and a 400 status code.
+	err = json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
 	}
 
-	request.ChatId = chatId
+	// Getting ChatId parameter
+	err = EnsureChatId(&request.QpSendRequest, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	trackid := GetTrackId(r)
+	if len(request.Url) > 0 {
+		// base 64 content to byte array
+		err = request.GenerateUrlContent()
+		if err != nil {
+			metrics.MessageSendErrors.Inc()
+			response.ParseError(err)
+			RespondInterface(w, response)
+			return
+		}
+
+		SendDocument(server, response, &request.QpSendRequest, w, trackid)
+	} else if len(request.Content) > 0 {
+		// base 64 content to byte array
+		err = request.GenerateEmbbedContent()
+		if err != nil {
+			metrics.MessageSendErrors.Inc()
+			response.ParseError(err)
+			RespondInterface(w, response)
+			return
+		}
+
+		SendDocument(server, response, &request.QpSendRequest, w, trackid)
+	} else {
+		Send(server, response, &request.QpSendRequest, w, nil, trackid)
+	}
+}
+
+// SendAPIHandler renders route "/v3/bot/{token}/sendtext"
+func SendText(w http.ResponseWriter, r *http.Request) {
+	response := &models.QpSendResponse{}
+
+	server, err := GetServer(w, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	// Declare a new request struct.
+	request := &models.QpSendRequest{}
+
+	// Try to decode the request body into the struct. If there is an error,
+	// respond to the client with the error message and a 400 status code.
+	err = json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	// Getting ChatId parameter
+	err = EnsureChatId(request, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	if len(request.Text) == 0 {
+		err = fmt.Errorf("text not found, do not send empty messages")
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	trackid := GetTrackId(r)
+	Send(server, response, request, w, nil, trackid)
+}
+
+/*
+<summary>
+	Renders route POST "/{version}/bot/{token}/sendbinary/{chatid}/{fileName}/{text}"
+
+	Any of then, at this order of priority
+	Path parameters: {chatid}
+	Path parameters: {fileName}
+	Path parameters: {text} only images
+	Url parameters: ?chatid={chatId}
+	Url parameters: ?fileName={fileName}
+	Url parameters: ?text={text} only images
+	Header parameters: X-QUEPASA-CHATID = {chatId}
+	Header parameters: X-QUEPASA-FILENAME = {fileName}
+	Header parameters: X-QUEPASA-TEXT = {text} only images
+</summary>
+*/
+func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
+	response := &models.QpSendResponse{}
+
+	server, err := GetServer(w, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	// Declare a new request struct.
+	request := &models.QpSendRequest{}
+
+	// Getting ChatId parameter
+	err = EnsureChatId(request, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
 
 	content, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(fmt.Errorf("attachment content missing or read error"))
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
@@ -134,14 +228,14 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	request.FileName = fileName
 
 	// Getting textLabel parameter
-	textLabel := chi.URLParam(r, "textLabel")
-	if len(textLabel) == 0 && r.URL.Query().Has("textLabel") {
-		textLabel = r.URL.Query().Get("textLabel")
-	} else if len(textLabel) == 0 {
-		textLabel = r.Header.Get("X-QUEPASA-TEXTLABEL")
+	text := chi.URLParam(r, "text")
+	if len(text) == 0 && r.URL.Query().Has("text") {
+		text = r.URL.Query().Get("text")
+	} else if len(text) == 0 {
+		text = r.Header.Get("X-QUEPASA-TEXT")
 	}
 
-	request.TextLabel = textLabel
+	request.Text = text
 	trackid := GetTrackId(r)
 	SendDocument(server, response, request, w, trackid)
 }
@@ -152,27 +246,23 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 
 	Body parameter: {chatId}
 	Body parameter: {fileName}
-	Body parameter: {textLabel} only images
+	Body parameter: {text} only images
 	Body parameter: {content}
 </summary>
 */
 func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
 	response := &models.QpSendResponse{}
 
 	server, err := GetServer(w, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	// Declare a new request struct.
-	var request models.QpSendRequestEncoded
+	request := &models.QpSendRequestEncoded{}
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
@@ -180,32 +270,30 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
-	chatId, err := whatsapp.FormatEndpoint(request.ChatId)
+	// Getting ChatId parameter
+	err = EnsureChatId(&request.QpSendRequest, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
-
-	// formatted chat id
-	request.ChatId = chatId
 
 	// base 64 content to byte array
 	err = request.GenerateContent()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	trackid := GetTrackId(r)
-	SendDocument(server, response, request.QpSendRequest, w, trackid)
+	SendDocument(server, response, &request.QpSendRequest, w, trackid)
 }
 
 /*
@@ -215,26 +303,22 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 	Body parameter: {url}
 	Body parameter: {chatId}
 	Body parameter: {fileName}
-	Body parameter: {textLabel} only images
+	Body parameter: {text} only images
 </summary>
 */
 func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
-
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
 	response := &models.QpSendResponse{}
 
 	server, err := GetServer(w, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	// Declare a new request struct.
-	var request models.QpSendRequestUrl
+	request := &models.QpSendRequestUrl{}
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
@@ -242,72 +326,76 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
-	if len(request.ChatId) == 0 {
-		metrics.MessageSendErrors.Inc()
-		response.ParseError(fmt.Errorf("chat id missing"))
-		RespondServerError(server, w, response)
-		return
-	}
-
-	chatId, err := whatsapp.FormatEndpoint(request.ChatId)
+	// Getting ChatId parameter
+	err = EnsureChatId(&request.QpSendRequest, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
-
-	// formatted chat id
-	request.ChatId = chatId
 
 	// base 64 content to byte array
 	err = request.GenerateContent()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	trackid := GetTrackId(r)
-	SendDocument(server, response, request.QpSendRequest, w, trackid)
+	SendDocument(server, response, &request.QpSendRequest, w, trackid)
 }
 
-func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request models.QpSendRequest, w http.ResponseWriter, trackid string) {
-	attach, err := request.ToWhatsappAttachment()
+func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter, attach *whatsapp.WhatsappAttachment, trackid string) {
+	waMsg, err := whatsapp.ToMessage(request.ChatId, request.Text, trackid)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
-	waMsg, err := whatstapp.ToMessage(request.ChatId, "", trackid)
-	if err != nil {
-		metrics.MessageSendErrors.Inc()
-		return
+	if attach != nil {
+		waMsg.Attachment = attach
+		waMsg.Type = whatsapp.GetMessageType(attach.Mimetype)
+	} else {
+		waMsg.Type = whatsapp.TextMessageType
 	}
-
-	waMsg.Attachment = attach
-	waMsg.Type = whatsapp.GetMessageType(attach.Mimetype)
 
 	sendResponse, err := server.SendMessage(waMsg)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
-	response.Message.Source = server.GetWid()
-	response.Message.Id = sendResponse.GetID()
-	response.Message.Recipient = waMsg.Chat.ID
-
+	// success
 	metrics.MessagesSent.Inc()
-	response.ParseSuccess(response.Message)
-	RespondSuccess(w, response)
+
+	result := &models.QpSendResponseMessage{}
+	result.Source = server.GetWid()
+	result.Id = sendResponse.GetID()
+	result.Recipient = waMsg.Chat.ID
+
+	response.ParseSuccess(result)
+	RespondInterface(w, response)
+}
+
+func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter, trackid string) {
+	attach, err := request.ToWhatsappAttachment()
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
+
+	Send(server, response, request, w, attach, trackid)
 }
