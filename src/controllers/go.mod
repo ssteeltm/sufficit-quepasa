@@ -34,7 +34,6 @@ require (
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect
 	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/whatsrhymen v0.0.0-00010101000000-000000000000 // indirect
 	go.mau.fi/libsignal v0.0.0-20211109153248-a67163214910 // indirect
 	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
@@ -51,7 +50,5 @@ replace github.com/sufficit/sufficit-quepasa-fork/models => ../models
 replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
 
 replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
-
-replace github.com/sufficit/sufficit-quepasa-fork/whatsrhymen => ../whatsrhymen
 
 go 1.17
