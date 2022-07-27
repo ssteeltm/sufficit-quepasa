@@ -417,6 +417,28 @@ func (server *QPWhatsappServer) Delete() (err error) {
 // Default send message method
 func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (response whatsapp.IWhatsappSendResponse, err error) {
 	server.Log.Debugf("sending msg to: %v", msg.Chat.ID)
+
+	if msg.HasAttachment() {
+		if len(msg.Text) > 0 {
+
+			// Overriding filename with caption text if IMAGE or VIDEO
+			if msg.Type == whatsapp.ImageMessageType || msg.Type == whatsapp.VideoMessageType {
+				msg.Attachment.FileName = msg.Text
+			} else {
+
+				// Copying and send text before file
+				textMsg := *msg
+				textMsg.Type = whatsapp.TextMessageType
+				textMsg.Attachment = nil
+				_, err = server.connection.Send(&textMsg)
+				if err == nil {
+					server.Handler.Message(&textMsg)
+				}
+			}
+		}
+	}
+
+	// sending default msg
 	response, err = server.connection.Send(msg)
 	if err == nil {
 		server.Handler.Message(msg)

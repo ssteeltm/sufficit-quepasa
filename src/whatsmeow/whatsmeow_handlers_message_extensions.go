@@ -3,7 +3,6 @@ package whatsmeow
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
@@ -31,14 +30,13 @@ func HandleKnowingMessages(log *log.Entry, out *WhatsappMessage, in *Message) {
 }
 
 func HandleUnknownMessage(log *log.Entry, in interface{}) {
-	log.Debug("Received an unknown message !")
+	log.Info("Received an unknown message !")
 	b, err := json.Marshal(in)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
-	fmt.Println(string(b))
-
+	log.Debug(string(b))
 }
 
 func HandleTextMessage(log *log.Entry, out *WhatsappMessage, in *Message) {
