@@ -20,6 +20,12 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 	attach = &whatsapp.WhatsappAttachment{}
 
 	mimeType := http.DetectContentType(source.Content)
+	if mimeType == "application/octet-stream" && len(source.FileName) > 0 {
+		newMimeType := mime.TypeByExtension(source.FileName)
+		if len(newMimeType) > 0 {
+			mimeType = newMimeType
+		}
+	}
 	log.Tracef("detected mime type: %s", mimeType)
 
 	fileName := source.FileName
