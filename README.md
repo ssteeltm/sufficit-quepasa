@@ -2,7 +2,7 @@
 
 > A (micro) web-application to make web-based [WhatsApp][0] bots easy to write.
 
-Built on the library [go-whatsapp][1] by [Rhymen][2].
+[PostMan Shared Documentations](https://www.getpostman.com/collections/569a066d7a2798e8d293)
 
 **Implemented features:**
 
