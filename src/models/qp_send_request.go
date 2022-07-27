@@ -3,6 +3,7 @@ package models
 import (
 	"mime"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -21,12 +22,13 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 
 	mimeType := http.DetectContentType(source.Content)
 	if mimeType == "application/octet-stream" && len(source.FileName) > 0 {
-		newMimeType := mime.TypeByExtension(source.FileName)
+		extension := filepath.Ext(source.FileName)
+		newMimeType := mime.TypeByExtension(extension)
 		if len(newMimeType) > 0 {
 			mimeType = newMimeType
 		}
 	}
-	log.Tracef("detected mime type: %s", mimeType)
+	log.Tracef("detected mime type: %s, filename: %s", mimeType, source.FileName)
 
 	fileName := source.FileName
 	// Defining a filename if not found before
