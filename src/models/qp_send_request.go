@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/binary"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -22,7 +21,7 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 	attach = &whatsapp.WhatsappAttachment{}
 
 	mimeType := http.DetectContentType(source.Content)
-	if mimeType == "application/octet-stream" && len(source.FileName) > 0 {
+	if (mimeType == "application/octet-stream" || mimeType == "application/ogg") && len(source.FileName) > 0 {
 		extension := filepath.Ext(source.FileName)
 		newMimeType := mime.TypeByExtension(extension)
 		if len(newMimeType) > 0 {
@@ -46,11 +45,8 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 		}
 	}
 
-	// detecting file size
-	fileLength := binary.Size(source.Content)
-
 	attach.FileName = fileName
-	attach.FileLength = uint64(fileLength)
+	attach.FileLength = uint64(len(source.Content))
 	attach.Mimetype = mimeType
 	attach.SetContent(&source.Content)
 	return
