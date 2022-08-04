@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/binary"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -45,8 +46,11 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 		}
 	}
 
+	// detecting file size
+	fileLength := binary.Size(source.Content)
+
 	attach.FileName = fileName
-	attach.FileLength = uint64(len(source.Content))
+	attach.FileLength = uint64(fileLength)
 	attach.Mimetype = mimeType
 	attach.SetContent(&source.Content)
 	return
