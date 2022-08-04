@@ -1,7 +1,7 @@
 package models
 
 type QpSendResponseMessage struct {
-	Id        string `json:"id,omitempty"`
-	Source    string `json:"source,omitempty"`
-	Recipient string `json:"recipient,omitempty"`
+	Id     string `json:"id,omitempty"`
+	Wid    string `json:"wid,omitempty"`
+	ChatId string `json:"chatId,omitempty"`
 }

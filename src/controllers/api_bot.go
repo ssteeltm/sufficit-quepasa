@@ -339,7 +339,7 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// base 64 content to byte array
+	// url download content to byte array
 	err = request.GenerateContent()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
@@ -381,9 +381,9 @@ func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, requ
 	metrics.MessagesSent.Inc()
 
 	result := &models.QpSendResponseMessage{}
-	result.Source = server.GetWid()
+	result.Wid = server.GetWid()
 	result.Id = sendResponse.GetID()
-	result.Recipient = waMsg.Chat.ID
+	result.ChatId = waMsg.Chat.ID
 
 	response.ParseSuccess(result)
 	RespondInterface(w, response)

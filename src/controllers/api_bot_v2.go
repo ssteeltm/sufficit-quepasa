@@ -9,9 +9,8 @@ import (
 	"github.com/go-chi/chi"
 	log "github.com/sirupsen/logrus"
 	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	models "github.com/sufficit/sufficit-quepasa-fork/models"
 	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	whatstapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
 )
 
 // Renders route GET "/{version}/bot/{token}/receive"
@@ -29,7 +28,7 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
-	if status != whatstapp.Ready {
+	if status != whatsapp.Ready {
 		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}
@@ -46,8 +45,8 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	metrics.MessagesReceived.Add(float64(len(messages)))
 
-	out := QPFormReceiveResponseV2{
-		Bot:      *ToQPBotV2(server.Bot),
+	out := models.QPFormReceiveResponseV2{
+		Bot:      *models.ToQPBotV2(server.Bot),
 		Messages: messages,
 	}
 
@@ -68,7 +67,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Declare a new Person struct.
-	var request QPSendRequest
+	var request models.QPSendRequest
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
@@ -80,7 +79,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 
 	log.Tracef("sending requested: %v", request)
 	trackid := GetTrackId(r)
-	waMsg, err := whatstapp.ToMessage(request.Recipient, request.Message, trackid)
+	waMsg, err := whatsapp.ToMessage(request.Recipient, request.Message, trackid)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		return
@@ -103,7 +102,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := QPSendResponseV2{}
+	response := models.QPSendResponseV2{}
 	response.Chat.ID = waMsg.Chat.ID
 	response.Chat.UserName = waMsg.Chat.ID
 	response.Chat.Title = waMsg.Chat.Title
@@ -112,7 +111,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	response.ID = sendResponse.GetID()
 
 	// Para manter a compatibilidade
-	response.PreviusV1 = QPSendResult{
+	response.PreviusV1 = models.QPSendResult{
 		Source:    server.GetWid(),
 		Recipient: waMsg.Chat.ID,
 		MessageId: sendResponse.GetID(),
@@ -135,7 +134,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Declare a new Person struct.
-	var request QPSendDocumentRequestV2
+	var request models.QPSendDocumentRequestV2
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
@@ -146,20 +145,20 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if request.Attachment == (QPAttachmentV1{}) {
+	if request.Attachment == (models.QPAttachmentV1{}) {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, fmt.Errorf("attachment not found"))
 		return
 	}
 
 	trackid := GetTrackId(r)
-	waMsg, err := whatstapp.ToMessage(request.Recipient, request.Message, trackid)
+	waMsg, err := whatsapp.ToMessage(request.Recipient, request.Message, trackid)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		return
 	}
 
-	attach, err := ToWhatsappAttachment(&request.Attachment)
+	attach, err := models.ToWhatsappAttachment(&request.Attachment)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -176,7 +175,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := QPSendResponseV2{}
+	response := models.QPSendResponseV2{}
 	response.Chat.ID = waMsg.Chat.ID
 	response.Chat.UserName = waMsg.Chat.ID
 	response.Chat.Title = server.GetTitle(waMsg.Chat.ID)
@@ -185,7 +184,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	response.ID = sendResponse.GetID()
 
 	// Para manter a compatibilidade
-	response.PreviusV1 = QPSendResult{
+	response.PreviusV1 = models.QPSendResult{
 		Source:    server.GetWid(),
 		Recipient: waMsg.Chat.ID,
 		MessageId: sendResponse.GetID(),
@@ -198,7 +197,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 // AttachmentHandler renders route POST "/v1/bot/{token}/attachment"
 func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
-	server, err := GetServerFromToken(token)
+	server, err := models.GetServerFromToken(token)
 	if err != nil {
 		RespondNotFound(w, fmt.Errorf("Token '%s' not found", token))
 		return
@@ -212,7 +211,7 @@ func AttachmentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Declare a new Person struct.
-	var p QPAttachmentV1
+	var p models.QPAttachmentV1
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
