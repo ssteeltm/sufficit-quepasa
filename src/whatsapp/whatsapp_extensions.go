@@ -88,7 +88,7 @@ func GetMessageType(Mimetype string) WhatsappMessageType {
 	switch mimeOnly[0] {
 	case "image/png", "image/jpeg":
 		return ImageMessageType
-	case "audio/ogg", "application/ogg", "audio/ogx", "audio/mpeg", "audio/mp4", "audio/x-wav":
+	case "audio/ogg", "application/ogg", "audio/oga", "audio/mpeg", "audio/mp4", "audio/x-wav":
 		return AudioMessageType
 	case "video/mp4":
 		return VideoMessageType
