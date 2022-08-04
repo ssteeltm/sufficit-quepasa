@@ -364,6 +364,7 @@ func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, requ
 	if attach != nil {
 		waMsg.Attachment = attach
 		waMsg.Type = whatsapp.GetMessageType(attach.Mimetype)
+		server.Log.Debugf("send attachment of type: %v and mime: %s", waMsg.Type, attach.Mimetype)
 	} else {
 		waMsg.Type = whatsapp.TextMessageType
 	}
