@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	metrics "github.com/sufficit/sufficit-quepasa-fork/metrics"
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	metrics "github.com/sufficit/sufficit-quepasa/metrics"
+	models "github.com/sufficit/sufficit-quepasa/models"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // ReceiveAPIHandler renders route GET "/{version}/bot/{token}/receive"

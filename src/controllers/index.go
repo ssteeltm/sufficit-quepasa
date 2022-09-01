@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/sufficit/sufficit-quepasa-fork/models"
+	"github.com/sufficit/sufficit-quepasa/models"
 )
 
 type indexData struct {

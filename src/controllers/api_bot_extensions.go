@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
+	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 //<summary>Find a whatsapp server by token passed on Url Path parameters</summary>

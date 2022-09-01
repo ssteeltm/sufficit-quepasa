@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa/models"
 )
 
 // Retrieve messages with timestamp parameter

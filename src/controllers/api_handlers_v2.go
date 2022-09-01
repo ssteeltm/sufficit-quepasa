@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa/models"
 )
 
 const APIVersion2 string = "v2"

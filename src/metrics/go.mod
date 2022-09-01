@@ -1,4 +1,4 @@
-module github.com/sufficit/sufficit-quepasa-fork/metrics
+module github.com/sufficit/sufficit-quepasa/metrics
 
 go 1.17
 

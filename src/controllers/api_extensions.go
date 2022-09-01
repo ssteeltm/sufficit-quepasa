@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	models "github.com/sufficit/sufficit-quepasa/models"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 func GetTimestamp(timestamp string) (result int64, err error) {

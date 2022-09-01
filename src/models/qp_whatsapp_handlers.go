@@ -2,11 +2,12 @@ package models
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // Serviço que controla os servidores / bots individuais do whatsapp
@@ -74,7 +75,11 @@ func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
 
-	handler.messages[msg.ID] = *msg
+	normalizedId := msg.ID
+	normalizedId = strings.ToUpper(normalizedId) // ensure that is an uppercase string before save
+
+	// saving on local normalized cache, do not afect remote msgs
+	handler.messages[normalizedId] = *msg
 
 	handler.sync.Unlock() // Sinal verde !
 
@@ -101,9 +106,13 @@ func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, e
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
 
-	msg, ok := handler.messages[id]
+	normalizedId := id
+	normalizedId = strings.ToUpper(normalizedId) // ensure that is an uppercase string before save
+
+	// getting from local normalized cache, do not afect remote msgs
+	msg, ok := handler.messages[normalizedId]
 	if !ok {
-		err = fmt.Errorf("message not present on handlers (cache) id: %s", id)
+		err = fmt.Errorf("message not present on handlers (cache) id: %s", normalizedId)
 	}
 
 	handler.sync.Unlock() // Sinal verde !

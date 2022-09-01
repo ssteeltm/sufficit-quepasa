@@ -1,8 +1,8 @@
-module github.com/sufficit/sufficit-quepasa-fork/models
+module github.com/sufficit/sufficit-quepasa/models
 
 require (
-	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/whatsapp v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/whatsmeow v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -35,12 +35,12 @@ require (
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 )
 
-replace github.com/sufficit/sufficit-quepasa-fork/library => ../library
+replace github.com/sufficit/sufficit-quepasa/library => ../library
 
-replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
+replace github.com/sufficit/sufficit-quepasa/whatsmeow => ../whatsmeow
 
-replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
+replace github.com/sufficit/sufficit-quepasa/whatsapp => ../whatsapp
 
-replace github.com/sufficit/sufficit-quepasa-fork/models => ./
+replace github.com/sufficit/sufficit-quepasa/models => ./
 
 go 1.17

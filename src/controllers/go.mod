@@ -1,4 +1,4 @@
-module github.com/sufficit/sufficit-quepasa-fork/controllers
+module github.com/sufficit/sufficit-quepasa/controllers
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -7,10 +7,11 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354
 	github.com/sirupsen/logrus v1.8.1
-	github.com/sufficit/sufficit-quepasa-fork/library v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/metrics v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/models v0.0.0-00010101000000-000000000000
-	github.com/sufficit/sufficit-quepasa-fork/whatsapp v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/library v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/metrics v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/models v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/whatsapp v0.0.0-00010101000000-000000000000
+	github.com/sufficit/sufficit-quepasa/whatsmeow v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20191027152451-9434209cb086 // indirect
-	github.com/sufficit/sufficit-quepasa-fork/whatsmeow v0.0.0-00010101000000-000000000000 // indirect
 	go.mau.fi/libsignal v0.0.0-20211109153248-a67163214910 // indirect
 	go.mau.fi/whatsmeow v0.0.0-20220215120744-a1550ccceb70 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
@@ -41,14 +41,14 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 )
 
-replace github.com/sufficit/sufficit-quepasa-fork/library => ../library
+replace github.com/sufficit/sufficit-quepasa/library => ../library
 
-replace github.com/sufficit/sufficit-quepasa-fork/metrics => ../metrics
+replace github.com/sufficit/sufficit-quepasa/metrics => ../metrics
 
-replace github.com/sufficit/sufficit-quepasa-fork/models => ../models
+replace github.com/sufficit/sufficit-quepasa/models => ../models
 
-replace github.com/sufficit/sufficit-quepasa-fork/whatsapp => ../whatsapp
+replace github.com/sufficit/sufficit-quepasa/whatsapp => ../whatsapp
 
-replace github.com/sufficit/sufficit-quepasa-fork/whatsmeow => ../whatsmeow
+replace github.com/sufficit/sufficit-quepasa/whatsmeow => ../whatsmeow
 
 go 1.17

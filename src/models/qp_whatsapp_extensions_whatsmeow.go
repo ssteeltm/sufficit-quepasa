@@ -5,8 +5,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
-	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
+	whatsmeow "github.com/sufficit/sufficit-quepasa/whatsmeow"
 )
 
 func NewWhatsmeowEmptyConnection() (whatsapp.IWhatsappConnection, error) {

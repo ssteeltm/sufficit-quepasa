@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // Mensagem no formato QuePasa

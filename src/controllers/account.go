@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/nbutton23/zxcvbn-go"
-	. "github.com/sufficit/sufficit-quepasa-fork/library"
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa/library"
+	. "github.com/sufficit/sufficit-quepasa/models"
 )
 
 // LogoutHandler renders route GET "/logoout"

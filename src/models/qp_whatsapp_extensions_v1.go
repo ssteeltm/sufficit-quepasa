@@ -3,7 +3,7 @@ package models
 import (
 	"encoding/base64"
 
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 func ToWhatsappAttachment(source *QPAttachmentV1) (attach *whatsapp.WhatsappAttachment, err error) {

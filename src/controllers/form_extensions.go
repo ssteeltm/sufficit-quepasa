@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
+	. "github.com/sufficit/sufficit-quepasa/models"
 )
 
 func RedirectToLogin(w http.ResponseWriter, r *http.Request) {

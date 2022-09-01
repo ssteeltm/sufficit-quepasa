@@ -1,7 +1,7 @@
 package models
 
 import (
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 type QpReceiveResponse struct {

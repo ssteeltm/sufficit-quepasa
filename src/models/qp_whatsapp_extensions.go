@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 func NewEmptyConnection(multidevice bool) (whatsapp.IWhatsappConnection, error) {

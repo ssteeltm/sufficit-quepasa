@@ -1,7 +1,7 @@
 package models
 
 import (
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // Parameters to be acessed/passed on Views (receive.tmpl)

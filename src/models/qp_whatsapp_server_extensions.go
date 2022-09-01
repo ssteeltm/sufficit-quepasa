@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // Encaminha msg ao WebHook específicado

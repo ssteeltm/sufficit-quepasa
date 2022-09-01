@@ -26,7 +26,7 @@ type IWhatsappConnection interface {
 	DownloadData(IWhatsappMessage) ([]byte, error)
 
 	// Download message attachment if exists and informations
-	Download(IWhatsappMessage) (WhatsappAttachment, error)
+	Download(IWhatsappMessage) (*WhatsappAttachment, error)
 
 	// Default send message method
 	Send(*WhatsappMessage) (IWhatsappSendResponse, error)

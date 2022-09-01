@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	controllers "github.com/sufficit/sufficit-quepasa-fork/controllers"
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
-	whatsmeow "github.com/sufficit/sufficit-quepasa-fork/whatsmeow"
+	controllers "github.com/sufficit/sufficit-quepasa/controllers"
+	models "github.com/sufficit/sufficit-quepasa/models"
+	whatsmeow "github.com/sufficit/sufficit-quepasa/whatsmeow"
 
 	log "github.com/sirupsen/logrus"
 )

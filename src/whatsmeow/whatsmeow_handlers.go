@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "github.com/sufficit/sufficit-quepasa/whatsapp"
 	. "go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"
 )
@@ -106,7 +106,7 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 	}
 
 	// Process diferent message types
-	HandleKnowingMessages(handler.log, message, evt.Message)
+	HandleKnowingMessages(handler, message, evt.Message)
 	if message.Type == UnknownMessageType {
 		HandleUnknownMessage(handler.log, evt)
 	}

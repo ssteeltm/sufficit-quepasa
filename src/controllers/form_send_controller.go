@@ -8,9 +8,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	. "github.com/sufficit/sufficit-quepasa-fork/metrics"
-	. "github.com/sufficit/sufficit-quepasa-fork/models"
-	. "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	. "github.com/sufficit/sufficit-quepasa/metrics"
+	. "github.com/sufficit/sufficit-quepasa/models"
+	. "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 func FormSendController(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
+	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 type errorResponse struct {

@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 	. "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	. "go.mau.fi/whatsmeow/types"
@@ -115,13 +115,18 @@ func (conn *WhatsmeowConnection) DownloadData(imsg whatsapp.IWhatsappMessage) (d
 	return conn.Client.Download(downloadable)
 }
 
-func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att whatsapp.WhatsappAttachment, err error) {
+func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att *whatsapp.WhatsappAttachment, err error) {
 	data, err := conn.DownloadData(imsg)
 	if err != nil {
 		return
 	}
 
+	att = &whatsapp.WhatsappAttachment{}
 	att.SetContent(&data)
+
+	sourceAttach := imsg.GetAttachment()
+	att.FileName = sourceAttach.FileName
+
 	return
 }
 
@@ -155,12 +160,12 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 		msg.ID = GenerateMessageID()
 	}
 
-	timestamp, err := conn.Client.SendMessage(jid, msg.ID, newMessage)
+	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.ID, newMessage)
 	if err != nil {
 		conn.log.Infof("send error: %s", err)
 		return msg, err
 	}
-	msg.Timestamp = timestamp
+	msg.Timestamp = resp.Timestamp
 
 	conn.log.Infof("send: %s, on: %s", msg.ID, msg.Timestamp)
 	return msg, err

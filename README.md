@@ -1,3 +1,11 @@
+<p align="center">
+	<img src="" alt="Quepasa-logo" width="240" />
+	<span>Quepasa</span>
+	<p align="center">Open-source, all free license software to exchange messages with Whatsapp Platform</p>
+</p>
+<hr />
+___
+
 # QuePasa
 
 > A (micro) web-application to make web-based [WhatsApp][0] bots easy to write.

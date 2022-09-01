@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	whatsapp "github.com/sufficit/sufficit-quepasa-fork/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 type QPWhatsappServer struct {
@@ -91,7 +91,7 @@ func (server *QPWhatsappServer) DownloadData(id string) ([]byte, error) {
 	return server.connection.DownloadData(&msg)
 }
 
-func (server *QPWhatsappServer) Download(id string) (att whatsapp.WhatsappAttachment, err error) {
+func (server *QPWhatsappServer) Download(id string) (att *whatsapp.WhatsappAttachment, err error) {
 	msg, err := server.Handler.GetMessage(id)
 	if err != nil {
 		return
@@ -99,11 +99,8 @@ func (server *QPWhatsappServer) Download(id string) (att whatsapp.WhatsappAttach
 
 	server.Log.Infof("downloading msg %s", id)
 	att, err = server.connection.Download(&msg)
-
-	// setting, if empty, filename from cache
-	if len(att.FileName) == 0 && msg.Attachment != nil {
-		att.FileName = msg.Attachment.FileName
-		server.Log.Infof("updating not setted filename: %s", att.FileName)
+	if err != nil {
+		return
 	}
 
 	return

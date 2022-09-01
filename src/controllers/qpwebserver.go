@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/sufficit/sufficit-quepasa-fork/models"
+	"github.com/sufficit/sufficit-quepasa/models"
 )
 
 func QPWebServerStart() {

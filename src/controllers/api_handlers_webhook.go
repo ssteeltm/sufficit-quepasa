@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	models "github.com/sufficit/sufficit-quepasa-fork/models"
+	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 //region CONTROLLER - WEBHOOK
