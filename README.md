@@ -1,17 +1,19 @@
 <p align="center">
-	<img src="https://github.com/sufficit/sufficit-quepasa/raw/main/src/assets/favicon.png" alt="Quepasa-logo" width="240" />
-	<span>Quepasa</span>
-	<p align="center">Open-source, all free license software to exchange messages with Whatsapp Platform</p>
+	<img src="https://github.com/sufficit/sufficit-quepasa/raw/main/src/assets/favicon.png" alt="Quepasa-logo" width="100" />	
+	<p align="center">Quepasa is a Open-source, all free license software to exchange messages with Whatsapp Platform</p>
 </p>
 <hr />
 <p align="left">
-	<img src="https://telegram.org/img/t_logo_sprite.svg" alt="Telegram-logo" width="32" />
+	<img src="https://telegram.org/favicon.ico" alt="Telegram-logo" width="32" />
 	<span>Chat with us on Telegram: </span>
-	<a href="t.me/quepasa_api">Group</a>
+	<a href="https://t.me/quepasa_api">Group</a>
 	<span> || </span>
-	<a href="t.me/quepasa_channel">Channel</a>
+	<a href="https://t.me/quepasa_channel">Channel</a>
 </p>
-
+<p align="left">
+	<span>Special thanks to <a href="https://agenciaoctos.com.br">Lukas Prais</a>, who developed this logo.</span>
+</p>
+<hr />
 # QuePasa
 
 > A (micro) web-application to make web-based [WhatsApp][0] bots easy to write.
