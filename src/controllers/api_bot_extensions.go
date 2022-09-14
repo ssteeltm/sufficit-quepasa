@@ -4,21 +4,22 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 //<summary>Find a whatsapp server by token passed on Url Path parameters</summary>
-func GetServer(w http.ResponseWriter, r *http.Request) (server *models.QPWhatsappServer, err error) {
+func GetServer(r *http.Request) (server *models.QPWhatsappServer, err error) {
+	token := chi.URLParam(r, "token")
+	return models.GetServerFromToken(token)
+}
+
+//<summary>Find a whatsapp server by token passed on Url Path parameters</summary>
+func GetServerRespondOnError(w http.ResponseWriter, r *http.Request) (server *models.QPWhatsappServer, err error) {
 	token := chi.URLParam(r, "token")
 	server, err = models.GetServerFromToken(token)
 	if err != nil {
 		RespondNotFound(w, fmt.Errorf("token '%s' not found", token))
 	}
 	return
-}
-
-//<summary>Find a system track identifier to follow the message</summary>
-func GetTrackId(r *http.Request) string {
-	return r.Header.Get("X-QUEPASA-TRACKID")
 }

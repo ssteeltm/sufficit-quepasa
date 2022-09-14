@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	migrate "github.com/joncalhoun/migrate"
 	log "github.com/sirupsen/logrus"
 
 	"path/filepath"
@@ -15,7 +16,6 @@ import (
 	"strconv"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/joncalhoun/migrate"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -139,9 +139,12 @@ func MigrateToLatest() (err error) {
 		}
 	}
 
+	log.Debugf("fullpath database: %s", fullPath)
+
 	config := GetDBConfig()
 	superDB := *GetDB()
 	db := superDB.DB
+
 	migrator := migrate.Sqlx{
 		Printf: func(format string, args ...interface{}) (int, error) {
 			log.Println(format, args)
@@ -155,6 +158,7 @@ func MigrateToLatest() (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return nil
 }
 

@@ -1,13 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	controllers "github.com/sufficit/sufficit-quepasa/controllers"
 	models "github.com/sufficit/sufficit-quepasa/models"
 	whatsmeow "github.com/sufficit/sufficit-quepasa/whatsmeow"
@@ -15,6 +9,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// @title chi-swagger example APIs
+// @version 1.0
+// @description chi-swagger example APIs
+// @BasePath /
 func main() {
 
 	// Carregando variaveis de ambiente apartir de arquivo .env
@@ -40,18 +38,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	go func() {
-		m := chi.NewRouter()
-		m.Handle("/metrics", promhttp.Handler())
-		host := fmt.Sprintf("%s:%s", os.Getenv("METRICS_HOST"), os.Getenv("METRICS_PORT"))
-
-		log.Println("Starting Metrics Service")
-		err := http.ListenAndServe(host, m)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
 
 	controllers.QPWebServerStart()
 }

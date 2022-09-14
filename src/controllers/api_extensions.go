@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	models "github.com/sufficit/sufficit-quepasa/models"
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
@@ -35,20 +35,63 @@ func GetMessages(server *models.QPWhatsappServer, timestamp int64) (messages []w
 	return
 }
 
-// Getting chatId from PATH => QUERY => HEADER
-func GetChatId(r *http.Request) (chatId string) {
+/*
+<summary>
+	Find a system track identifier to follow the message
+	Getting from PATH => QUERY => HEADER
+</summary>
+*/
+func GetTrackId(r *http.Request) (result string) {
 
 	// retrieve from url path parameter
-	chatId = chi.URLParam(r, "chatid")
-	if len(chatId) == 0 {
+	result = chi.URLParam(r, "trackid")
+	if len(result) == 0 {
 
 		// retrieve from url query parameter
-		if r.URL.Query().Has("chatid") {
-			chatId = r.URL.Query().Get("chatid")
+		if r.URL.Query().Has("trackid") {
+			result = r.URL.Query().Get("trackid")
 		} else {
 
 			// retrieve from header parameter
-			chatId = r.Header.Get("X-QUEPASA-CHATID")
+			result = r.Header.Get("X-QUEPASA-TRACKID")
+		}
+	}
+	return
+}
+
+// Getting PictureId from PATH => QUERY => HEADER
+func GetPictureId(r *http.Request) (result string) {
+
+	// retrieve from url path parameter
+	result = chi.URLParam(r, "pictureid")
+	if len(result) == 0 {
+
+		// retrieve from url query parameter
+		if r.URL.Query().Has("pictureid") {
+			result = r.URL.Query().Get("pictureid")
+		} else {
+
+			// retrieve from header parameter
+			result = r.Header.Get("X-QUEPASA-PICTUREID")
+		}
+	}
+	return
+}
+
+// Getting ChatId from PATH => QUERY => HEADER
+func GetChatId(r *http.Request) (result string) {
+
+	// retrieve from url path parameter
+	result = chi.URLParam(r, "chatid")
+	if len(result) == 0 {
+
+		// retrieve from url query parameter
+		if r.URL.Query().Has("chatid") {
+			result = r.URL.Query().Get("chatid")
+		} else {
+
+			// retrieve from header parameter
+			result = r.Header.Get("X-QUEPASA-CHATID")
 		}
 	}
 	return

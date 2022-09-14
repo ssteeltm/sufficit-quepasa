@@ -11,9 +11,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
-	. "github.com/sufficit/sufficit-quepasa/models"
+	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 func RedirectToLogin(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func RedirectToLogin(w http.ResponseWriter, r *http.Request) {
 // Google chrome bloqueou wss, portanto retornaremos sempre ws apatir de agora
 func WebSocketProtocol() string {
 	protocol := "ws"
-	isSecure, _ := GetEnvBool("WEBSOCKETSSL", false)
+	isSecure, _ := models.GetEnvBool("WEBSOCKETSSL", false)
 	if isSecure {
 		protocol = "wss"
 	}
@@ -125,7 +125,7 @@ func FormToggleGroupsController(w http.ResponseWriter, r *http.Request) {
 
 // VerifyFormHandler renders route GET "/bot/verify" ?mode={sd|md}
 func VerifyFormHandler(w http.ResponseWriter, r *http.Request) {
-	data := QPFormVerifyData{
+	data := models.QPFormVerifyData{
 		PageTitle:   "Verify To Add or Update",
 		Protocol:    WebSocketProtocol(),
 		Host:        r.Host,
@@ -145,7 +145,7 @@ var upgrader = websocket.Upgrader{}
 
 // VerifyHandler renders route GET "/bot/verify/ws"
 func VerifyHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	user, err := models.GetUser(r)
 	if err != nil {
 		log.Print("Connection upgrade error (not logged): ", err)
 		RedirectToLogin(w, r)
@@ -199,7 +199,7 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
+func receiveWebSocketHandler(user models.QPUser, connection *websocket.Conn) {
 	defer close(done)
 	for {
 		mt, msg, err := connection.ReadMessage()
@@ -221,7 +221,7 @@ func receiveWebSocketHandler(user QPUser, connection *websocket.Conn) {
 			multidevice := strings.EqualFold(string(msg), "start:md")
 
 			// Exibindo código QR
-			err := SignInWithQRCode(user, multidevice, out)
+			err := models.SignInWithQRCode(user, multidevice, out)
 			if err != nil {
 				if strings.Contains(err.Error(), "timed out") {
 					err = connection.WriteMessage(mt, []byte("timeout"))
@@ -257,7 +257,7 @@ func FormDeleteController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := WhatsappService.Delete(server); err != nil {
+	if err := models.WhatsappService.Delete(server); err != nil {
 		RespondServerError(server, w, err)
 		return
 	}
@@ -270,8 +270,8 @@ func FormDeleteController(w http.ResponseWriter, r *http.Request) {
 //
 
 // Facilitador que traz usuario e servidor para quem esta autenticado
-func GetUserAndServer(w http.ResponseWriter, r *http.Request) (user QPUser, server *QPWhatsappServer, err error) {
-	user, err = GetUser(r)
+func GetUserAndServer(w http.ResponseWriter, r *http.Request) (user models.QPUser, server *models.QPWhatsappServer, err error) {
+	user, err = models.GetUser(r)
 	if err != nil {
 		RedirectToLogin(w, r)
 		return
@@ -288,27 +288,27 @@ func GetUserAndServer(w http.ResponseWriter, r *http.Request) (user QPUser, serv
 }
 
 // Returns bot from http form request using E164 id
-func GetBotFromRequest(r *http.Request) (QPBot, error) {
-	var bot QPBot
-	user, err := GetUser(r)
+func GetBotFromRequest(r *http.Request) (models.QPBot, error) {
+	var bot models.QPBot
+	user, err := models.GetUser(r)
 	if err != nil {
 		return bot, err
 	}
 
 	botID := chi.URLParam(r, "id")
-	return WhatsappService.DB.Bot.FindForUser(user.ID, botID)
+	return models.WhatsappService.DB.Bot.FindForUser(user.ID, botID)
 }
 
 // Returns bot from http form request using E164 id
-func GetServerFromRequest(r *http.Request) (*QPWhatsappServer, error) {
+func GetServerFromRequest(r *http.Request) (*models.QPWhatsappServer, error) {
 	wid := chi.URLParam(r, "id")
-	return GetServerFromID(wid)
+	return models.GetServerFromID(wid)
 }
 
 // Search for a server ID from an authenticated request
-func GetServerFromAuthenticatedRequest(user QPUser, r *http.Request) (server *QPWhatsappServer, err error) {
+func GetServerFromAuthenticatedRequest(user models.QPUser, r *http.Request) (server *models.QPWhatsappServer, err error) {
 	serverid := r.Form.Get("botID")
-	server, ok := GetServersForUser(user)[serverid]
+	server, ok := models.GetServersForUser(user)[serverid]
 	if !ok {
 		err = fmt.Errorf("server not found")
 	}

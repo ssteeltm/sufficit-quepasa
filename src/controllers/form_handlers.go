@@ -8,7 +8,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth"
 	log "github.com/sirupsen/logrus"
 	. "github.com/sufficit/sufficit-quepasa/models"

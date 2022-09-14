@@ -14,12 +14,6 @@ type errorResponse struct {
 	Result string `json:"result"`
 }
 
-func RespondSuccess(w http.ResponseWriter, res interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(res)
-}
-
 func RespondBadRequest(w http.ResponseWriter, err error) {
 	log.Println("!Request Bad Format: ", err)
 
@@ -98,4 +92,16 @@ func RespondInterfaceCode(w http.ResponseWriter, response interface{}, code int)
 
 func RespondInterface(w http.ResponseWriter, response interface{}) {
 	RespondInterfaceCode(w, response, 0)
+}
+
+func RespondSuccess(w http.ResponseWriter, response interface{}) {
+	if qpresponse, ok := response.(models.QpResponseInterface); ok {
+		if !qpresponse.IsSuccess() {
+			if len(qpresponse.GetStatusMessage()) == 0 {
+				qpresponse.ParseSuccess("")
+			}
+		}
+	}
+
+	RespondInterfaceCode(w, response, http.StatusOK)
 }

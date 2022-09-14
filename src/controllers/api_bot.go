@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
 	models "github.com/sufficit/sufficit-quepasa/models"
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
@@ -16,7 +16,7 @@ import (
 func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpReceiveResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -64,7 +64,7 @@ func ReceiveAPIHandler(w http.ResponseWriter, r *http.Request) {
 func SendAny(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -75,16 +75,6 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 	// Declare a new request struct.
 	request := &models.QpSendAnyRequest{}
 
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
-	err = json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		metrics.MessageSendErrors.Inc()
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
 	// Getting ChatId parameter
 	err = EnsureChatId(&request.QpSendRequest, r)
 	if err != nil {
@@ -92,6 +82,28 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 		response.ParseError(err)
 		RespondInterface(w, response)
 		return
+	}
+
+	switch os := r.Method; os {
+	case http.MethodPost:
+		// Try to decode the request body into the struct. If there is an error,
+		// respond to the client with the error message and a 400 status code.
+		err = json.NewDecoder(r.Body).Decode(&request)
+		if err != nil {
+			jsonErr := fmt.Errorf("invalid json body: %s", err.Error())
+			response.ParseError(jsonErr)
+			RespondInterface(w, response)
+			return
+		}
+
+	case http.MethodGet:
+		if r.URL.Query().Has("text") {
+			request.Text = r.URL.Query().Get("text")
+		}
+
+		if r.URL.Query().Has("url") {
+			request.Url = r.URL.Query().Get("url")
+		}
 	}
 
 	trackid := GetTrackId(r)
@@ -118,6 +130,16 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 
 		SendDocument(server, response, &request.QpSendRequest, w, trackid)
 	} else {
+		// text msg
+
+		if len(request.Text) == 0 {
+			metrics.MessageSendErrors.Inc()
+			err = fmt.Errorf("text not found, do not send empty messages")
+			response.ParseError(err)
+			RespondInterface(w, response)
+			return
+		}
+
 		Send(server, response, &request.QpSendRequest, w, nil, trackid)
 	}
 }
@@ -126,7 +148,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 func SendText(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -147,17 +169,18 @@ func SendText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Getting ChatId parameter
-	err = EnsureChatId(request, r)
-	if err != nil {
+	if len(request.Text) == 0 {
 		metrics.MessageSendErrors.Inc()
+		err = fmt.Errorf("text not found, do not send empty messages")
 		response.ParseError(err)
 		RespondInterface(w, response)
 		return
 	}
 
-	if len(request.Text) == 0 {
-		err = fmt.Errorf("text not found, do not send empty messages")
+	// Getting ChatId parameter
+	err = EnsureChatId(request, r)
+	if err != nil {
+		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
 		RespondInterface(w, response)
 		return
@@ -186,7 +209,7 @@ func SendText(w http.ResponseWriter, r *http.Request) {
 func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -253,7 +276,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -309,7 +332,7 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 	response := &models.QpSendResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)

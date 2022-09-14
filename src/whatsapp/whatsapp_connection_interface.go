@@ -19,6 +19,9 @@ type IWhatsappConnection interface {
 	Delete() error
 	GetWhatsAppQRChannel(chan<- string) error
 
+	// Get info to download profile picture
+	GetProfilePicture(wid string, knowingId string) (*WhatsappProfilePicture, error)
+
 	UpdateHandler(IWhatsappHandlers)
 	EnsureHandlers() error
 

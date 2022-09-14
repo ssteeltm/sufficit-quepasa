@@ -145,11 +145,7 @@ func (server *QPWhatsappServer) UpdateConnection(connection whatsapp.IWhatsappCo
 	webhookDispatcher := &QPWebhookHandler{Server: server}
 	server.Handler.Register(webhookDispatcher)
 
-	go server.EnsureHandlers()
-}
-
-func (server *QPWhatsappServer) EnsureHandlers() error {
-	return server.connection.EnsureHandlers()
+	server.connection.EnsureHandlers()
 }
 
 func (server *QPWhatsappServer) EnsureUnderlying() (err error) {
@@ -441,6 +437,15 @@ func (server *QPWhatsappServer) SendMessage(msg *whatsapp.WhatsappMessage) (resp
 		server.Handler.Message(msg)
 	}
 	return
+}
+
+//#endregion
+//#region PROFILE PICTURE
+
+func (server *QPWhatsappServer) GetProfilePicture(wid string, knowingId string) (picture *whatsapp.WhatsappProfilePicture, err error) {
+	server.Log.Debugf("getting info about profile picture for: %s, with id: %s", wid, knowingId)
+
+	return server.connection.GetProfilePicture(wid, knowingId)
 }
 
 //#endregion

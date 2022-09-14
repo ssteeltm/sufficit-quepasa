@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	log "github.com/sirupsen/logrus"
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
 	models "github.com/sufficit/sufficit-quepasa/models"
@@ -19,7 +19,7 @@ func ReceiveAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -59,7 +59,7 @@ func SendTextAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		RespondServerError(server, w, err)
@@ -127,7 +127,7 @@ func SendDocumentAPIHandlerV2(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
-	server, err := GetServer(w, r)
+	server, err := GetServerRespondOnError(w, r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		return

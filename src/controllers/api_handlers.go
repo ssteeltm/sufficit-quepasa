@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	log "github.com/sirupsen/logrus"
 
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
@@ -22,10 +22,18 @@ func RegisterAPIControllers(r chi.Router) {
 	for _, endpoint := range aliases {
 		r.Get(endpoint+CurrentControllerPrefix, InformationController)
 
+		// SENDING MSG ----------------------------
+		// ----------------------------------------
+
+		// used to dispatch alert msgs via url, triggers on monitor systems like zabbix
+		r.Get(endpoint+CurrentControllerPrefix+"/send", SendAny)
+
 		r.Post(endpoint+CurrentControllerPrefix+"/send", SendAny)
 		r.Post(endpoint+CurrentControllerPrefix+"/send/{chatid}", SendAny)
 		r.Post(endpoint+CurrentControllerPrefix+"/sendtext", SendText)
 		r.Post(endpoint+CurrentControllerPrefix+"/sendtext/{chatid}", SendText)
+
+		// SENDING MSG ATTACH ---------------------
 
 		// deprecated, discard/remove on next version
 		r.Post(endpoint+CurrentControllerPrefix+"/senddocument", SendDocumentAPIHandlerV2)
@@ -37,11 +45,30 @@ func RegisterAPIControllers(r chi.Router) {
 		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary", SendDocumentFromBinary)
 		r.Post(endpoint+CurrentControllerPrefix+"/sendencoded", SendDocumentFromEncoded)
 
+		// ----------------------------------------
+		// SENDING MSG ----------------------------
+
 		r.Get(endpoint+CurrentControllerPrefix+"/receive", ReceiveAPIHandler)
 		r.Post(endpoint+CurrentControllerPrefix+"/attachment", AttachmentAPIHandlerV2)
 
 		r.Get(endpoint+CurrentControllerPrefix+"/download/{messageId}", DownloadController)
 		r.Get(endpoint+CurrentControllerPrefix+"/download", DownloadController)
+
+		// PICTURE INFO | DATA --------------------
+		// ----------------------------------------
+
+		r.Post(endpoint+CurrentControllerPrefix+"/picinfo", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picinfo/{chatid}/{pictureid}", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picinfo/{chatid}", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picinfo", PictureController)
+
+		r.Post(endpoint+CurrentControllerPrefix+"/picdata", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picdata/{chatid}/{pictureid}", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picdata/{chatid}", PictureController)
+		r.Get(endpoint+CurrentControllerPrefix+"/picdata", PictureController)
+
+		// ----------------------------------------
+		// PICTURE INFO | DATA --------------------
 
 		r.Post(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
 		r.Get(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
@@ -58,7 +85,7 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 
 	response := &models.QpInfoResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -92,7 +119,7 @@ func GetDownloadPrefix(token string) (path string) {
 */
 func DownloadController(w http.ResponseWriter, r *http.Request) {
 
-	server, err := GetServer(w, r)
+	server, err := GetServerRespondOnError(w, r)
 	if err != nil {
 		return
 	}

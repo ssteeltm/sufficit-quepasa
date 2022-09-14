@@ -28,6 +28,11 @@ func FormatEndpoint(source string) (destination string, err error) {
 	// removing whitespaces
 	destination = strings.Replace(source, " ", "", -1)
 
+	if len(destination) == 0 {
+		err = fmt.Errorf("empty recipient")
+		return
+	}
+
 	// if have a + as prefix, is a phone number
 	if strings.HasPrefix(source, "+") {
 		destination = PhoneToWid(source)
@@ -38,6 +43,7 @@ func FormatEndpoint(source string) (destination string, err error) {
 		splited := strings.Split(destination, "@")
 		if !AllowedSuffix[splited[1]] {
 			err = fmt.Errorf("invalid recipient %s", destination)
+			return
 		}
 	} else {
 		if strings.Contains(destination, "-") {

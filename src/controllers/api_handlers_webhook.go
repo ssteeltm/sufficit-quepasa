@@ -18,7 +18,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 
 	response := &models.QpWebhookResponse{}
 
-	server, err := GetServer(w, r)
+	server, err := GetServer(r)
 	if err != nil {
 		response.ParseError(err)
 		RespondServerError(server, w, response)

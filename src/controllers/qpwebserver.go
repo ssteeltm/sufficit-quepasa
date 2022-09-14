@@ -7,11 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	models "github.com/sufficit/sufficit-quepasa/models"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/sufficit/sufficit-quepasa/models"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
+	//docs "github.com/sufficit/sufficit-quepasa/docs"
+	//ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
+	// swagger embed files
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func QPWebServerStart() {
@@ -22,8 +28,16 @@ func QPWebServerStart() {
 		webAPIPort = "31000"
 	}
 
+	var timeout = 30 * time.Second
+	server := http.Server{
+		Addr:         webAPIHost + ":" + webAPIPort,
+		ReadTimeout:  timeout,
+		WriteTimeout: timeout,
+		Handler:      r,
+	}
+
 	log.Printf("Starting Web Server on Port: %s", webAPIPort)
-	err := http.ListenAndServe(webAPIHost+":"+webAPIPort, r)
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,6 +84,11 @@ func newRouter() chi.Router {
 	assetsDir := filepath.Join(workDir, "assets")
 	fileServer(r, "/assets", http.Dir(assetsDir))
 
+	// Swagger Ui
+	ServeSwaggerUi(r)
+
+	// Metrics
+	ServeMetrics(r)
 	return r
 }
 
@@ -92,4 +111,14 @@ func fileServer(r chi.Router, path string, root http.FileSystem) {
 	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	}))
+}
+
+func ServeSwaggerUi(r chi.Router) {
+	log.Debugln("Starting SwaggerUi Service")
+	r.Mount("/swagger", httpSwagger.WrapHandler)
+}
+
+func ServeMetrics(r chi.Router) {
+	log.Debugln("Starting Metrics Service")
+	r.Handle("/metrics", promhttp.Handler())
 }

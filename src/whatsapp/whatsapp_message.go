@@ -65,7 +65,7 @@ func (source WhatsappMessage) GetTimestamp() uint64 { return uint64(source.Times
 
 //endregion
 
-func (source *WhatsappMessage) GetChatID() string {
+func (source *WhatsappMessage) GetChatId() string {
 	return source.Chat.ID
 }
 

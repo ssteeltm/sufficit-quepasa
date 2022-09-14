@@ -28,8 +28,8 @@ TimeoutStopSec=5
 RestartSec=5  
 
 SyslogIdentifier=[quepasa]
-StandardOutput=syslog
-StandardError=syslog
+StandardOutput=journal
+StandardError=journal
 
 KillSignal=SIGINT
 

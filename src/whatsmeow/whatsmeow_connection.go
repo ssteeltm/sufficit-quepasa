@@ -8,15 +8,15 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
-	. "go.mau.fi/whatsmeow"
+	whatsmeow "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
-	. "go.mau.fi/whatsmeow/types"
+	types "go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
 // Must Implement IWhatsappConnection
 type WhatsmeowConnection struct {
-	Client      *Client
+	Client      *whatsmeow.Client
 	Handlers    *WhatsmeowHandlers
 	waLogger    waLog.Logger
 	logger      *log.Logger
@@ -68,7 +68,7 @@ func (conn *WhatsmeowConnection) GetStatus() (state whatsapp.WhatsappConnectionS
 
 // Retorna algum titulo válido apartir de um jid
 func (conn *WhatsmeowConnection) GetTitle(Wid string) string {
-	jid := NewJID(Wid, "")
+	jid := types.NewJID(Wid, "")
 	var result string
 	contact, err := conn.Client.Store.Contacts.GetContact(jid)
 	if err == nil {
@@ -94,7 +94,7 @@ func (conn *WhatsmeowConnection) Connect() (err error) {
 // func (cli *Client) Download(msg DownloadableMessage) (data []byte, err error)
 func (conn *WhatsmeowConnection) DownloadData(imsg whatsapp.IWhatsappMessage) (data []byte, err error) {
 	msg := imsg.GetSource()
-	downloadable, ok := msg.(DownloadableMessage)
+	downloadable, ok := msg.(whatsmeow.DownloadableMessage)
 	if !ok {
 		conn.log.Debug("not downloadable, trying default message")
 		waMsg, ok := msg.(*waProto.Message)
@@ -130,6 +130,27 @@ func (conn *WhatsmeowConnection) Download(imsg whatsapp.IWhatsappMessage) (att *
 	return
 }
 
+func (conn *WhatsmeowConnection) GetProfilePicture(wid string, knowingId string) (picture *whatsapp.WhatsappProfilePicture, err error) {
+	jid, err := types.ParseJID(wid)
+	if err != nil {
+		return
+	}
+
+	pictureInfo, err := conn.Client.GetProfilePictureInfo(jid, false, knowingId)
+	if err != nil {
+		return
+	}
+
+	if pictureInfo != nil {
+		picture = &whatsapp.WhatsappProfilePicture{
+			Id:   pictureInfo.ID,
+			Type: pictureInfo.Type,
+			Url:  pictureInfo.URL,
+		}
+	}
+	return
+}
+
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 
@@ -148,8 +169,8 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 	}
 
 	// Formatting destination accordly
-	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatID())
-	jid, err := ParseJID(formatedDestiantion)
+	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatId())
+	jid, err := types.ParseJID(formatedDestiantion)
 	if err != nil {
 		conn.log.Infof("send error on get jid: %s", err)
 		return msg, err
@@ -157,7 +178,7 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 
 	// Generating a new unique MessageID
 	if len(msg.ID) == 0 {
-		msg.ID = GenerateMessageID()
+		msg.ID = whatsmeow.GenerateMessageID()
 	}
 
 	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.ID, newMessage)

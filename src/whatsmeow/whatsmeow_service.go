@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
-	. "go.mau.fi/whatsmeow"
+	whatsmeow "go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -109,7 +109,7 @@ func (service *WhatsmeowServiceModel) GetStoreFromWid(wid string) (str *store.De
 	} else {
 		devices, err := service.Container.GetAllDevices()
 		if err != nil {
-			err = fmt.Errorf("error on getting store from wid (%s): %v", wid, err)
+			err = fmt.Errorf("(Whatsmeow)(EX001) error on getting store from wid (%s): %v", wid, err)
 			return str, err
 		} else {
 			for _, element := range devices {
@@ -129,12 +129,11 @@ func (service *WhatsmeowServiceModel) GetStoreFromWid(wid string) (str *store.De
 	return
 }
 
-func (service *WhatsmeowServiceModel) GetWhatsAppClient(wid string, logger waLog.Logger) (client *Client, err error) {
+func (service *WhatsmeowServiceModel) GetWhatsAppClient(wid string, logger waLog.Logger) (client *whatsmeow.Client, err error) {
 	deviceStore, err := service.GetStoreFromWid(wid)
-	if err != nil {
-		err = fmt.Errorf("error on getting whatsapp client: %s", err)
-	} else {
-		client = NewClient(deviceStore, logger)
+	if deviceStore != nil {
+		client = whatsmeow.NewClient(deviceStore, logger)
+		client.AutoTrustIdentity = true
 	}
 	return
 }
