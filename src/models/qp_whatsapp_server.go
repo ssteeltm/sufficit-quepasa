@@ -130,7 +130,7 @@ func (server *QPWhatsappServer) Initialize() {
 // Update underlying connection and ensure trivials
 func (server *QPWhatsappServer) UpdateConnection(connection whatsapp.IWhatsappConnection) {
 	if server.connection != nil {
-		defer server.connection.Dispose()
+		server.connection.Dispose()
 	}
 
 	server.connection = connection

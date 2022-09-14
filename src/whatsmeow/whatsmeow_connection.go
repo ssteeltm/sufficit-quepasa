@@ -213,12 +213,11 @@ func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) 
 }
 
 func (conn *WhatsmeowConnection) Disconnect() (err error) {
-	if conn.Client == nil {
-		err = fmt.Errorf("client not available to disconnect")
-		return
+	if conn.Client != nil {
+		if conn.Client.IsConnected() {
+			conn.Client.Disconnect()
+		}
 	}
-
-	conn.Client.Disconnect()
 	return
 }
 
@@ -286,5 +285,5 @@ func (conn *WhatsmeowConnection) EnsureHandlers() error {
 
 func (conn *WhatsmeowConnection) Dispose() {
 	conn.logger.SetLevel(log.FatalLevel)
-	defer conn.Disconnect()
+	conn.Disconnect()
 }
