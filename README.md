@@ -44,8 +44,7 @@ cd /opt
 git clone https://github.com/sufficit/sufficit-quepasa-fork.git
 mv /opt/sufficit-quepasa /opt/quepasa-source
 cd quepasa-source
-chmod +x ./helpers/install.sh
-./helpers/install.sh
+bash ./helpers/install.sh
 ```
     
   ### **Final step**
