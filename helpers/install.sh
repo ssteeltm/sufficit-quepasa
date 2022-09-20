@@ -3,13 +3,17 @@
 
 # tested on fresh ubuntu 20.04
 
+echo INSTALL GCC
 apt install gcc -y
 
+echo INSTALL GO
 wget https://go.dev/dl/go1.17.12.linux-amd64.tar.gz
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.12.linux-amd64.tar.gz
 ln -s /usr/local/go/bin/go /usr/sbin/go
 go version
 
+echo UPDATING QUEPASA LINK
+ln -s /opt/quepasa-source/src/ /opt/quepasa
 
 echo UPDATING LOGGING
 ln -sf /opt/quepasa-source/helpers/syslog.conf /etc/rsyslog.d/10-quepasa.conf
