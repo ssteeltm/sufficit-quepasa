@@ -3,7 +3,7 @@
 
 # tested on fresh ubuntu 20.04
 
-apt install git gcc
+apt install gcc -y
 
 wget https://go.dev/dl/go1.17.12.linux-amd64.tar.gz
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.12.linux-amd64.tar.gz
