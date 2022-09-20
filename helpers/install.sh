@@ -40,7 +40,7 @@ systemctl start quepasa
 
 
 
-# Setup Quepasa user
+# Hint: Setup Quepasa user
 echo "Setup Quepasa user >>>  http://<your-ip>:31000/setup"
 
 
