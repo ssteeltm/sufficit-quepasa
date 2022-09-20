@@ -20,6 +20,42 @@
 
 [PostMan Shared Documentations](https://www.getpostman.com/collections/569a066d7a2798e8d293)
 
+**Features:**
+  * Verify a number with a QR code
+  * Persistence of account data and keys
+  * Exposes HTTP endpoints for:
+    * sending messages
+    * receiving messages
+    * download attachments
+    * set webhook for receiving messages 
+
+  **WARNING: This application has not been audited. It should not be regarded as
+  secure, use at your own risk.**
+
+  **This is a third-party effort, and is NOT in any affiliated with [WhatsApp][0].**
+
+<details>
+  <summary>Installation</summary>
+  
+  **Clone and Install**
+  
+```bash
+cd /opt
+git clone https://github.com/sufficit/sufficit-quepasa-fork.git
+mv /opt/sufficit-quepasa /opt/quepasa-source
+cd quepasa-source
+chmod +x ./helpers/install.sh
+./helpers/install.sh
+```
+    
+  ### **Final step**
+
+  - go to http://your.ip.address:3100/setup in the web browser and register an admin user for your system
+  - log in to the sysetm http://your.ip.address:3100 form previously created user and scan the qr using you whatsapp 
+
+
+
+</details>
 <details>
   <summary>Anything is section was not reviewed</summary>
 
