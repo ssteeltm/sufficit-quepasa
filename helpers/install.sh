@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# tested on ubuntu 20.04
+# tested on fresh ubuntu 20.04
 
 apt install git gcc
 
