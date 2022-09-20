@@ -11,23 +11,6 @@ ln -s /usr/local/go/bin/go /usr/sbin/go
 go version
 
 
-
-cd /opt
-git clone https://github.com/sufficit/sufficit-quepasa
-mv /opt/sufficit-quepasa /opt/quepasa-source
-cd quepasa-source
-chmod +x ./helpers/install.sh && ./helpers/install.sh
-
-systemctl status quepasa
-
-
-
-
-
-
-
-
-
 echo UPDATING LOGGING
 ln -sf /opt/quepasa-source/helpers/syslog.conf /etc/rsyslog.d/10-quepasa.conf
 
