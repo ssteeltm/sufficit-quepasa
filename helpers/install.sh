@@ -1,7 +1,35 @@
 #!/bin/bash
 
+
+# tested on ubuntu 20.04
+
+apt install git gcc
+
+wget https://go.dev/dl/go1.17.12.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.12.linux-amd64.tar.gz
+ln -s /usr/local/go/bin/go /usr/sbin/go
+go version
+
+
+
+cd /opt
+git clone https://github.com/sufficit/sufficit-quepasa
+mv /opt/sufficit-quepasa /opt/quepasa-source
+cd quepasa-source
+chmod +x ./helpers/install.sh && ./helpers/install.sh
+
+systemctl status quepasa
+
+
+
+
+
+
+
+
+
 echo UPDATING LOGGING
-ln -sf /opt/quepasa-source/helpers/quepasa-syslog.conf /etc/rsyslog.d/10-quepasa.conf
+ln -sf /opt/quepasa-source/helpers/syslog.conf /etc/rsyslog.d/10-quepasa.conf
 
 echo UPDATING LOGROTATE
 ln -sf /opt/quepasa-source/helpers/quepasa.logrotate.d /etc/logrotate.d/quepasa
@@ -20,12 +48,17 @@ systemctl daemon-reload
 adduser --disabled-password --gecos "" -home /opt/quepasa quepasa
 chown -R quepasa /opt/quepasa-source
 
-echo UPDATING GO PATHS
-mkdir -p /usr/local/go/bin
-ln -sf /usr/lib/go/bin/go /usr/local/go/bin/go
+
 
 cp /opt/quepasa-source/helpers/.env /opt/quepasa/.env
 
 systemctl enable quepasa.service
 systemctl start quepasa
+
+
+
+# Setup Quepasa user
+echo "Setup Quepasa user >>>  http://<your-ip>:31000/setup"
+
+
 exit 0
