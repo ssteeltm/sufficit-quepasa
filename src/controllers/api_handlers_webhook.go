@@ -26,15 +26,15 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Declare a new Person struct.
-	var p models.QpWebhook
+	var webhook *models.QpWebhook
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
-	_ = json.NewDecoder(r.Body).Decode(&p)
+	_ = json.NewDecoder(r.Body).Decode(&webhook)
 
 	switch os := r.Method; os {
 	case http.MethodPost:
-		affected, err := server.WebhookAdd(p.Url, p.ForwardInternal, p.TrackId)
+		affected, err := server.WebhookAdd(webhook)
 		if err != nil {
 			response.ParseError(err)
 			RespondServerError(server, w, response)
@@ -43,12 +43,12 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 			response.ParseSuccess("updated with success")
 			RespondSuccess(w, response)
 			if affected > 0 {
-				server.Log.Infof("updating webhook url: %s, items affected: %v", p.Url, affected)
+				server.Log.Infof("updating webhook url: %s, items affected: %v", webhook.Url, affected)
 			}
 		}
 		return
 	case http.MethodDelete:
-		affected, err := server.WebhookRemove(p.Url)
+		affected, err := server.WebhookRemove(webhook.Url)
 		if err != nil {
 			response.ParseError(err)
 			RespondServerError(server, w, response)
@@ -57,7 +57,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 			response.ParseSuccess("deleted with success")
 			RespondSuccess(w, response)
 			if affected > 0 {
-				server.Log.Infof("removing webhook url: %s, items affected: %v", p.Url, affected)
+				server.Log.Infof("removing webhook url: %s, items affected: %v", webhook.Url, affected)
 			}
 		}
 		return

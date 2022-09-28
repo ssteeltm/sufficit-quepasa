@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 // Webhook model
 type QpBotWebhook struct {
@@ -18,12 +22,35 @@ func (source *QpBotWebhook) FindAll(context string) ([]*QpBotWebhook, error) {
 	return source.db.FindAll(context)
 }
 
-func (source *QpBotWebhook) All() ([]QpBotWebhook, error) {
+func (source *QpBotWebhook) All() ([]*QpBotWebhook, error) {
 	return source.db.All()
 }
 
-func (source *QpBotWebhook) Add(context string, url string, forwardinternal bool, trackid string) error {
-	return source.db.Add(context, url, forwardinternal, trackid)
+// passing extra info as json valid or default string
+func (source *QpBotWebhook) GetExtraText() string {
+	extraJson, err := json.Marshal(&source.Extra)
+	if err != nil {
+		return fmt.Sprintf("%v", source.Extra)
+	} else {
+		return string(extraJson)
+	}
+}
+
+// trying to get interface from json string or default string
+func (source *QpBotWebhook) ParseExtra() {
+	extraText := source.Extra.(string)
+
+	var extraJson interface{}
+	err := json.Unmarshal([]byte(extraText), &extraJson)
+	if err != nil {
+		source.Extra = extraText
+	} else {
+		source.Extra = extraJson
+	}
+}
+
+func (source *QpBotWebhook) Add(element QpBotWebhook) error {
+	return source.db.Add(element)
 }
 
 func (source *QpBotWebhook) Remove(context string, url string) error {

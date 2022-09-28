@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth"
 
-	. "github.com/sufficit/sufficit-quepasa/models"
+	models "github.com/sufficit/sufficit-quepasa/models"
 )
 
 // Token of authentication / encryption
@@ -64,17 +64,17 @@ func HttpAuthenticatorHandler(next http.Handler) http.Handler {
 
 // Rrenders route GET "/{prefix}/account"
 func FormAccountController(w http.ResponseWriter, r *http.Request) {
-	user, err := GetUser(r)
+	user, err := models.GetUser(r)
 	if err != nil {
 		RedirectToLogin(w, r)
 	}
 
-	data := QPFormAccountData{
+	data := models.QPFormAccountData{
 		PageTitle: "Account",
 		User:      user,
 	}
 
-	data.Servers = GetServersForUser(user)
+	data.Servers = models.GetServersForUser(user)
 
 	templates := template.Must(template.ParseFiles("views/layouts/main.tmpl", "views/account.tmpl"))
 	templates.ExecuteTemplate(w, "main", data)
