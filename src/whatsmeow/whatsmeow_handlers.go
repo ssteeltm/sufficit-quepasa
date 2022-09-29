@@ -82,7 +82,7 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 	message := &WhatsappMessage{Content: evt.Message}
 
 	// basic information
-	message.ID = evt.Info.ID
+	message.Id = evt.Info.ID
 	message.Timestamp = evt.Info.Timestamp
 	message.FromMe = evt.Info.IsFromMe
 

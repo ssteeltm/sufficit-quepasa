@@ -177,18 +177,18 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 	}
 
 	// Generating a new unique MessageID
-	if len(msg.ID) == 0 {
-		msg.ID = whatsmeow.GenerateMessageID()
+	if len(msg.Id) == 0 {
+		msg.Id = whatsmeow.GenerateMessageID()
 	}
 
-	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.ID, newMessage)
+	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.Id, newMessage)
 	if err != nil {
 		conn.log.Infof("send error: %s", err)
 		return msg, err
 	}
 	msg.Timestamp = resp.Timestamp
 
-	conn.log.Infof("send: %s, on: %s", msg.ID, msg.Timestamp)
+	conn.log.Infof("send: %s, on: %s", msg.Id, msg.Timestamp)
 	return msg, err
 }
 

@@ -62,7 +62,7 @@ func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
 		return
 	}
 
-	handler.log.Trace("msg recebida/(enviada por outro meio) em models: %s", msg.ID)
+	handler.log.Trace("msg recebida/(enviada por outro meio) em models: %s", msg.Id)
 	handler.appendMsgToCache(msg)
 }
 
@@ -75,7 +75,7 @@ func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
 
-	normalizedId := msg.ID
+	normalizedId := msg.Id
 	normalizedId = strings.ToUpper(normalizedId) // ensure that is an uppercase string before save
 
 	// saving on local normalized cache, do not afect remote msgs

@@ -22,12 +22,12 @@ func (w *QPWebhookHandler) Handle(payload *whatsapp.WhatsappMessage) {
 	}
 
 	if payload.Type == whatsapp.TextMessageType && len(strings.TrimSpace(payload.Text)) <= 0 {
-		log.Debug("ignoring empty text message on webhook request: %v", payload.ID)
+		log.Debug("ignoring empty text message on webhook request: %v", payload.Id)
 		return
 	}
 
 	if payload.Chat.ID == "status@broadcast" && !w.Server.HandleBroadcast() {
-		log.Debug("ignoring broadcast message on webhook request: %v", payload.ID)
+		log.Debug("ignoring broadcast message on webhook request: %v", payload.Id)
 		return
 	}
 

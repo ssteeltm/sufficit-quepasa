@@ -18,7 +18,7 @@ func NewWhatsmeowConnection(wid string, logger *log.Logger) (whatsapp.IWhatsappC
 }
 
 func ToQPMessageV2(source whatsapp.WhatsappMessage, wid string) (message QPMessageV2) {
-	message.ID = source.ID
+	message.ID = source.Id
 	message.Timestamp = uint64(source.Timestamp.Unix())
 	message.Text = source.Text
 	message.FromMe = source.FromMe
@@ -53,7 +53,7 @@ func ToQPMessageV2(source whatsapp.WhatsappMessage, wid string) (message QPMessa
 }
 
 func ToQPMessageV1(source whatsapp.WhatsappMessage, wid string) (message QPMessageV1) {
-	message.ID = source.ID
+	message.ID = source.Id
 	message.Timestamp = uint64(source.Timestamp.Unix())
 	message.Text = source.Text
 	message.FromMe = source.FromMe

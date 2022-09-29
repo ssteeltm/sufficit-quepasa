@@ -12,7 +12,15 @@ import (
 )
 
 type QpSendRequest struct {
-	ChatId   string `json:"chatid"`
+	// (Optional) Used if passed
+	Id string `json:"id,omitempty"`
+
+	// Recipient of this message
+	ChatId string `json:"chatid"`
+
+	// (Optional) TrackId - less priority (urlparam -> query -> header -> body)
+	TrackId string `json:"trackid,omitempty"`
+
 	Text     string `json:"text,omitempty"`
 	FileName string `json:"filename,omitempty"`
 	Content  []byte
@@ -41,6 +49,30 @@ func (source *QpSendRequest) EnsureValidChatId(r *http.Request) (err error) {
 	}
 
 	source.ChatId = chatid
+	return
+}
+
+func (source *QpSendRequest) ToWhatsappMessage() (msg *whatsapp.WhatsappMessage, err error) {
+	chatId, err := whatsapp.FormatEndpoint(source.ChatId)
+	if err != nil {
+		return
+	}
+
+	chat := whatsapp.WhatsappChat{ID: chatId}
+	msg = &whatsapp.WhatsappMessage{
+		Id:           source.Id,
+		TrackId:      source.TrackId,
+		Text:         source.Text,
+		Chat:         chat,
+		FromMe:       true,
+		FromInternal: true,
+	}
+
+	// setting default type
+	if len(msg.Text) > 0 {
+		msg.Type = whatsapp.TextMessageType
+	}
+
 	return
 }
 

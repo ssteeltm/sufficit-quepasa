@@ -158,6 +158,6 @@ func HandleAudioMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Audio
 	// get file extension from mime type
 	extension, _ := mime.ExtensionsByType(out.Attachment.Mimetype)
 	if len(extension) > 0 {
-		out.Attachment.FileName = out.ID + extension[0]
+		out.Attachment.FileName = out.Id + extension[0]
 	}
 }
