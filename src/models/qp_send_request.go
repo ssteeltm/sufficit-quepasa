@@ -31,12 +31,16 @@ func (source *QpSendRequest) EnsureChatId(r *http.Request) (err error) {
 
 func (source *QpSendRequest) EnsureValidChatId(r *http.Request) (err error) {
 	err = source.EnsureChatId(r)
-	if err == nil {
-		chatId, err := whatsapp.FormatEndpoint(source.ChatId)
-		if err == nil {
-			source.ChatId = chatId
-		}
+	if err != nil {
+		return
 	}
+
+	chatid, err := whatsapp.FormatEndpoint(source.ChatId)
+	if err != nil {
+		return
+	}
+
+	source.ChatId = chatid
 	return
 }
 

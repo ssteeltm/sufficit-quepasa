@@ -2,7 +2,6 @@ module github.com/sufficit/sufficit-quepasa/controllers
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/jwtauth v4.0.4+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354

@@ -1,6 +1,7 @@
 module github.com/sufficit/sufficit-quepasa/models
 
 require (
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/sufficit/sufficit-quepasa/whatsapp v0.0.0-00010101000000-000000000000
 	github.com/sufficit/sufficit-quepasa/whatsmeow v0.0.0-00010101000000-000000000000
 )
@@ -14,7 +15,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/go-chi/chi v4.0.2+incompatible // indirect
 	github.com/go-chi/jwtauth v4.0.4+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.1.1

@@ -28,21 +28,26 @@ func FormatEndpoint(source string) (destination string, err error) {
 	// removing whitespaces
 	destination = strings.Replace(source, " ", "", -1)
 
-	if len(destination) == 0 {
-		err = fmt.Errorf("empty recipient")
+	if len(destination) < 8 {
+		if len(destination) == 0 {
+			err = fmt.Errorf("empty chatid recipient")
+			return
+		}
+
+		err = fmt.Errorf("invalid chatid length")
 		return
 	}
 
 	// if have a + as prefix, is a phone number
-	if strings.HasPrefix(source, "+") {
-		destination = PhoneToWid(source)
+	if strings.HasPrefix(destination, "+") {
+		destination = PhoneToWid(destination)
 		return
 	}
 
 	if strings.ContainsAny(destination, "@") {
 		splited := strings.Split(destination, "@")
 		if !AllowedSuffix[splited[1]] {
-			err = fmt.Errorf("invalid recipient %s", destination)
+			err = fmt.Errorf("invalid complete @ recipient %s", destination)
 			return
 		}
 	} else {

@@ -1,7 +1,6 @@
 module github.com/sufficit/sufficit-quepasa/main
 
 require (
-	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/joho/godotenv v1.4.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sirupsen/logrus v1.8.1
