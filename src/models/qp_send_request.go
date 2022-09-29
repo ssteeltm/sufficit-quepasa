@@ -21,9 +21,12 @@ type QpSendRequest struct {
 	// (Optional) TrackId - less priority (urlparam -> query -> header -> body)
 	TrackId string `json:"trackId,omitempty"`
 
-	Text     string `json:"text,omitempty"`
+	Text string `json:"text,omitempty"`
+
+	// (Optional) Sugested filename on user download
 	FileName string `json:"fileName,omitempty"`
-	Content  []byte
+
+	Content *[]byte
 }
 
 func (source *QpSendRequest) EnsureChatId(r *http.Request) (err error) {
@@ -79,7 +82,7 @@ func (source *QpSendRequest) ToWhatsappMessage() (msg *whatsapp.WhatsappMessage,
 func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAttachment, err error) {
 	attach = &whatsapp.WhatsappAttachment{}
 
-	mimeType := http.DetectContentType(source.Content)
+	mimeType := http.DetectContentType(*source.Content)
 	if mimeType == "application/octet-stream" && len(source.FileName) > 0 {
 		extension := filepath.Ext(source.FileName)
 		newMimeType := mime.TypeByExtension(extension)
@@ -105,8 +108,8 @@ func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAt
 	}
 
 	attach.FileName = fileName
-	attach.FileLength = uint64(len(source.Content))
+	attach.FileLength = uint64(len(*source.Content))
 	attach.Mimetype = mimeType
-	attach.SetContent(&source.Content)
+	attach.SetContent(source.Content)
 	return
 }

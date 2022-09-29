@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -238,7 +238,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := ioutil.ReadAll(r.Body)
+	content, err := io.ReadAll(r.Body)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(fmt.Errorf("attachment content missing or read error"))
@@ -246,7 +246,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.Content = content
+	request.Content = &content
 
 	// Getting FileName parameter
 	fileName := chi.URLParam(r, "fileName")

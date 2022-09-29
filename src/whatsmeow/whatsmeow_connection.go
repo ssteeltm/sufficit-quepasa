@@ -202,13 +202,12 @@ func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) 
 	}
 
 	mediaType := GetMediaTypeFromString(msg.Attachment.Mimetype)
-
 	response, err := conn.Client.Upload(context.Background(), content, mediaType)
 	if err != nil {
 		return
 	}
 
-	result = NewWhatsmeowMessageAttachment(response, msg.Attachment)
+	result = NewWhatsmeowMessageAttachment(response, msg.Attachment, mediaType)
 	return
 }
 

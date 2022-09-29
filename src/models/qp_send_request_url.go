@@ -1,7 +1,7 @@
 package models
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path"
 )
@@ -18,12 +18,12 @@ func (source *QpSendRequestUrl) GenerateContent() (err error) {
 	}
 	defer resp.Body.Close()
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
 
-	source.QpSendRequest.Content = content
+	source.QpSendRequest.Content = &content
 
 	// setting filename if empty
 	if len(source.QpSendRequest.FileName) == 0 {
