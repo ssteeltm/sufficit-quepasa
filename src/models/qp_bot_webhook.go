@@ -38,7 +38,7 @@ func (source *QpBotWebhook) GetExtraText() string {
 
 // trying to get interface from json string or default string
 func (source *QpBotWebhook) ParseExtra() {
-	extraText := source.Extra.(string)
+	extraText := fmt.Sprintf("%v", source.Extra)
 
 	var extraJson interface{}
 	err := json.Unmarshal([]byte(extraText), &extraJson)
