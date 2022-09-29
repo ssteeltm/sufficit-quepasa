@@ -246,7 +246,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.Content = &content
+	request.Content = content
 
 	// Getting FileName parameter
 	fileName := chi.URLParam(r, "fileName")

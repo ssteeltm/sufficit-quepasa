@@ -15,6 +15,6 @@ func (source *QpSendRequestEncoded) GenerateContent() (err error) {
 		return
 	}
 
-	source.QpSendRequest.Content = &content
+	source.QpSendRequest.Content = content
 	return
 }

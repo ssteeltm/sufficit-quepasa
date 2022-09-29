@@ -23,7 +23,7 @@ func (source *QpSendRequestUrl) GenerateContent() (err error) {
 		return
 	}
 
-	source.QpSendRequest.Content = &content
+	source.QpSendRequest.Content = content
 
 	// setting filename if empty
 	if len(source.QpSendRequest.FileName) == 0 {

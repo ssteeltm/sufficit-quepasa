@@ -27,7 +27,7 @@ func (source *QpSendAnyRequest) GenerateEmbbedContent() (err error) {
 		return
 	}
 
-	source.QpSendRequest.Content = &content
+	source.QpSendRequest.Content = content
 	return
 }
 
@@ -43,7 +43,7 @@ func (source *QpSendAnyRequest) GenerateUrlContent() (err error) {
 		return
 	}
 
-	source.QpSendRequest.Content = &content
+	source.QpSendRequest.Content = content
 
 	// setting filename if empty
 	if len(source.QpSendRequest.FileName) == 0 {
