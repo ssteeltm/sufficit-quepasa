@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -73,47 +72,6 @@ func GetPictureId(r *http.Request) (result string) {
 
 			// retrieve from header parameter
 			result = r.Header.Get("X-QUEPASA-PICTUREID")
-		}
-	}
-	return
-}
-
-// Getting ChatId from PATH => QUERY => HEADER
-func GetChatId(r *http.Request) (result string) {
-
-	// retrieve from url path parameter
-	result = chi.URLParam(r, "chatid")
-	if len(result) == 0 {
-
-		// retrieve from url query parameter
-		if r.URL.Query().Has("chatid") {
-			result = r.URL.Query().Get("chatid")
-		} else {
-
-			// retrieve from header parameter
-			result = r.Header.Get("X-QUEPASA-CHATID")
-		}
-	}
-	return
-}
-
-func EnsureChatId(sendR *models.QpSendRequest, r *http.Request) (err error) {
-	if len(sendR.ChatId) == 0 {
-		sendR.ChatId = GetChatId(r)
-	}
-
-	if len(sendR.ChatId) == 0 {
-		err = fmt.Errorf("chat id missing")
-	}
-	return
-}
-
-func EnsureValidChatId(sendR *models.QpSendRequest, r *http.Request) (err error) {
-	err = EnsureChatId(sendR, r)
-	if err == nil {
-		chatId, err := whatsapp.FormatEndpoint(sendR.ChatId)
-		if err == nil {
-			sendR.ChatId = chatId
 		}
 	}
 	return

@@ -24,7 +24,7 @@ func PictureController(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	chatId := GetChatId(r)
+	chatId := models.GetChatId(r)
 	pictureId := GetPictureId(r)
 
 	switch os := r.Method; os {

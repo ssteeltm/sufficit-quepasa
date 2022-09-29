@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -15,6 +16,28 @@ type QpSendRequest struct {
 	Text     string `json:"text,omitempty"`
 	FileName string `json:"filename,omitempty"`
 	Content  []byte
+}
+
+func (source *QpSendRequest) EnsureChatId(r *http.Request) (err error) {
+	if len(source.ChatId) == 0 {
+		source.ChatId = GetChatId(r)
+	}
+
+	if len(source.ChatId) == 0 {
+		err = fmt.Errorf("chat id missing")
+	}
+	return
+}
+
+func (source *QpSendRequest) EnsureValidChatId(r *http.Request) (err error) {
+	err = source.EnsureChatId(r)
+	if err == nil {
+		chatId, err := whatsapp.FormatEndpoint(source.ChatId)
+		if err == nil {
+			source.ChatId = chatId
+		}
+	}
+	return
 }
 
 func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAttachment, err error) {

@@ -76,7 +76,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 	request := &models.QpSendAnyRequest{}
 
 	// Getting ChatId parameter
-	err = EnsureValidChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -178,7 +178,7 @@ func SendText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureValidChatId(request, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -221,7 +221,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	request := &models.QpSendRequest{}
 
 	// Getting ChatId parameter
-	err = EnsureValidChatId(request, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -298,7 +298,7 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureValidChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -354,7 +354,7 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureValidChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
