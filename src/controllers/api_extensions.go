@@ -107,3 +107,14 @@ func EnsureChatId(sendR *models.QpSendRequest, r *http.Request) (err error) {
 	}
 	return
 }
+
+func EnsureValidChatId(sendR *models.QpSendRequest, r *http.Request) (err error) {
+	err = EnsureChatId(sendR, r)
+	if err == nil {
+		chatId, err := whatsapp.FormatEndpoint(sendR.ChatId)
+		if err == nil {
+			sendR.ChatId = chatId
+		}
+	}
+	return
+}
