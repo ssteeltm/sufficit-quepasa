@@ -16,13 +16,13 @@ type QpSendRequest struct {
 	Id string `json:"id,omitempty"`
 
 	// Recipient of this message
-	ChatId string `json:"chatid"`
+	ChatId string `json:"chatId"`
 
 	// (Optional) TrackId - less priority (urlparam -> query -> header -> body)
-	TrackId string `json:"trackid,omitempty"`
+	TrackId string `json:"trackId,omitempty"`
 
 	Text     string `json:"text,omitempty"`
-	FileName string `json:"filename,omitempty"`
+	FileName string `json:"fileName,omitempty"`
 	Content  []byte
 }
 
