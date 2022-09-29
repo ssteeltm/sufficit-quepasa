@@ -78,7 +78,7 @@ func RespondInterfaceCode(w http.ResponseWriter, response interface{}, code int)
 	if code != 0 {
 		w.WriteHeader(code)
 	} else {
-		if qpresponse, ok := response.(models.QpResponseInterface); ok {
+		if qpresponse, ok := response.(models.QpResponseBasicInterface); ok {
 			if qpresponse.IsSuccess() {
 				w.WriteHeader(http.StatusOK)
 			} else {

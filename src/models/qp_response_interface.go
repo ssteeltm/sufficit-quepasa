@@ -1,7 +1,6 @@
 package models
 
 type QpResponseInterface interface {
-	IsSuccess() bool
+	QpResponseBasicInterface
 	ParseSuccess(string)
-	GetStatusMessage() string
 }
