@@ -283,6 +283,8 @@ func (conn *WhatsmeowConnection) EnsureHandlers() error {
 }
 
 func (conn *WhatsmeowConnection) Dispose() {
-	conn.logger.SetLevel(log.FatalLevel)
+	if conn.logger != nil {
+		conn.logger.SetLevel(log.FatalLevel)
+	}
 	conn.Disconnect()
 }
