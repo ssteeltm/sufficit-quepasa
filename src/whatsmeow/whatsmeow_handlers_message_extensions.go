@@ -187,12 +187,13 @@ func HandleLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Lo
 
 	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
 	length := uint64(len(content))
+	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
 
 	out.Attachment = &whatsapp.WhatsappAttachment{
 		Mimetype:      "text/x-uri; location",
 		Latitude:      *in.DegreesLatitude,
 		Longitude:     *in.DegreesLongitude,
-		JpegThumbnail: string(in.JpegThumbnail),
+		JpegThumbnail: jpeg,
 		Url:           defaultUrl,
 		FileName:      filename,
 		FileLength:    length,
@@ -221,13 +222,14 @@ func HandleLiveLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in
 
 	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
 	length := uint64(len(content))
+	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
 
 	out.Attachment = &whatsapp.WhatsappAttachment{
 		Mimetype:      "text/x-uri; live location",
 		Latitude:      *in.DegreesLatitude,
 		Longitude:     *in.DegreesLongitude,
 		Sequence:      *in.SequenceNumber,
-		JpegThumbnail: string(in.JpegThumbnail),
+		JpegThumbnail: jpeg,
 		Url:           defaultUrl,
 		FileName:      filename,
 		FileLength:    length,
