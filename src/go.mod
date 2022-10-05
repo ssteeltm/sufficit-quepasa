@@ -33,6 +33,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gosimple/slug v1.13.1 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/joncalhoun/migrate v0.0.2 // indirect

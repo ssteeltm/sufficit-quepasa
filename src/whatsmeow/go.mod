@@ -3,6 +3,11 @@ module github.com/sufficit/sufficit-quepasa/whatsmeow
 require github.com/sufficit/sufficit-quepasa/whatsapp v0.0.0-00010101000000-000000000000
 
 require (
+	github.com/gosimple/slug v1.13.1 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
+)
+
+require (
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.11

@@ -3,8 +3,11 @@ package whatsmeow
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"mime"
+	"strings"
 
+	slug "github.com/gosimple/slug"
 	log "github.com/sirupsen/logrus"
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 	. "go.mau.fi/whatsmeow/binary/proto"
@@ -23,6 +26,12 @@ func HandleKnowingMessages(handler *WhatsmeowHandlers, out *whatsapp.WhatsappMes
 		HandleVideoMessage(handler.log, out, in.VideoMessage)
 	} else if in.ExtendedTextMessage != nil {
 		HandleExtendedTextMessage(handler.log, out, in.ExtendedTextMessage)
+	} else if in.LocationMessage != nil {
+		HandleLocationMessage(handler.log, out, in.LocationMessage)
+	} else if in.LiveLocationMessage != nil {
+		HandleLiveLocationMessage(handler.log, out, in.LiveLocationMessage)
+	} else if in.ContactMessage != nil {
+		HandleContactMessage(handler.log, out, in.ContactMessage)
 	} else if in.ProtocolMessage != nil || in.SenderKeyDistributionMessage != nil {
 		out.Type = whatsapp.DiscardMessageType
 	} else if len(in.GetConversation()) > 0 {
@@ -160,4 +169,93 @@ func HandleAudioMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Audio
 	if len(extension) > 0 {
 		out.Attachment.FileName = out.Id + extension[0]
 	}
+}
+
+func HandleLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *LocationMessage) {
+	log.Debug("Received a Location message !")
+	out.Content = in
+	out.Type = whatsapp.LocationMessageType
+
+	// in a near future, create a enviroment variavel for that
+	defaultUrl := "https://www.google.com/maps?ll={lat},{lon}&q={lat}+{lon}"
+
+	defaultUrl = strings.Replace(defaultUrl, "{lat}", fmt.Sprintf("%f", *in.DegreesLatitude), -1)
+	defaultUrl = strings.Replace(defaultUrl, "{lon}", fmt.Sprintf("%f", *in.DegreesLongitude), -1)
+
+	filename := fmt.Sprintf("%f_%f", *in.DegreesLatitude, *in.DegreesLongitude)
+	filename = fmt.Sprintf("%s.url", slug.Make(filename))
+
+	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
+	length := uint64(len(content))
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:      "text/x-uri; location",
+		Latitude:      *in.DegreesLatitude,
+		Longitude:     *in.DegreesLongitude,
+		JpegThumbnail: string(in.JpegThumbnail),
+		Url:           defaultUrl,
+		FileName:      filename,
+		FileLength:    length,
+	}
+
+	out.Attachment.SetContent(&content)
+}
+
+func HandleLiveLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *LiveLocationMessage) {
+	log.Debug("Received a Live Location message !")
+	out.Content = in
+	out.Type = whatsapp.LocationMessageType
+
+	// in a near future, create a enviroment variavel for that
+	defaultUrl := "https://www.google.com/maps?ll={lat},{lon}&q={lat}+{lon}"
+
+	defaultUrl = strings.Replace(defaultUrl, "{lat}", fmt.Sprintf("%f", *in.DegreesLatitude), -1)
+	defaultUrl = strings.Replace(defaultUrl, "{lon}", fmt.Sprintf("%f", *in.DegreesLongitude), -1)
+
+	out.Text = *in.Caption
+	filename := *in.Caption
+	if len(filename) == 0 {
+		filename = fmt.Sprintf("%f_%f", *in.DegreesLatitude, *in.DegreesLongitude)
+	}
+	filename = fmt.Sprintf("%s.url", slug.Make(filename))
+
+	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
+	length := uint64(len(content))
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:      "text/x-uri; live location",
+		Latitude:      *in.DegreesLatitude,
+		Longitude:     *in.DegreesLongitude,
+		Sequence:      *in.SequenceNumber,
+		JpegThumbnail: string(in.JpegThumbnail),
+		Url:           defaultUrl,
+		FileName:      filename,
+		FileLength:    length,
+	}
+
+	out.Attachment.SetContent(&content)
+}
+
+func HandleContactMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *ContactMessage) {
+	log.Debug("Received a Contact message !")
+	out.Content = in
+	out.Type = whatsapp.ContactMessageType
+
+	out.Text = *in.DisplayName
+	filename := *in.DisplayName
+	if len(filename) == 0 {
+		filename = out.Id
+	}
+	filename = fmt.Sprintf("%s.vcf", slug.Make(filename))
+
+	content := []byte(*in.Vcard)
+	length := uint64(len(content))
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:   "text/x-vcard",
+		FileName:   filename,
+		FileLength: length,
+	}
+
+	out.Attachment.SetContent(&content)
 }
