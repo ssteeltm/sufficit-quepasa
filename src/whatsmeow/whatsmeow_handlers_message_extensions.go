@@ -213,8 +213,11 @@ func HandleLiveLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in
 	defaultUrl = strings.Replace(defaultUrl, "{lat}", fmt.Sprintf("%f", *in.DegreesLatitude), -1)
 	defaultUrl = strings.Replace(defaultUrl, "{lon}", fmt.Sprintf("%f", *in.DegreesLongitude), -1)
 
-	out.Text = *in.Caption
-	filename := *in.Caption
+	if in.Caption != nil {
+		out.Text = *in.Caption
+	}
+
+	filename := out.Text
 	if len(filename) == 0 {
 		filename = fmt.Sprintf("%f_%f", *in.DegreesLatitude, *in.DegreesLongitude)
 	}
