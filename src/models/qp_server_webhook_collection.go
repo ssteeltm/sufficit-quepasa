@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -33,6 +34,12 @@ func (source *QpServerWebhookCollection) WebhookFill(context string, db QpDataWe
 }
 
 func (source *QpServerWebhookCollection) WebhookAdd(webhook *QpWebhook) (affected uint, err error) {
+
+	if webhook == nil || len(webhook.Url) == 0 {
+		err = fmt.Errorf("empty or nil webhook")
+		return
+	}
+
 	botWHook, err := source.db.Find(source.context, webhook.Url)
 	if err != nil {
 		return

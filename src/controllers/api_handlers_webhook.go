@@ -50,6 +50,11 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// creating an empty webhook, to filter or clear it all
+	if webhook == nil {
+		webhook = &models.QpWebhook{}
+	}
+
 	switch os := r.Method; os {
 	case http.MethodPost:
 		affected, err := server.WebhookAdd(webhook)
