@@ -12,12 +12,12 @@ import (
 )
 
 type QpWebhook struct {
-	Url             string      `db:"url" json:"url"`                         // destination
-	ForwardInternal bool        `db:"forwardinternal" json:"forwardinternal"` // forward internal msg from api
-	TrackId         string      `db:"trackid" json:"trackid,omitempty"`       // identifier of remote system to avoid loop
-	Extra           interface{} `db:"extra" json:"extra,omitempty"`           // extra info to append on payload
-	Failure         *time.Time  `json:"failure,omitempty"`                    // first failure timestamp
-	Success         *time.Time  `json:"success,omitempty"`                    // last success timestamp
+	Url             string      `db:"url" json:"url,omitempty"`                         // destination
+	ForwardInternal bool        `db:"forwardinternal" json:"forwardinternal,omitempty"` // forward internal msg from api
+	TrackId         string      `db:"trackid" json:"trackid,omitempty"`                 // identifier of remote system to avoid loop
+	Extra           interface{} `db:"extra" json:"extra,omitempty"`                     // extra info to append on payload
+	Failure         *time.Time  `json:"failure,omitempty"`                              // first failure timestamp
+	Success         *time.Time  `json:"success,omitempty"`                              // last success timestamp
 }
 
 // Payload to include extra content

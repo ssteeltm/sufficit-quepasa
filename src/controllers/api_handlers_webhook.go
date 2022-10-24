@@ -30,7 +30,12 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 
 	// Try to decode the request body into the struct. If there is an error,
 	// respond to the client with the error message and a 400 status code.
-	_ = json.NewDecoder(r.Body).Decode(&webhook)
+	err = json.NewDecoder(r.Body).Decode(&webhook)
+	if err != nil {
+		response.ParseError(err)
+		RespondInterface(w, response)
+		return
+	}
 
 	switch os := r.Method; os {
 	case http.MethodPost:
