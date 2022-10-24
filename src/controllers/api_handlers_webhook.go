@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -25,16 +26,28 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Declare a new Person struct.
-	var webhook *models.QpWebhook
-
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
-	err = json.NewDecoder(r.Body).Decode(&webhook)
+	// reading body to avoid converting to json if empty
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		response.ParseError(err)
 		RespondInterface(w, response)
 		return
+	}
+
+	// Declare a new Person struct.
+	var webhook *models.QpWebhook
+
+	if len(body) > 0 {
+
+		// Try to decode the request body into the struct. If there is an error,
+		// respond to the client with the error message and a 400 status code.
+		err = json.Unmarshal(body, &webhook)
+		if err != nil {
+			jsonError := fmt.Errorf("error converting body to json: %v", err.Error())
+			response.ParseError(jsonError)
+			RespondInterface(w, response)
+			return
+		}
 	}
 
 	switch os := r.Method; os {
