@@ -78,7 +78,7 @@ func (source *QpServerWebhookCollection) WebhookAdd(webhook *QpWebhook) (affecte
 func (source *QpServerWebhookCollection) WebhookRemove(url string) (affected uint, err error) {
 	i := 0 // output index
 	for _, element := range source.Webhooks {
-		if strings.Contains(element.Url, url) {
+		if len(url) == 0 || strings.Contains(element.Url, url) {
 			err = source.db.Remove(source.context, element.Url)
 			if err == nil {
 				affected++
