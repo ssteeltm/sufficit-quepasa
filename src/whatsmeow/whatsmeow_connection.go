@@ -78,12 +78,19 @@ func (conn *WhatsmeowConnection) GetTitle(Wid string) string {
 	return result
 }
 
+// Connect to websocket only, dot not authenticate yet, errors come after
 func (conn *WhatsmeowConnection) Connect() (err error) {
-	conn.log.Info("starting whatsmeow connecting ...")
+	conn.log.Info("starting whatsmeow connection")
 
 	err = conn.Client.Connect()
 	if err != nil {
 		conn.failedToken = true
+		return
+	}
+
+	if !conn.Client.IsLoggedIn() {
+		conn.failedToken = true
+		conn.log.Warn("starting whatsmeow connection, connected but not logged")
 		return
 	}
 
@@ -243,7 +250,18 @@ func (conn *WhatsmeowConnection) Delete() (err error) {
 	return
 }
 
+func (conn *WhatsmeowConnection) GetInvite(groupId string) (link string, err error) {
+	jid, err := types.ParseJID(groupId)
+	if err != nil {
+		conn.log.Infof("getting invite error on parse jid: %s", err)
+	}
+
+	link, err = conn.Client.GetGroupInviteLink(jid, false)
+	return
+}
+
 func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
+
 	// No ID stored, new login
 	qrChan, _ := conn.Client.GetQRChannel(context.Background())
 	err = conn.Client.Connect()
@@ -282,9 +300,33 @@ func (conn *WhatsmeowConnection) EnsureHandlers() error {
 	return nil
 }
 
+/*
+<summary>
+	Disconnect if connected
+	Cleanup Handlers
+</summary>
+*/
 func (conn *WhatsmeowConnection) Dispose() {
 	if conn.logger != nil {
-		conn.logger.SetLevel(log.FatalLevel)
+		conn.logger.Warnf("disposing connection ...")
+		conn.logger = nil
 	}
-	conn.Disconnect()
+
+	if conn.Handlers != nil {
+		conn.Handlers.UnRegister()
+		conn.Handlers = nil
+	}
+
+	if conn.Client != nil {
+		if conn.Client.IsConnected() {
+			conn.Client.Disconnect()
+		}
+		conn.Client = nil
+	}
+
+	conn = nil
+}
+
+func (conn *WhatsmeowConnection) IsInterfaceNil() bool {
+	return nil == conn
 }

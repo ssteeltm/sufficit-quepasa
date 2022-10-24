@@ -19,6 +19,9 @@ type IWhatsappConnection interface {
 	Delete() error
 	GetWhatsAppQRChannel(chan<- string) error
 
+	// Get group invite link
+	GetInvite(groupId string) (string, error)
+
 	// Get info to download profile picture
 	GetProfilePicture(wid string, knowingId string) (*WhatsappProfilePicture, error)
 
@@ -39,4 +42,6 @@ type IWhatsappConnection interface {
 
 	// Release all resources
 	Dispose()
+
+	IsInterfaceNil() bool
 }

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -120,16 +121,17 @@ func (server *QPWhatsappServer) Initialize() {
 		panic("nil server, code error")
 	}
 
-	server.Log.Info("Initializing WhatsApp Server ...")
+	server.Log.Info("initializing whatsapp server ...")
 	err := server.Start()
 	if err != nil {
-		server.Log.Error(err)
+		server.Log.Errorf("initializing server error: %s", err.Error())
 	}
 }
 
 // Update underlying connection and ensure trivials
 func (server *QPWhatsappServer) UpdateConnection(connection whatsapp.IWhatsappConnection) {
-	if server.connection != nil {
+
+	if server.connection != nil && !server.connection.IsInterfaceNil() {
 		server.connection.Dispose()
 	}
 
@@ -143,7 +145,9 @@ func (server *QPWhatsappServer) UpdateConnection(connection whatsapp.IWhatsappCo
 
 	// Registrando webhook
 	webhookDispatcher := &QPWebhookHandler{Server: server}
-	server.Handler.Register(webhookDispatcher)
+	if !server.Handler.IsAttached() {
+		server.Handler.Register(webhookDispatcher)
+	}
 
 	server.connection.EnsureHandlers()
 }
@@ -159,8 +163,17 @@ func (server *QPWhatsappServer) EnsureUnderlying() (err error) {
 
 		var connection whatsapp.IWhatsappConnection
 		connection, err = NewWhatsmeowConnection(wid, log)
+		if err != nil {
+			waError, ok := err.(whatsapp.WhatsappError)
+			if ok {
+				if waError.Unauthorized() {
+					server.MarkVerified(false)
+				}
+			}
 
-		server.connection = connection
+		} else {
+			server.connection = connection
+		}
 	}
 
 	server.syncConnection.Unlock()
@@ -173,11 +186,12 @@ func (server *QPWhatsappServer) Start() (err error) {
 		return
 	}
 
-	server.Log.Infof("Starting WhatsApp Server ...")
+	state := server.GetStatus()
+	server.Log.Infof("starting whatsapp server ... on %s state", state)
 
-	if server.GetWorking() {
-		state := server.GetStatus()
-		server.Log.Warnf("trying to start a server on an invalid state :: %s", state)
+	if !IsValidToStart(state) {
+		err = fmt.Errorf("trying to start a server on an invalid state :: %s", state)
+		server.Log.Warnf(err.Error())
 		return
 	}
 
@@ -188,7 +202,7 @@ func (server *QPWhatsappServer) Start() (err error) {
 	// Atualizando manipuladores de eventos
 	server.connection.UpdateHandler(server.Handler)
 
-	server.Log.Infof("Requesting connection ...")
+	server.Log.Infof("requesting connection ...")
 	err = server.connection.Connect()
 	if err != nil {
 		if unauthorized, ok := err.(*whatsapp.UnauthorizedError); ok {
@@ -246,6 +260,20 @@ func (server *QPWhatsappServer) GetOwnerID() string {
 }
 
 //region QP BOT EXTENSIONS
+
+// Check if the current connection state is valid for a start call
+func IsValidToStart(status whatsapp.WhatsappConnectionState) bool {
+	if status == whatsapp.Stopped {
+		return true
+	}
+	if status == whatsapp.Disconnected {
+		return true
+	}
+	if status == whatsapp.Failed {
+		return true
+	}
+	return false
+}
 
 func (server *QPWhatsappServer) GetWorking() bool {
 	status := server.GetStatus()
@@ -446,6 +474,13 @@ func (server *QPWhatsappServer) GetProfilePicture(wid string, knowingId string) 
 	server.Log.Debugf("getting info about profile picture for: %s, with id: %s", wid, knowingId)
 
 	return server.connection.GetProfilePicture(wid, knowingId)
+}
+
+//#endregion
+//#region GROUP INVITE LINK
+
+func (server *QPWhatsappServer) GetInvite(groupId string) (link string, err error) {
+	return server.connection.GetInvite(groupId)
 }
 
 //#endregion

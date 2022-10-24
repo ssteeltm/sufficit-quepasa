@@ -21,7 +21,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 	server, err := GetServer(r)
 	if err != nil {
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
@@ -37,7 +37,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		affected, err := server.WebhookAdd(webhook)
 		if err != nil {
 			response.ParseError(err)
-			RespondServerError(server, w, response)
+			RespondInterface(w, response)
 		} else {
 			response.Affected = affected
 			response.ParseSuccess("updated with success")
@@ -51,7 +51,7 @@ func WebhookController(w http.ResponseWriter, r *http.Request) {
 		affected, err := server.WebhookRemove(webhook.Url)
 		if err != nil {
 			response.ParseError(err)
-			RespondServerError(server, w, response)
+			RespondInterface(w, response)
 		} else {
 			response.Affected = affected
 			response.ParseSuccess("deleted with success")

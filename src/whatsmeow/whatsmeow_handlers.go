@@ -2,16 +2,17 @@ package whatsmeow
 
 import (
 	"fmt"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa/whatsapp"
-	. "go.mau.fi/whatsmeow"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
+	whatsmeow "go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types/events"
 )
 
 type WhatsmeowHandlers struct {
-	Client                   *Client
-	WAHandlers               IWhatsappHandlers
+	Client                   *whatsmeow.Client
+	WAHandlers               whatsapp.IWhatsappHandlers
 	eventHandlerID           uint32
 	unregisterRequestedToken bool
 	log                      *log.Entry
@@ -19,6 +20,12 @@ type WhatsmeowHandlers struct {
 
 func (handler *WhatsmeowHandlers) UnRegister() {
 	handler.unregisterRequestedToken = true
+
+	// if is this session
+	found := handler.Client.RemoveEventHandler(handler.eventHandlerID)
+	if found {
+		handler.log.Infof("handler unregistered, id: %v", handler.eventHandlerID)
+	}
 }
 
 func (handler *WhatsmeowHandlers) Register() (err error) {
@@ -29,6 +36,7 @@ func (handler *WhatsmeowHandlers) Register() (err error) {
 
 	handler.unregisterRequestedToken = false
 	handler.eventHandlerID = handler.Client.AddEventHandler(handler.EventsHandler)
+	handler.log.Infof("handler registered, id: %v", handler.eventHandlerID)
 
 	return
 }
@@ -46,6 +54,7 @@ func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 
 	case *events.Message:
 		go handler.Message(*v)
+		return
 
 	case *events.Connected:
 		// zerando contador de tentativas de reconexão
@@ -53,19 +62,32 @@ func (handler *WhatsmeowHandlers) EventsHandler(evt interface{}) {
 		handler.Client.AutoReconnectErrors = 0
 		return
 
-		/*
-			case *events.LoggedOut:
-				handler.log.Error("loggedout ...")
-				return
+	case *events.LoggedOut:
+		handler.UnRegister()
+		return
 
-			case *events.Receipt, *events.PushName, *events.OfflineSyncPreview:
-				return // ignore
+	case
+		*events.AppState,
+		*events.AppStateSyncComplete,
+		*events.Contact,
+		*events.DeleteChat,
+		*events.DeleteForMe,
+		*events.HistorySync,
+		*events.MarkChatAsRead,
+		*events.Mute,
+		*events.OfflineSyncCompleted,
+		*events.OfflineSyncPreview,
+		*events.PairSuccess,
+		*events.Pin,
+		*events.PushName,
+		*events.PushNameSetting,
+		*events.QR,
+		*events.Receipt:
+		return // ignoring not implemented yet
 
-			default:
-				handler.log.Infof("event not handled: %v", reflect.TypeOf(v))
-				return
-
-		*/
+	default:
+		handler.log.Debugf("event not handled: %v", reflect.TypeOf(v))
+		return
 	}
 }
 
@@ -79,14 +101,14 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 		return
 	}
 
-	message := &WhatsappMessage{Content: evt.Message}
+	message := &whatsapp.WhatsappMessage{Content: evt.Message}
 
 	// basic information
 	message.Id = evt.Info.ID
 	message.Timestamp = evt.Info.Timestamp
 	message.FromMe = evt.Info.IsFromMe
 
-	message.Chat = WhatsappChat{}
+	message.Chat = whatsapp.WhatsappChat{}
 	chatID := fmt.Sprint(evt.Info.Chat.User, "@", evt.Info.Chat.Server)
 	message.Chat.ID = chatID
 
@@ -96,7 +118,7 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 			message.Chat.Title = gInfo.Name
 		}
 
-		message.Participant = &WhatsappEndpoint{}
+		message.Participant = &whatsapp.WhatsappEndpoint{}
 
 		participantID := fmt.Sprint(evt.Info.Sender.User, "@", evt.Info.Sender.Server)
 		message.Participant.ID = participantID
@@ -107,7 +129,7 @@ func (handler *WhatsmeowHandlers) Message(evt events.Message) {
 
 	// Process diferent message types
 	HandleKnowingMessages(handler, message, evt.Message)
-	if message.Type == UnknownMessageType {
+	if message.Type == whatsapp.UnknownMessageType {
 		HandleUnknownMessage(handler.log, evt)
 	}
 

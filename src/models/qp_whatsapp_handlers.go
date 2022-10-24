@@ -7,18 +7,20 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	. "github.com/sufficit/sufficit-quepasa/whatsapp"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // Serviço que controla os servidores / bots individuais do whatsapp
 type QPWhatsappHandlers struct {
-	messages     map[string]WhatsappMessage
+	messages     map[string]whatsapp.WhatsappMessage
 	sync         *sync.Mutex // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
 	syncRegister *sync.Mutex
 	log          *log.Entry
 
 	// Appended events handler
-	aeh []interface{ Handle(*WhatsappMessage) }
+	aeh []interface {
+		Handle(*whatsapp.WhatsappMessage)
+	}
 
 	//filters
 	HandleGroups    bool
@@ -29,7 +31,7 @@ type QPWhatsappHandlers struct {
 
 // Create a new QuePasa WhatsApp Event Handler
 func NewQPWhatsappHandlers(groups bool, broadcast bool, logger *log.Entry) (handler *QPWhatsappHandlers) {
-	handlerMessages := make(map[string]WhatsappMessage)
+	handlerMessages := make(map[string]whatsapp.WhatsappMessage)
 	handler = &QPWhatsappHandlers{
 		HandleGroups:    groups,
 		HandleBroadcast: broadcast,
@@ -50,7 +52,7 @@ func NewQPWhatsappHandlers(groups bool, broadcast bool, logger *log.Entry) (hand
 //endregion
 //#region EVENTS FROM WHATSAPP SERVICE
 
-func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
+func (handler *QPWhatsappHandlers) Message(msg *whatsapp.WhatsappMessage) {
 
 	// skipping groups if choosed
 	if !handler.HandleGroups && msg.FromGroup() {
@@ -70,7 +72,7 @@ func (handler *QPWhatsappHandlers) Message(msg *WhatsappMessage) {
 //region MESSAGE CONTROL REGION HANDLE A LOCK
 
 // Salva em cache e inicia gatilhos assíncronos
-func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
+func (handler *QPWhatsappHandlers) appendMsgToCache(msg *whatsapp.WhatsappMessage) {
 
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
@@ -87,7 +89,7 @@ func (handler *QPWhatsappHandlers) appendMsgToCache(msg *WhatsappMessage) {
 	handler.Trigger(msg)
 }
 
-func (handler *QPWhatsappHandlers) GetMessages(timestamp time.Time) (messages []WhatsappMessage) {
+func (handler *QPWhatsappHandlers) GetMessages(timestamp time.Time) (messages []whatsapp.WhatsappMessage) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
 
@@ -102,7 +104,7 @@ func (handler *QPWhatsappHandlers) GetMessages(timestamp time.Time) (messages []
 }
 
 // Get a single message if exists
-func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, err error) {
+func (handler *QPWhatsappHandlers) GetMessage(id string) (msg whatsapp.WhatsappMessage, err error) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 	// Apartir deste ponto só se executa um por vez
 
@@ -122,14 +124,16 @@ func (handler *QPWhatsappHandlers) GetMessage(id string) (msg WhatsappMessage, e
 //endregion
 //region EVENT HANDLER TO INTERNAL USE, GENERALY TO WEBHOOK
 
-func (handler *QPWhatsappHandlers) Trigger(payload *WhatsappMessage) {
+func (handler *QPWhatsappHandlers) Trigger(payload *whatsapp.WhatsappMessage) {
 	for _, handler := range handler.aeh {
 		go handler.Handle(payload)
 	}
 }
 
 // Register an event handler that triggers on a new message received on cache
-func (handler *QPWhatsappHandlers) Register(evt interface{ Handle(*WhatsappMessage) }) {
+func (handler *QPWhatsappHandlers) Register(evt interface {
+	Handle(*whatsapp.WhatsappMessage)
+}) {
 	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
 
 	if !handler.IsRegistered(evt) {
@@ -139,6 +143,33 @@ func (handler *QPWhatsappHandlers) Register(evt interface{ Handle(*WhatsappMessa
 	handler.sync.Unlock()
 }
 
+// Removes an specific event handler
+func (handler *QPWhatsappHandlers) UnRegister(evt interface {
+	Handle(*whatsapp.WhatsappMessage)
+}) {
+	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
+
+	newHandlers := []interface {
+		Handle(*whatsapp.WhatsappMessage)
+	}{}
+	for _, v := range handler.aeh {
+		if v != evt {
+			newHandlers = append(handler.aeh, evt)
+		}
+	}
+
+	// updating
+	handler.aeh = newHandlers
+
+	handler.sync.Unlock()
+}
+
+// Indicates that has any event handler registered
+func (handler *QPWhatsappHandlers) IsAttached() bool {
+	return len(handler.aeh) > 0
+}
+
+// Indicates that if an specific hanlder is registered
 func (handler *QPWhatsappHandlers) IsRegistered(evt interface{}) bool {
 	for _, v := range handler.aeh {
 		if v == evt {

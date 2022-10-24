@@ -1,6 +1,7 @@
 package models
 
 import (
+	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ func (w *QPWebhookHandler) Handle(payload *whatsapp.WhatsappMessage) {
 	}
 
 	if payload.Type == whatsapp.DiscardMessageType|whatsapp.UnknownMessageType {
-		log.Debug("ignoring unknown message type on webhook request")
+		log.Debugf("ignoring unknown message type on webhook request: %v", reflect.TypeOf(payload))
 		return
 	}
 
