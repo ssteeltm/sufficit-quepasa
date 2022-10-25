@@ -1,15 +1,12 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
 	models "github.com/sufficit/sufficit-quepasa/models"
-	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 const CurrentAPIVersion string = "v4"
@@ -55,8 +52,8 @@ func RegisterAPIControllers(r chi.Router) {
 		r.Get(endpoint+"/receive", ReceiveAPIHandler)
 		r.Post(endpoint+"/attachment", AttachmentAPIHandlerV2)
 
-		r.Get(endpoint+"/download/{messageId}", DownloadController)
-		r.Get(endpoint+"/download", DownloadController)
+		r.Get(endpoint+"/download/{messageId}", DownloadControllerV3)
+		r.Get(endpoint+"/download", DownloadControllerV3)
 
 		// PICTURE INFO | DATA --------------------
 		// ----------------------------------------
@@ -108,72 +105,6 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 
 	response.ParseSuccess(*server)
 	RespondSuccess(w, response)
-}
-
-//endregion
-//region CONTROLLER - DOWNLOAD MESSAGE ATTACHMENT
-
-/*
-<summary>
-	Renders route GET "/{{version}}/bot/{{token}}/download/{messageId}"
-
-	Any of then, at this order of priority
-	Path parameters: {messageId}
-	Url parameters: ?messageId={messageId} || ?id={messageId}
-	Header parameters: X-QUEPASA-MESSAGEID = {messageId}
-</summary>
-*/
-func DownloadController(w http.ResponseWriter, r *http.Request) {
-
-	response := &models.QpResponse{}
-
-	server, err := GetServer(r)
-	if err != nil {
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
-	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	status := server.GetStatus()
-	if status != whatsapp.Ready {
-		err := &ApiServerNotReadyException{Wid: server.GetWid(), Status: status}
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
-	// Default parameters
-	messageId := chi.URLParam(r, "messageId")
-	if strings.Contains(messageId, "message") || (len(messageId) == 0 && r.URL.Query().Has("id")) {
-		messageId = r.URL.Query().Get("id")
-	} else if len(messageId) == 0 && r.URL.Query().Has("messageId") {
-		messageId = r.URL.Query().Get("messageId")
-	} else if len(messageId) == 0 {
-		messageId = r.Header.Get("X-QUEPASA-MESSAGEID")
-	}
-
-	if len(messageId) == 0 {
-		metrics.MessageSendErrors.Inc()
-		err := fmt.Errorf("empty message id")
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
-	att, err := server.Download(messageId)
-	if err != nil {
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
-	if len(att.FileName) > 0 {
-		w.Header().Set("Content-Disposition", "attachment; filename="+att.FileName)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(*att.GetContent())
 }
 
 //endregion
