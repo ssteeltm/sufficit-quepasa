@@ -17,7 +17,7 @@ func RegisterAPIControllers(r chi.Router) {
 
 		// CONTROL METHODS ************************
 		// ----------------------------------------
-		r.Get(endpoint+"/info", InformationController)
+		r.Get(endpoint+"/info", InformationControllerV3)
 		r.Get(endpoint+"/scan", ScannerController)
 
 		// ----------------------------------------
@@ -85,29 +85,6 @@ func RegisterAPIControllers(r chi.Router) {
 		// INVITE METHODS ************************
 	}
 }
-
-//region CONTROLLER - INFORMATION
-
-// InformationController renders route GET "/{version}/info"
-func InformationController(w http.ResponseWriter, r *http.Request) {
-	// setting default reponse type as json
-	w.Header().Set("Content-Type", "application/json")
-
-	response := &models.QpInfoResponse{}
-
-	server, err := GetServer(r)
-	if err != nil {
-		metrics.MessageSendErrors.Inc()
-		response.ParseError(err)
-		RespondInterface(w, response)
-		return
-	}
-
-	response.ParseSuccess(*server)
-	RespondSuccess(w, response)
-}
-
-//endregion
 
 func ScannerController(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json

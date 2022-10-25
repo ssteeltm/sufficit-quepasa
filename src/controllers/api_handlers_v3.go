@@ -82,7 +82,7 @@ func RegisterAPIV3Controllers(r chi.Router) {
 
 //region CONTROLLER - INFORMATION
 
-// InformationController renders route GET "/{version}/bot/{token}"
+// InformationController renders route GET "/{version}/info"
 func InformationControllerV3(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
@@ -93,13 +93,15 @@ func InformationControllerV3(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
 	response.ParseSuccess(*server)
 	RespondSuccess(w, response)
 }
+
+//endregion
 
 //endregion
 //region CONTROLLER - DOWNLOAD MESSAGE ATTACHMENT

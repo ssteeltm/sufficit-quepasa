@@ -17,8 +17,8 @@ type QPWhatsappServer struct {
 	connection     whatsapp.IWhatsappConnection `json:"-"`
 	syncConnection *sync.Mutex                  `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
 	syncMessages   *sync.Mutex                  `json:"-"` // Objeto de sinaleiro para evitar chamadas simultâneas a este objeto
-	Battery        WhatsAppBateryStatus         `json:"battery"`
-	Timestamp      time.Time                    `json:"starttime"`
+	Battery        WhatsAppBateryStatus         `json:"battery,omitempty"`
+	Timestamp      time.Time                    `json:"starttime,omitempty"`
 	Handler        *QPWhatsappHandlers          `json:"-"`
 
 	stopRequested bool        `json:"-"`
