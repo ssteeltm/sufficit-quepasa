@@ -82,6 +82,7 @@ func RegisterAPIControllers(r chi.Router) {
 		// INVITE METHODS ************************
 		// ----------------------------------------
 
+		r.Get(endpoint+"/invite", InviteController)
 		r.Get(endpoint+"/invite/{chatid}", InviteController)
 
 		// ----------------------------------------
