@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	log "github.com/sirupsen/logrus"
 
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
 	models "github.com/sufficit/sufficit-quepasa/models"
@@ -103,7 +102,7 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
-		RespondServerError(server, w, response)
+		RespondInterface(w, response)
 		return
 	}
 
@@ -126,15 +125,21 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 */
 func DownloadController(w http.ResponseWriter, r *http.Request) {
 
-	server, err := GetServerRespondOnError(w, r)
+	response := &models.QpResponse{}
+
+	server, err := GetServer(r)
 	if err != nil {
+		response.ParseError(err)
+		RespondInterface(w, response)
 		return
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
 	if status != whatsapp.Ready {
-		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
+		err := &ApiServerNotReadyException{Wid: server.GetWid(), Status: status}
+		response.ParseError(err)
+		RespondInterface(w, response)
 		return
 	}
 
@@ -150,14 +155,16 @@ func DownloadController(w http.ResponseWriter, r *http.Request) {
 
 	if len(messageId) == 0 {
 		metrics.MessageSendErrors.Inc()
-		RespondServerError(server, w, fmt.Errorf("empty message id"))
+		err := fmt.Errorf("empty message id")
+		response.ParseError(err)
+		RespondInterface(w, response)
 		return
 	}
 
 	att, err := server.Download(messageId)
 	if err != nil {
-		log.Error(err)
-		RespondServerError(server, w, fmt.Errorf("cannot download data: %s", err))
+		response.ParseError(err)
+		RespondInterface(w, response)
 		return
 	}
 
