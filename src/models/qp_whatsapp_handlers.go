@@ -164,6 +164,16 @@ func (handler *QPWhatsappHandlers) UnRegister(evt interface {
 	handler.sync.Unlock()
 }
 
+// Removes an specific event handler
+func (handler *QPWhatsappHandlers) Clear() {
+	handler.sync.Lock() // Sinal vermelho para atividades simultâneas
+
+	// updating
+	handler.aeh = nil
+
+	handler.sync.Unlock()
+}
+
 // Indicates that has any event handler registered
 func (handler *QPWhatsappHandlers) IsAttached() bool {
 	return len(handler.aeh) > 0

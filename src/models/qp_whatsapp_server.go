@@ -195,6 +195,9 @@ func (server *QPWhatsappServer) Start() (err error) {
 		return
 	}
 
+	// reset stop requested token
+	server.stopRequested = false
+
 	// Registrando webhook
 	webhookDispatcher := &QPWebhookHandler{Server: server}
 	server.Handler.Register(webhookDispatcher)
@@ -215,6 +218,21 @@ func (server *QPWhatsappServer) Start() (err error) {
 	}
 
 	server.MarkVerified(true)
+	return
+}
+
+func (server *QPWhatsappServer) Stop(cause string) (err error) {
+	if !server.stopRequested {
+		// setting token
+		server.stopRequested = true
+
+		if server.connection != nil {
+			server.connection.Dispose()
+			server.connection = nil
+		}
+		server.Handler.Clear()
+	}
+
 	return
 }
 
@@ -316,12 +334,9 @@ func (server *QPWhatsappServer) GetConnection() whatsapp.IWhatsappConnection {
 
 func (server *QPWhatsappServer) Toggle() (err error) {
 	if !server.GetWorking() {
-		server.stopRequested = false
 		err = server.Start()
 	} else {
-		server.stopRequested = true
-
-		server.Disconnect("toggling")
+		err = server.Stop("toggling")
 	}
 	return
 }
