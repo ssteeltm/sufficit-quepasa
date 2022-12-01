@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"unicode"
 
 	log "github.com/sirupsen/logrus"
 
@@ -158,6 +159,15 @@ func (conn *WhatsmeowConnection) GetProfilePicture(wid string, knowingId string)
 	return
 }
 
+func isASCII(s string) bool {
+	for _, c := range s {
+		if c > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
+}
+
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 
@@ -176,8 +186,15 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 	}
 
 	// Formatting destination accordly
-	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatId())
-	jid, err := types.ParseJID(formatedDestiantion)
+	formatedDestination, _ := whatsapp.FormatEndpoint(msg.GetChatId())
+
+	// Avoid common issue with incorrect non ascii chat id
+	if !isASCII(formatedDestination) {
+		err = fmt.Errorf("not an ASCII formated chat id")
+		return msg, err
+	}
+
+	jid, err := types.ParseJID(formatedDestination)
 	if err != nil {
 		conn.log.Infof("send error on get jid: %s", err)
 		return msg, err
