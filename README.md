@@ -34,27 +34,23 @@
 
   **This is a third-party effort, and is NOT in any affiliated with [WhatsApp][0].**
 
-<details>
-  <summary>Installation</summary>
+
   
   **Clone and Install**
   
 ```bash
-cd /opt
-git clone https://github.com/sufficit/sufficit-quepasa-fork.git
-mv /opt/sufficit-quepasa /opt/quepasa-source
-cd quepasa-source
-bash ./helpers/install.sh
+git clone https://github.com/sufficit/sufficit-quepasa /opt/quepasa-source
+bash /opt/helpers/install.sh
 ```
     
   ### **Final step**
 
   - go to http://your.ip.address:3100/setup in the web browser and register an admin user for your system
-  - log in to the sysetm http://your.ip.address:3100 form previously created user and scan the qr using you whatsapp 
+  - login on quepasa http://your.ip.address:3100 from previously created user and scan the qr using you whatsapp 
+
+<hr/>
 
 
-
-</details>
 <details>
   <summary>Anything is section was not reviewed</summary>
 
