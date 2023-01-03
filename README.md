@@ -40,7 +40,7 @@
   
 ```bash
 git clone https://github.com/sufficit/sufficit-quepasa /opt/quepasa-source
-bash /opt/helpers/install.sh
+bash /opt/quepasa-source/helpers/install.sh
 ```
     
   ### **Final step**
