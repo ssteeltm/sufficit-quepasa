@@ -5,27 +5,42 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"reflect"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 type QpWebhook struct {
-	Url             string     `db:"url" json:"url"`                         // destination
-	ForwardInternal bool       `db:"forwardinternal" json:"forwardinternal"` // forward internal msg from api
-	TrackId         string     `db:"trackid" json:"trackid,omitempty"`       // identifier of remote system to avoid loop
-	Failure         *time.Time `json:"failure,omitempty"`                    // first failure time
-	Success         *time.Time `json:"success,omitempty"`                    // first failure time
+	Url             string      `db:"url" json:"url,omitempty"`                         // destination
+	ForwardInternal bool        `db:"forwardinternal" json:"forwardinternal,omitempty"` // forward internal msg from api
+	TrackId         string      `db:"trackid" json:"trackid,omitempty"`                 // identifier of remote system to avoid loop
+	Extra           interface{} `db:"extra" json:"extra,omitempty"`                     // extra info to append on payload
+	Failure         *time.Time  `json:"failure,omitempty"`                              // first failure timestamp
+	Success         *time.Time  `json:"success,omitempty"`                              // last success timestamp
+}
+
+// Payload to include extra content
+type QpWebhookPayload struct {
+	*whatsapp.WhatsappMessage
+	Extra interface{} `db:"extra" json:"extra,omitempty"` // extra info to append on payload
 }
 
 var ErrInvalidResponse error = errors.New("the requested url do not return 200 status code")
 
-func (source *QpWebhook) Post(wid string, message interface{}) (err error) {
-	typeOfMessage := reflect.TypeOf(message)
-	log.Infof("dispatching webhook from: (%s): %s, to: %s", typeOfMessage, wid, source.Url)
+func (source *QpWebhook) Post(wid string, message *whatsapp.WhatsappMessage) (err error) {
+	log.Infof("dispatching webhook from: %s, to: %s", wid, source.Url)
 
-	payloadJson, _ := json.Marshal(&message)
+	payload := &QpWebhookPayload{
+		WhatsappMessage: message,
+		Extra:           source.Extra,
+	}
+
+	payloadJson, err := json.Marshal(&payload)
+	if err != nil {
+		return
+	}
+
 	req, err := http.NewRequest("POST", source.Url, bytes.NewBuffer(payloadJson))
 	req.Header.Set("User-Agent", "Quepasa")
 	req.Header.Set("X-QUEPASA-WID", wid)

@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -76,7 +76,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 	request := &models.QpSendAnyRequest{}
 
 	// Getting ChatId parameter
-	err = EnsureChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -106,7 +106,12 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// override trackid if passed throw any other way
 	trackid := GetTrackId(r)
+	if len(trackid) > 0 {
+		request.TrackId = trackid
+	}
+
 	if len(request.Url) > 0 {
 		// base 64 content to byte array
 		err = request.GenerateUrlContent()
@@ -117,7 +122,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		SendDocument(server, response, &request.QpSendRequest, w, trackid)
+		SendDocument(server, response, &request.QpSendRequest, w)
 	} else if len(request.Content) > 0 {
 		// base 64 content to byte array
 		err = request.GenerateEmbbedContent()
@@ -128,7 +133,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		SendDocument(server, response, &request.QpSendRequest, w, trackid)
+		SendDocument(server, response, &request.QpSendRequest, w)
 	} else {
 		// text msg
 
@@ -140,7 +145,7 @@ func SendAny(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		Send(server, response, &request.QpSendRequest, w, nil, trackid)
+		Send(server, response, &request.QpSendRequest, w, nil)
 	}
 }
 
@@ -178,7 +183,7 @@ func SendText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureChatId(request, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -186,8 +191,12 @@ func SendText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// override trackid if passed throw any other way
 	trackid := GetTrackId(r)
-	Send(server, response, request, w, nil, trackid)
+	if len(trackid) > 0 {
+		request.TrackId = trackid
+	}
+	Send(server, response, request, w, nil)
 }
 
 /*
@@ -221,7 +230,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	request := &models.QpSendRequest{}
 
 	// Getting ChatId parameter
-	err = EnsureChatId(request, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -229,7 +238,7 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := ioutil.ReadAll(r.Body)
+	content, err := io.ReadAll(r.Body)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(fmt.Errorf("attachment content missing or read error"))
@@ -259,8 +268,14 @@ func SendDocumentFromBinary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.Text = text
+
+	// override trackid if passed throw any other way
 	trackid := GetTrackId(r)
-	SendDocument(server, response, request, w, trackid)
+	if len(trackid) > 0 {
+		request.TrackId = trackid
+	}
+
+	SendDocument(server, response, request, w)
 }
 
 /*
@@ -298,7 +313,7 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -315,8 +330,12 @@ func SendDocumentFromEncoded(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// override trackid if passed throw any other way
 	trackid := GetTrackId(r)
-	SendDocument(server, response, &request.QpSendRequest, w, trackid)
+	if len(trackid) > 0 {
+		request.TrackId = trackid
+	}
+	SendDocument(server, response, &request.QpSendRequest, w)
 }
 
 /*
@@ -354,7 +373,7 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Getting ChatId parameter
-	err = EnsureChatId(&request.QpSendRequest, r)
+	err = request.EnsureValidChatId(r)
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -371,12 +390,17 @@ func SendDocumentFromUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// override trackid if passed throw any other way
 	trackid := GetTrackId(r)
-	SendDocument(server, response, &request.QpSendRequest, w, trackid)
+	if len(trackid) > 0 {
+		request.TrackId = trackid
+	}
+
+	SendDocument(server, response, &request.QpSendRequest, w)
 }
 
-func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter, attach *whatsapp.WhatsappAttachment, trackid string) {
-	waMsg, err := whatsapp.ToMessage(request.ChatId, request.Text, trackid)
+func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter, attach *whatsapp.WhatsappAttachment) {
+	waMsg, err := request.ToWhatsappMessage()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
 		response.ParseError(err)
@@ -407,12 +431,13 @@ func Send(server *models.QPWhatsappServer, response *models.QpSendResponse, requ
 	result.Wid = server.GetWid()
 	result.Id = sendResponse.GetID()
 	result.ChatId = waMsg.Chat.ID
+	result.TrackId = waMsg.TrackId
 
 	response.ParseSuccess(result)
 	RespondInterface(w, response)
 }
 
-func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter, trackid string) {
+func SendDocument(server *models.QPWhatsappServer, response *models.QpSendResponse, request *models.QpSendRequest, w http.ResponseWriter) {
 	attach, err := request.ToWhatsappAttachment()
 	if err != nil {
 		metrics.MessageSendErrors.Inc()
@@ -421,5 +446,5 @@ func SendDocument(server *models.QPWhatsappServer, response *models.QpSendRespon
 		return
 	}
 
-	Send(server, response, request, w, attach, trackid)
+	Send(server, response, request, w, attach)
 }

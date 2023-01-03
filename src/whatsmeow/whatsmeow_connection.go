@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"unicode"
 
 	log "github.com/sirupsen/logrus"
 
@@ -78,12 +79,19 @@ func (conn *WhatsmeowConnection) GetTitle(Wid string) string {
 	return result
 }
 
+// Connect to websocket only, dot not authenticate yet, errors come after
 func (conn *WhatsmeowConnection) Connect() (err error) {
-	conn.log.Info("starting whatsmeow connecting ...")
+	conn.log.Info("starting whatsmeow connection")
 
 	err = conn.Client.Connect()
 	if err != nil {
 		conn.failedToken = true
+		return
+	}
+
+	if !conn.Client.IsLoggedIn() {
+		conn.failedToken = true
+		conn.log.Warn("starting whatsmeow connection, connected but not logged")
 		return
 	}
 
@@ -151,6 +159,15 @@ func (conn *WhatsmeowConnection) GetProfilePicture(wid string, knowingId string)
 	return
 }
 
+func isASCII(s string) bool {
+	for _, c := range s {
+		if c > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
+}
+
 // Default SEND method using WhatsappMessage Interface
 func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.IWhatsappSendResponse, error) {
 
@@ -169,26 +186,33 @@ func (conn *WhatsmeowConnection) Send(msg *whatsapp.WhatsappMessage) (whatsapp.I
 	}
 
 	// Formatting destination accordly
-	formatedDestiantion, _ := whatsapp.FormatEndpoint(msg.GetChatId())
-	jid, err := types.ParseJID(formatedDestiantion)
+	formatedDestination, _ := whatsapp.FormatEndpoint(msg.GetChatId())
+
+	// Avoid common issue with incorrect non ascii chat id
+	if !isASCII(formatedDestination) {
+		err = fmt.Errorf("not an ASCII formated chat id")
+		return msg, err
+	}
+
+	jid, err := types.ParseJID(formatedDestination)
 	if err != nil {
 		conn.log.Infof("send error on get jid: %s", err)
 		return msg, err
 	}
 
 	// Generating a new unique MessageID
-	if len(msg.ID) == 0 {
-		msg.ID = whatsmeow.GenerateMessageID()
+	if len(msg.Id) == 0 {
+		msg.Id = whatsmeow.GenerateMessageID()
 	}
 
-	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.ID, newMessage)
+	resp, err := conn.Client.SendMessage(context.Background(), jid, msg.Id, newMessage)
 	if err != nil {
 		conn.log.Infof("send error: %s", err)
 		return msg, err
 	}
 	msg.Timestamp = resp.Timestamp
 
-	conn.log.Infof("send: %s, on: %s", msg.ID, msg.Timestamp)
+	conn.log.Infof("send: %s, on: %s", msg.Id, msg.Timestamp)
 	return msg, err
 }
 
@@ -202,13 +226,12 @@ func (conn *WhatsmeowConnection) UploadAttachment(msg whatsapp.WhatsappMessage) 
 	}
 
 	mediaType := GetMediaTypeFromString(msg.Attachment.Mimetype)
-
 	response, err := conn.Client.Upload(context.Background(), content, mediaType)
 	if err != nil {
 		return
 	}
 
-	result = NewWhatsmeowMessageAttachment(response, msg.Attachment)
+	result = NewWhatsmeowMessageAttachment(response, msg.Attachment, mediaType)
 	return
 }
 
@@ -244,7 +267,18 @@ func (conn *WhatsmeowConnection) Delete() (err error) {
 	return
 }
 
+func (conn *WhatsmeowConnection) GetInvite(groupId string) (link string, err error) {
+	jid, err := types.ParseJID(groupId)
+	if err != nil {
+		conn.log.Infof("getting invite error on parse jid: %s", err)
+	}
+
+	link, err = conn.Client.GetGroupInviteLink(jid, false)
+	return
+}
+
 func (conn *WhatsmeowConnection) GetWhatsAppQRChannel(result chan<- string) (err error) {
+
 	// No ID stored, new login
 	qrChan, _ := conn.Client.GetQRChannel(context.Background())
 	err = conn.Client.Connect()
@@ -283,7 +317,33 @@ func (conn *WhatsmeowConnection) EnsureHandlers() error {
 	return nil
 }
 
+/*
+<summary>
+	Disconnect if connected
+	Cleanup Handlers
+</summary>
+*/
 func (conn *WhatsmeowConnection) Dispose() {
-	conn.logger.SetLevel(log.FatalLevel)
-	conn.Disconnect()
+	if conn.logger != nil {
+		conn.logger.Warnf("disposing connection ...")
+		conn.logger = nil
+	}
+
+	if conn.Handlers != nil {
+		conn.Handlers.UnRegister()
+		conn.Handlers = nil
+	}
+
+	if conn.Client != nil {
+		if conn.Client.IsConnected() {
+			conn.Client.Disconnect()
+		}
+		conn.Client = nil
+	}
+
+	conn = nil
+}
+
+func (conn *WhatsmeowConnection) IsInterfaceNil() bool {
+	return nil == conn
 }

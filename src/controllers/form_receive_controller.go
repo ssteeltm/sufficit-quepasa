@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	. "github.com/sufficit/sufficit-quepasa/metrics"
-	. "github.com/sufficit/sufficit-quepasa/models"
-	. "github.com/sufficit/sufficit-quepasa/whatsapp"
+	models "github.com/sufficit/sufficit-quepasa/models"
+	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
 // FormReceiveController renders route GET "/bot/{botID}/receive"
 func FormReceiveController(w http.ResponseWriter, r *http.Request) {
-	data := QPFormReceiveData{PageTitle: "Receive", FormAccountEndpoint: FormAccountEndpoint}
+	data := models.QPFormReceiveData{PageTitle: "Receive", FormAccountEndpoint: FormAccountEndpoint}
 
 	server, err := GetServerFromRequest(r)
 	if err != nil {
@@ -19,12 +19,12 @@ func FormReceiveController(w http.ResponseWriter, r *http.Request) {
 	} else {
 		data.Number = server.GetWid()
 		data.Token = server.Bot.Token
-		data.DownloadPrefix = GetDownloadPrefix(server.Bot.Token)
+		data.DownloadPrefix = GetDownloadPrefixV3(server.Bot.Token)
 	}
 
 	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
 	status := server.GetStatus()
-	if status != Ready {
+	if status != whatsapp.Ready {
 		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
 		return
 	}

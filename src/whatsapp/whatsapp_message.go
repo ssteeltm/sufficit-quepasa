@@ -12,7 +12,7 @@ type WhatsappMessage struct {
 	// original message from source service
 	Content interface{} `json:"-"`
 
-	ID      string `json:"id"`
+	Id      string `json:"id"`
 	TrackId string `json:"trackid,omitempty"` // Optional id of the system that send that message
 
 	Timestamp time.Time           `json:"timestamp"`
@@ -55,7 +55,7 @@ func (m ByTimestamp) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 
 //region IMPLEMENT WHATSAPP SEND RESPONSE INTERFACE
 
-func (source WhatsappMessage) GetID() string { return source.ID }
+func (source WhatsappMessage) GetID() string { return source.Id }
 
 // Get the time of server processed message
 func (source WhatsappMessage) GetTime() time.Time { return source.Timestamp }

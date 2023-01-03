@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -11,10 +12,71 @@ import (
 )
 
 type QpSendRequest struct {
-	ChatId   string `json:"chatid"`
-	Text     string `json:"text,omitempty"`
-	FileName string `json:"filename,omitempty"`
-	Content  []byte
+	// (Optional) Used if passed
+	Id string `json:"id,omitempty"`
+
+	// Recipient of this message
+	ChatId string `json:"chatId"`
+
+	// (Optional) TrackId - less priority (urlparam -> query -> header -> body)
+	TrackId string `json:"trackId,omitempty"`
+
+	Text string `json:"text,omitempty"`
+
+	// (Optional) Sugested filename on user download
+	FileName string `json:"fileName,omitempty"`
+
+	Content []byte
+}
+
+func (source *QpSendRequest) EnsureChatId(r *http.Request) (err error) {
+	if len(source.ChatId) == 0 {
+		source.ChatId = GetChatId(r)
+	}
+
+	if len(source.ChatId) == 0 {
+		err = fmt.Errorf("chat id missing")
+	}
+	return
+}
+
+func (source *QpSendRequest) EnsureValidChatId(r *http.Request) (err error) {
+	err = source.EnsureChatId(r)
+	if err != nil {
+		return
+	}
+
+	chatid, err := whatsapp.FormatEndpoint(source.ChatId)
+	if err != nil {
+		return
+	}
+
+	source.ChatId = chatid
+	return
+}
+
+func (source *QpSendRequest) ToWhatsappMessage() (msg *whatsapp.WhatsappMessage, err error) {
+	chatId, err := whatsapp.FormatEndpoint(source.ChatId)
+	if err != nil {
+		return
+	}
+
+	chat := whatsapp.WhatsappChat{ID: chatId}
+	msg = &whatsapp.WhatsappMessage{
+		Id:           source.Id,
+		TrackId:      source.TrackId,
+		Text:         source.Text,
+		Chat:         chat,
+		FromMe:       true,
+		FromInternal: true,
+	}
+
+	// setting default type
+	if len(msg.Text) > 0 {
+		msg.Type = whatsapp.TextMessageType
+	}
+
+	return
 }
 
 func (source *QpSendRequest) ToWhatsappAttachment() (attach *whatsapp.WhatsappAttachment, err error) {

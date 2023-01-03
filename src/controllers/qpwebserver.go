@@ -94,7 +94,7 @@ func newRouter() chi.Router {
 
 func addAPIRoutes(r chi.Router) {
 	r.Group(RegisterAPIControllers)
-	r.Group(RegisterAPIV2Controllers)
+	r.Group(RegisterAPIV3Controllers)
 }
 
 func fileServer(r chi.Router, path string, root http.FileSystem) {

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth"
 )
 
@@ -25,18 +26,6 @@ func GetUser(r *http.Request) (QPUser, error) {
 
 	return WhatsappService.DB.User.FindByID(userID)
 }
-
-/*
-// CleanPhoneNumber removes all non-numeric characters from a string
-func CleanPhoneNumber(number string) (string, error) {
-	var out string
-	if strings.HasSuffix(number, "@g.us") {
-		return out, fmt.Errorf("this id is a group, cant be converted to phone number")
-	}
-
-	return GetPhoneByID(number)
-}
-*/
 
 // Usado também para identificar o número do bot
 // Meramente visual
@@ -64,4 +53,23 @@ func GetPhoneByID(id string) (out string, err error) {
 		out = matches[0]
 	}
 	return out, err
+}
+
+// Getting ChatId from PATH => QUERY => HEADER
+func GetChatId(r *http.Request) (result string) {
+
+	// retrieve from url path parameter
+	result = chi.URLParam(r, "chatid")
+	if len(result) == 0 {
+
+		// retrieve from url query parameter
+		if r.URL.Query().Has("chatid") {
+			result = r.URL.Query().Get("chatid")
+		} else {
+
+			// retrieve from header parameter
+			result = r.Header.Get("X-QUEPASA-CHATID")
+		}
+	}
+	return
 }

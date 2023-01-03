@@ -3,14 +3,17 @@ package whatsmeow
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"mime"
+	"strings"
 
+	slug "github.com/gosimple/slug"
 	log "github.com/sirupsen/logrus"
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
-	. "go.mau.fi/whatsmeow/binary/proto"
+	proto "go.mau.fi/whatsmeow/binary/proto"
 )
 
-func HandleKnowingMessages(handler *WhatsmeowHandlers, out *whatsapp.WhatsappMessage, in *Message) {
+func HandleKnowingMessages(handler *WhatsmeowHandlers, out *whatsapp.WhatsappMessage, in *proto.Message) {
 	if in.ImageMessage != nil {
 		HandleImageMessage(handler.log, out, in.ImageMessage)
 	} else if in.StickerMessage != nil {
@@ -23,6 +26,12 @@ func HandleKnowingMessages(handler *WhatsmeowHandlers, out *whatsapp.WhatsappMes
 		HandleVideoMessage(handler.log, out, in.VideoMessage)
 	} else if in.ExtendedTextMessage != nil {
 		HandleExtendedTextMessage(handler.log, out, in.ExtendedTextMessage)
+	} else if in.LocationMessage != nil {
+		HandleLocationMessage(handler.log, out, in.LocationMessage)
+	} else if in.LiveLocationMessage != nil {
+		HandleLiveLocationMessage(handler.log, out, in.LiveLocationMessage)
+	} else if in.ContactMessage != nil {
+		HandleContactMessage(handler.log, out, in.ContactMessage)
 	} else if in.ProtocolMessage != nil || in.SenderKeyDistributionMessage != nil {
 		out.Type = whatsapp.DiscardMessageType
 	} else if len(in.GetConversation()) > 0 {
@@ -40,14 +49,14 @@ func HandleUnknownMessage(log *log.Entry, in interface{}) {
 	log.Debug(string(b))
 }
 
-func HandleTextMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Message) {
+func HandleTextMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.Message) {
 	log.Debug("Received a text message !")
 	out.Type = whatsapp.TextMessageType
 	out.Text = in.GetConversation()
 }
 
 // Msg em resposta a outra
-func HandleExtendedTextMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *ExtendedTextMessage) {
+func HandleExtendedTextMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.ExtendedTextMessage) {
 	log.Debug("Received a text|extended message !")
 	out.Type = whatsapp.TextMessageType
 
@@ -67,7 +76,7 @@ func HandleExtendedTextMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in
 	}
 }
 
-func HandleImageMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *ImageMessage) {
+func HandleImageMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.ImageMessage) {
 	log.Debug("Received an image message !")
 	out.Content = in
 	out.Type = whatsapp.ImageMessageType
@@ -86,7 +95,7 @@ func HandleImageMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Image
 	}
 }
 
-func HandleStickerMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *StickerMessage) {
+func HandleStickerMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.StickerMessage) {
 	log.Debug("Received a image|sticker message !")
 	out.Content = in
 	out.Type = whatsapp.ImageMessageType
@@ -100,7 +109,7 @@ func HandleStickerMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Sti
 	}
 }
 
-func HandleVideoMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *VideoMessage) {
+func HandleVideoMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.VideoMessage) {
 	log.Debug("Received a video message !")
 	out.Content = in
 	out.Type = whatsapp.VideoMessageType
@@ -119,7 +128,7 @@ func HandleVideoMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Video
 	}
 }
 
-func HandleDocumentMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *DocumentMessage) {
+func HandleDocumentMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.DocumentMessage) {
 	log.Debug("Received a document message !")
 	out.Content = in
 	out.Type = whatsapp.DocumentMessageType
@@ -138,7 +147,7 @@ func HandleDocumentMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Do
 	}
 }
 
-func HandleAudioMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *AudioMessage) {
+func HandleAudioMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.AudioMessage) {
 	log.Debug("Received an audio message !")
 	out.Content = in
 	out.Type = whatsapp.AudioMessageType
@@ -158,6 +167,100 @@ func HandleAudioMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *Audio
 	// get file extension from mime type
 	extension, _ := mime.ExtensionsByType(out.Attachment.Mimetype)
 	if len(extension) > 0 {
-		out.Attachment.FileName = out.ID + extension[0]
+		out.Attachment.FileName = out.Id + extension[0]
 	}
+}
+
+func HandleLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.LocationMessage) {
+	log.Debug("Received a Location message !")
+	out.Content = in
+	out.Type = whatsapp.LocationMessageType
+
+	// in a near future, create a enviroment variavel for that
+	defaultUrl := "https://www.google.com/maps?ll={lat},{lon}&q={lat}+{lon}"
+
+	defaultUrl = strings.Replace(defaultUrl, "{lat}", fmt.Sprintf("%f", *in.DegreesLatitude), -1)
+	defaultUrl = strings.Replace(defaultUrl, "{lon}", fmt.Sprintf("%f", *in.DegreesLongitude), -1)
+
+	filename := fmt.Sprintf("%f_%f", *in.DegreesLatitude, *in.DegreesLongitude)
+	filename = fmt.Sprintf("%s.url", slug.Make(filename))
+
+	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
+	length := uint64(len(content))
+	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:      "text/x-uri; location",
+		Latitude:      *in.DegreesLatitude,
+		Longitude:     *in.DegreesLongitude,
+		JpegThumbnail: jpeg,
+		Url:           defaultUrl,
+		FileName:      filename,
+		FileLength:    length,
+	}
+
+	out.Attachment.SetContent(&content)
+}
+
+func HandleLiveLocationMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.LiveLocationMessage) {
+	log.Debug("Received a Live Location message !")
+	out.Content = in
+	out.Type = whatsapp.LocationMessageType
+
+	// in a near future, create a enviroment variavel for that
+	defaultUrl := "https://www.google.com/maps?ll={lat},{lon}&q={lat}+{lon}"
+
+	defaultUrl = strings.Replace(defaultUrl, "{lat}", fmt.Sprintf("%f", *in.DegreesLatitude), -1)
+	defaultUrl = strings.Replace(defaultUrl, "{lon}", fmt.Sprintf("%f", *in.DegreesLongitude), -1)
+
+	if in.Caption != nil {
+		out.Text = *in.Caption
+	}
+
+	filename := out.Text
+	if len(filename) == 0 {
+		filename = fmt.Sprintf("%f_%f", *in.DegreesLatitude, *in.DegreesLongitude)
+	}
+	filename = fmt.Sprintf("%s.url", slug.Make(filename))
+
+	content := []byte("[InternetShortcut]\nURL=" + defaultUrl)
+	length := uint64(len(content))
+	jpeg := base64.StdEncoding.EncodeToString(in.JpegThumbnail)
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:      "text/x-uri; live location",
+		Latitude:      *in.DegreesLatitude,
+		Longitude:     *in.DegreesLongitude,
+		Sequence:      *in.SequenceNumber,
+		JpegThumbnail: jpeg,
+		Url:           defaultUrl,
+		FileName:      filename,
+		FileLength:    length,
+	}
+
+	out.Attachment.SetContent(&content)
+}
+
+func HandleContactMessage(log *log.Entry, out *whatsapp.WhatsappMessage, in *proto.ContactMessage) {
+	log.Debug("Received a Contact message !")
+	out.Content = in
+	out.Type = whatsapp.ContactMessageType
+
+	out.Text = *in.DisplayName
+	filename := *in.DisplayName
+	if len(filename) == 0 {
+		filename = out.Id
+	}
+	filename = fmt.Sprintf("%s.vcf", slug.Make(filename))
+
+	content := []byte(*in.Vcard)
+	length := uint64(len(content))
+
+	out.Attachment = &whatsapp.WhatsappAttachment{
+		Mimetype:   "text/x-vcard",
+		FileName:   filename,
+		FileLength: length,
+	}
+
+	out.Attachment.SetContent(&content)
 }

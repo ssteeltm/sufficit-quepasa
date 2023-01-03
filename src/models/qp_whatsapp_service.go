@@ -87,6 +87,10 @@ func (service *QPWhatsappService) GetOrCreateServer(currentUserID string, wid st
 
 		log.Debugf("server: %s, found", wid)
 		server, err = service.AppendNewServer(&bot)
+	} else {
+		if server.connection != nil && !server.connection.IsInterfaceNil() {
+			server.connection.Dispose()
+		}
 	}
 
 	return

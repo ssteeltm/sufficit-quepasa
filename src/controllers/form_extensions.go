@@ -77,9 +77,12 @@ func FormToggleController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response := &models.QpResponse{}
+
 	err = server.Toggle()
 	if err != nil {
-		RespondServerError(server, w, err)
+		response.ParseError(err)
+		RespondInterface(w, response)
 		return
 	}
 

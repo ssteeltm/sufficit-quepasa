@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 
 	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/proto"
 
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 	whatsmeow "go.mau.fi/whatsmeow"
@@ -51,62 +52,61 @@ func ToWhatsmeowMessage(source whatsapp.IWhatsappMessage) (msg *waProto.Message,
 	return
 }
 
-func NewWhatsmeowMessageAttachment(response whatsmeow.UploadResponse, attach *whatsapp.WhatsappAttachment) (msg *waProto.Message) {
-	media := GetMediaTypeFromString(attach.Mimetype)
+func NewWhatsmeowMessageAttachment(response whatsmeow.UploadResponse, attach *whatsapp.WhatsappAttachment, media whatsmeow.MediaType) (msg *waProto.Message) {
 	switch media {
 	case whatsmeow.MediaImage:
 		msg = &waProto.Message{ImageMessage: &waProto.ImageMessage{
-			Url:           &response.URL,
-			DirectPath:    &response.DirectPath,
+			Url:           proto.String(response.URL),
+			DirectPath:    proto.String(response.DirectPath),
 			MediaKey:      response.MediaKey,
 			FileEncSha256: response.FileEncSHA256,
 			FileSha256:    response.FileSHA256,
-			FileLength:    &response.FileLength,
+			FileLength:    proto.Uint64(response.FileLength),
 
-			Mimetype: &attach.Mimetype,
-			Caption:  &attach.FileName,
+			Mimetype: proto.String(attach.Mimetype),
+			Caption:  proto.String(attach.FileName),
 		},
 		}
 		return
 	case whatsmeow.MediaAudio:
 		internal := &waProto.AudioMessage{
-			Url:           &response.URL,
-			DirectPath:    &response.DirectPath,
+			Url:           proto.String(response.URL),
+			DirectPath:    proto.String(response.DirectPath),
 			MediaKey:      response.MediaKey,
 			FileEncSha256: response.FileEncSHA256,
 			FileSha256:    response.FileSHA256,
-			FileLength:    &response.FileLength,
+			FileLength:    proto.Uint64(response.FileLength),
 
-			Mimetype: &attach.Mimetype,
-			Ptt:      &[]bool{true}[0],
+			Mimetype: proto.String(attach.Mimetype),
+			Ptt:      proto.Bool(attach.Mimetype == "audio/ogg"),
 		}
 		msg = &waProto.Message{AudioMessage: internal}
 		return
 	case whatsmeow.MediaVideo:
 		internal := &waProto.VideoMessage{
-			Url:           &response.URL,
-			DirectPath:    &response.DirectPath,
+			Url:           proto.String(response.URL),
+			DirectPath:    proto.String(response.DirectPath),
 			MediaKey:      response.MediaKey,
 			FileEncSha256: response.FileEncSHA256,
 			FileSha256:    response.FileSHA256,
-			FileLength:    &response.FileLength,
+			FileLength:    proto.Uint64(response.FileLength),
 
-			Mimetype: &attach.Mimetype,
-			Caption:  &attach.FileName,
+			Mimetype: proto.String(attach.Mimetype),
+			Caption:  proto.String(attach.FileName),
 		}
 		msg = &waProto.Message{VideoMessage: internal}
 		return
 	default:
 		internal := &waProto.DocumentMessage{
-			Url:           &response.URL,
-			DirectPath:    &response.DirectPath,
+			Url:           proto.String(response.URL),
+			DirectPath:    proto.String(response.DirectPath),
 			MediaKey:      response.MediaKey,
 			FileEncSha256: response.FileEncSHA256,
 			FileSha256:    response.FileSHA256,
-			FileLength:    &response.FileLength,
+			FileLength:    proto.Uint64(response.FileLength),
 
-			Mimetype: &attach.Mimetype,
-			FileName: &attach.FileName,
+			Mimetype: proto.String(attach.Mimetype),
+			FileName: proto.String(attach.FileName),
 		}
 		msg = &waProto.Message{DocumentMessage: internal}
 		return

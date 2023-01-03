@@ -1,85 +1,92 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
-	log "github.com/sirupsen/logrus"
 
 	metrics "github.com/sufficit/sufficit-quepasa/metrics"
 	models "github.com/sufficit/sufficit-quepasa/models"
-	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 )
 
-const CurrentAPIVersion string = "v3"
-
-var CurrentControllerPrefix string = "/bot/{token}"
+const CurrentAPIVersion string = "v4"
 
 func RegisterAPIControllers(r chi.Router) {
 	aliases := []string{"/current", "", "/" + CurrentAPIVersion}
 	for _, endpoint := range aliases {
-		r.Get(endpoint+CurrentControllerPrefix, InformationController)
+
+		// CONTROL METHODS ************************
+		// ----------------------------------------
+		r.Get(endpoint+"/info", InformationControllerV3)
+		r.Get(endpoint+"/scan", ScannerController)
+
+		// ----------------------------------------
+		// CONTROL METHODS ************************
 
 		// SENDING MSG ----------------------------
 		// ----------------------------------------
 
 		// used to dispatch alert msgs via url, triggers on monitor systems like zabbix
-		r.Get(endpoint+CurrentControllerPrefix+"/send", SendAny)
+		r.Get(endpoint+"/send", SendAny)
 
-		r.Post(endpoint+CurrentControllerPrefix+"/send", SendAny)
-		r.Post(endpoint+CurrentControllerPrefix+"/send/{chatid}", SendAny)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendtext", SendText)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendtext/{chatid}", SendText)
+		r.Post(endpoint+"/send", SendAny)
+		r.Post(endpoint+"/send/{chatid}", SendAny)
+		r.Post(endpoint+"/sendtext", SendText)
+		r.Post(endpoint+"/sendtext/{chatid}", SendText)
 
 		// SENDING MSG ATTACH ---------------------
 
 		// deprecated, discard/remove on next version
-		r.Post(endpoint+CurrentControllerPrefix+"/senddocument", SendDocumentAPIHandlerV2)
+		r.Post(endpoint+"/senddocument", SendDocumentAPIHandlerV2)
 
-		r.Post(endpoint+CurrentControllerPrefix+"/sendurl", SendDocumentFromUrl)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}/{fileName}/{text}", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}/{fileName}", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary/{chatid}", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendbinary", SendDocumentFromBinary)
-		r.Post(endpoint+CurrentControllerPrefix+"/sendencoded", SendDocumentFromEncoded)
+		r.Post(endpoint+"/sendurl", SendDocumentFromUrl)
+		r.Post(endpoint+"/sendbinary/{chatid}/{fileName}/{text}", SendDocumentFromBinary)
+		r.Post(endpoint+"/sendbinary/{chatid}/{fileName}", SendDocumentFromBinary)
+		r.Post(endpoint+"/sendbinary/{chatid}", SendDocumentFromBinary)
+		r.Post(endpoint+"/sendbinary", SendDocumentFromBinary)
+		r.Post(endpoint+"/sendencoded", SendDocumentFromEncoded)
 
 		// ----------------------------------------
 		// SENDING MSG ----------------------------
 
-		r.Get(endpoint+CurrentControllerPrefix+"/receive", ReceiveAPIHandler)
-		r.Post(endpoint+CurrentControllerPrefix+"/attachment", AttachmentAPIHandlerV2)
+		r.Get(endpoint+"/receive", ReceiveAPIHandler)
+		r.Post(endpoint+"/attachment", AttachmentAPIHandlerV2)
 
-		r.Get(endpoint+CurrentControllerPrefix+"/download/{messageId}", DownloadController)
-		r.Get(endpoint+CurrentControllerPrefix+"/download", DownloadController)
+		r.Get(endpoint+"/download/{messageId}", DownloadControllerV3)
+		r.Get(endpoint+"/download", DownloadControllerV3)
 
 		// PICTURE INFO | DATA --------------------
 		// ----------------------------------------
 
-		r.Post(endpoint+CurrentControllerPrefix+"/picinfo", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picinfo/{chatid}/{pictureid}", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picinfo/{chatid}", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picinfo", PictureController)
+		r.Post(endpoint+"/picinfo", PictureController)
+		r.Get(endpoint+"/picinfo/{chatid}/{pictureid}", PictureController)
+		r.Get(endpoint+"/picinfo/{chatid}", PictureController)
+		r.Get(endpoint+"/picinfo", PictureController)
 
-		r.Post(endpoint+CurrentControllerPrefix+"/picdata", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picdata/{chatid}/{pictureid}", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picdata/{chatid}", PictureController)
-		r.Get(endpoint+CurrentControllerPrefix+"/picdata", PictureController)
+		r.Post(endpoint+"/picdata", PictureController)
+		r.Get(endpoint+"/picdata/{chatid}/{pictureid}", PictureController)
+		r.Get(endpoint+"/picdata/{chatid}", PictureController)
+		r.Get(endpoint+"/picdata", PictureController)
 
 		// ----------------------------------------
 		// PICTURE INFO | DATA --------------------
 
-		r.Post(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
-		r.Get(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
-		r.Delete(endpoint+CurrentControllerPrefix+"/webhook", WebhookController)
+		r.Post(endpoint+"/webhook", WebhookController)
+		r.Get(endpoint+"/webhook", WebhookController)
+		r.Delete(endpoint+"/webhook", WebhookController)
+
+		// INVITE METHODS ************************
+		// ----------------------------------------
+
+		r.Get(endpoint+"/invite", InviteController)
+		r.Get(endpoint+"/invite/{chatid}", InviteController)
+
+		// ----------------------------------------
+		// INVITE METHODS ************************
 	}
 }
 
-//region CONTROLLER - INFORMATION
-
-// InformationController renders route GET "/{version}/bot/{token}"
-func InformationController(w http.ResponseWriter, r *http.Request) {
+func ScannerController(w http.ResponseWriter, r *http.Request) {
 	// setting default reponse type as json
 	w.Header().Set("Content-Type", "application/json")
 
@@ -96,70 +103,3 @@ func InformationController(w http.ResponseWriter, r *http.Request) {
 	response.ParseSuccess(*server)
 	RespondSuccess(w, response)
 }
-
-//endregion
-//region CONTROLLER - DOWNLOAD MESSAGE ATTACHMENT
-
-func GetDownloadPrefix(token string) (path string) {
-	path = CurrentControllerPrefix + "/download/{messageId}"
-	path = strings.Replace(path, "{token}", token, -1)
-	path = strings.Replace(path, "{messageId}", "", -1)
-	return
-}
-
-/*
-<summary>
-	Renders route GET "/{{version}}/bot/{{token}}/download/{messageId}"
-
-	Any of then, at this order of priority
-	Path parameters: {messageId}
-	Url parameters: ?messageId={messageId} || ?id={messageId}
-	Header parameters: X-QUEPASA-MESSAGEID = {messageId}
-</summary>
-*/
-func DownloadController(w http.ResponseWriter, r *http.Request) {
-
-	server, err := GetServerRespondOnError(w, r)
-	if err != nil {
-		return
-	}
-
-	// Evitando tentativa de download de anexos sem o bot estar devidamente sincronizado
-	status := server.GetStatus()
-	if status != whatsapp.Ready {
-		RespondNotReady(w, &ApiServerNotReadyException{Wid: server.GetWid(), Status: status})
-		return
-	}
-
-	// Default parameters
-	messageId := chi.URLParam(r, "messageId")
-	if strings.Contains(messageId, "message") || (len(messageId) == 0 && r.URL.Query().Has("id")) {
-		messageId = r.URL.Query().Get("id")
-	} else if len(messageId) == 0 && r.URL.Query().Has("messageId") {
-		messageId = r.URL.Query().Get("messageId")
-	} else if len(messageId) == 0 {
-		messageId = r.Header.Get("X-QUEPASA-MESSAGEID")
-	}
-
-	if len(messageId) == 0 {
-		metrics.MessageSendErrors.Inc()
-		RespondServerError(server, w, fmt.Errorf("empty message id"))
-		return
-	}
-
-	att, err := server.Download(messageId)
-	if err != nil {
-		log.Error(err)
-		RespondServerError(server, w, fmt.Errorf("cannot download data: %s", err))
-		return
-	}
-
-	if len(att.FileName) > 0 {
-		w.Header().Set("Content-Disposition", "attachment; filename="+att.FileName)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(*att.GetContent())
-}
-
-//endregion
