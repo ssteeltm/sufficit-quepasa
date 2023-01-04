@@ -45,8 +45,8 @@ bash /opt/quepasa-source/helpers/install.sh
     
   ### **Final step**
 
-  - go to http://your.ip.address:3100/setup in the web browser and register an admin user for your system
-  - login on quepasa http://your.ip.address:3100 from previously created user and scan the qr using you whatsapp 
+  - go to http://your.ip.address:31000/setup in the web browser and register an admin user for your system
+  - login on quepasa http://your.ip.address:31000 from previously created user and scan the qr using you whatsapp 
 
 <hr/>
 
