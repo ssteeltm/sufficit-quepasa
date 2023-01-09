@@ -9,6 +9,7 @@ import (
 	whatsapp "github.com/sufficit/sufficit-quepasa/whatsapp"
 	whatsmeow "go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"strings"
 )
 
 type WhatsmeowLogLevel string
@@ -79,6 +80,10 @@ func NewWhatsmeowMessageAttachment(response whatsmeow.UploadResponse, attach *wh
 
 			Mimetype: proto.String(attach.Mimetype),
 			Ptt:      proto.Bool(attach.Mimetype == "audio/ogg"),
+		}
+		if(strings.Contains(attach.Mimetype,"ogg")){
+			internal.Mimetype = proto.String("audio/ogg; codecs=opus")
+			internal.Ptt      = proto.Bool(true)
 		}
 		msg = &waProto.Message{AudioMessage: internal}
 		return
